@@ -1,8 +1,8 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+// Import from npm package instead of CDN
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 
-// Your web app's Firebase configuration
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyClUJLYwy9SEjF_YERVTYuI-vlRFC31EPw",
   authDomain: "earnhalal-5105b.firebaseapp.com",
@@ -10,7 +10,7 @@ const firebaseConfig = {
   storageBucket: "earnhalal-5105b.firebasestorage.app",
   messagingSenderId: "1077759003577",
   appId: "1:1077759003577:web:bde4fe4da663e506780468",
-  measurementId: "G-DQ43TYB9CN"
+  measurementId: "G-DQ43TYB9CN",
 };
 
 // Initialize Firebase
@@ -18,4 +18,3 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
 export { app, analytics };
-alert("🔥 Firebase Connected Successfully!");
