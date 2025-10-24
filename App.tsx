@@ -1,7 +1,3 @@
- </div>
-    );
-};
-
 import React, { useEffect, useState } from "react";
 import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
 import { app } from "./firebase";
