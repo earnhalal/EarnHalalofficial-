@@ -1,8 +1,5 @@
-// Import from npm package instead of CDN
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyClUJLYwy9SEjF_YERVTYuI-vlRFC31EPw",
   authDomain: "earnhalal-5105b.firebaseapp.com",
@@ -15,6 +12,5 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 
-export { app, analytics };
+export { app };
