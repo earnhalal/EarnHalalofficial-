@@ -50,11 +50,11 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
 
 
   return (
-    <header className="bg-white dark:bg-gray-800/50 backdrop-blur-sm p-4 shadow-sm sticky top-0 z-20">
+    <header className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm p-4 shadow-sm sticky top-0 z-20">
       <style>{`
         @keyframes balance-pop {
           0% { transform: scale(1); }
-          50% { transform: scale(1.25); color: #22c55e; } /* green-500 */
+          50% { transform: scale(1.25); color: #2dd4bf; } /* teal-400 */
           100% { transform: scale(1); }
         }
         .balance-increase {
@@ -63,20 +63,20 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
       `}</style>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden text-gray-600 dark:text-gray-300">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-600 dark:text-slate-300">
                 {isSidebarOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
             </button>
             {canGoBack && (
-              <button onClick={onBack} className="text-gray-600 dark:text-gray-300 hover:text-primary-500">
+              <button onClick={onBack} className="text-slate-600 dark:text-slate-300 hover:text-teal-500">
                 <ArrowLeftIcon className="w-6 h-6" />
               </button>
             )}
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{title}</h1>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
         </div>
         <div className="flex items-center space-x-4">
             <div className="text-right">
-                <p className="font-semibold text-gray-800 dark:text-gray-100">{username}</p>
-                <p className={`text-sm text-primary-600 dark:text-primary-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
+                <p className="font-semibold text-slate-800 dark:text-slate-100">{username}</p>
+                <p className={`text-sm text-teal-600 dark:text-teal-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
             </div>
         </div>
       </div>

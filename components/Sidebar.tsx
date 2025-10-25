@@ -17,10 +17,10 @@ const NavItem: React.FC<{
 }> = ({ icon, label, isActive, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group ${
       isActive
-        ? 'bg-primary-500 text-white shadow-lg'
-        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+        ? 'bg-gradient-to-r from-teal-500 to-primary-500 text-white shadow-lg'
+        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
     }`}
   >
     {icon}
@@ -51,16 +51,22 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
 
   return (
     <aside
-      className={`bg-white dark:bg-gray-800 text-gray-800 dark:text-white w-64 fixed top-0 left-0 h-full shadow-lg z-30 transform transition-transform duration-300 ease-in-out ${
+      className={`bg-white dark:bg-slate-800 text-slate-800 dark:text-white w-64 fixed top-0 left-0 h-full shadow-lg z-30 transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0 lg:w-64`}
     >
       <div className="p-4 flex flex-col h-full">
         <div className="flex items-center space-x-2 mb-10 px-2">
-           <svg className="w-10 h-10 text-primary-500" viewBox="0 0 24 24" fill="currentColor">
+           <svg className="w-10 h-10" viewBox="0 0 24 24" fill="url(#logo-gradient)">
+            <defs>
+              <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{stopColor: 'rgb(20 184 166)'}} />
+                <stop offset="100%" style={{stopColor: 'rgb(14 165 233)'}} />
+              </linearGradient>
+            </defs>
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
           </svg>
-          <span className="text-2xl font-bold text-gray-800 dark:text-white">Earn Halal</span>
+          <span className="text-2xl font-bold text-slate-800 dark:text-white">Earn Halal</span>
         </div>
         <nav className="flex-1 space-y-2">
           {mainViews.map(({ view, label, icon }) => (
@@ -74,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
           ))}
         </nav>
         <div className="mt-auto space-y-2">
-          <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+          <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
           {secondaryViews.map(({ view, label, icon }) => (
             <NavItem
               key={view}
@@ -84,7 +90,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
               onClick={() => setActiveView(view)}
             />
           ))}
-          <div className="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+          <div className="border-t border-slate-200 dark:border-slate-700 my-2"></div>
           <button
             onClick={onLogout}
             className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"

@@ -597,7 +597,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans flex">
+        <div className="bg-slate-100 dark:bg-slate-900 min-h-screen font-sans flex">
             {showPinModal && (
                 <PinLockView 
                     mode={showPinModal}
