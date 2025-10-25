@@ -86,6 +86,7 @@ export interface UserProfile {
   phone: string;
   paymentStatus: PaymentStatus;
   jobSubscription: JobSubscription | null;
+  password?: string;
 }
 
 export interface Job {

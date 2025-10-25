@@ -1,11 +1,12 @@
 
+
 import React, { useState } from 'react';
 import type { UserProfile } from '../types';
 import { CheckCircleIcon } from './icons';
 
 interface AuthViewProps {
-    onSignup: (profileData: Omit<UserProfile, 'paymentStatus' | 'jobSubscription'>) => void;
-    onLogin: (profile: UserProfile) => void;
+    onSignup: (profileData: Omit<UserProfile, 'paymentStatus' | 'jobSubscription'> & { password: string }) => void;
+    onLogin: (username: string, password: string) => void;
 }
 
 const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
@@ -23,25 +24,17 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
             return;
         }
         setError('');
-        onSignup({ username, email, phone });
+        onSignup({ username, email, phone, password });
     };
     
     const handleLoginSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setError('');
-        try {
-            const storedProfile = localStorage.getItem('userProfile');
-            if (storedProfile) {
-                const profile: UserProfile = JSON.parse(storedProfile);
-                if (profile.username.toLowerCase() === username.toLowerCase()) {
-                    onLogin(profile);
-                    return;
-                }
-            }
-            setError('User not found. Please sign up.');
-        } catch {
-             setError('An error occurred. Please try again.');
+        if (!username || !password) {
+            setError('Username and password are required.');
+            return;
         }
+        setError('');
+        onLogin(username, password);
     };
 
     return (
