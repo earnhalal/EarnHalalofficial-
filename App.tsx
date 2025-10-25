@@ -568,7 +568,7 @@ const App: React.FC = () => {
             case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
             case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
             case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
-            case 'INVITE': return <InviteView referrals={referrals} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} />;
+            case 'INVITE': return <InviteView referrals={referrals} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} />;
             case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} />;
             case 'HOW_IT_WORKS': return <HowItWorksView />;
             case 'ABOUT_US': return <AboutUsView />;
