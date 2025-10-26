@@ -1,5 +1,5 @@
 import React from 'react';
-import { DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon, InfoIcon, LogoutIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon, PlusCircleIcon } from './icons';
+import { DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon, InfoIcon, LogoutIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon, PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon } from './icons';
 import type { View } from '../types';
 
 interface SidebarProps {
@@ -35,9 +35,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-6 h-6" /> },
     { view: 'WALLET', label: 'Wallet', icon: <WalletIcon className="w-6 h-6" /> },
     { view: 'DEPOSIT', label: 'Deposit', icon: <PlusCircleIcon className="w-6 h-6" /> },
+    { view: 'INVITE', label: 'Invite Friends', icon: <InviteIcon className="w-6 h-6" /> },
     { view: 'CREATE_TASK', label: 'Create Task', icon: <CreateTaskIcon className="w-6 h-6" /> },
     { view: 'TASK_HISTORY', label: 'Task History', icon: <ClipboardListIcon className="w-6 h-6" /> },
-    { view: 'INVITE', label: 'Invite Friends', icon: <InviteIcon className="w-6 h-6" /> },
+    { view: 'JOBS', label: 'Jobs', icon: <BriefcaseIcon className="w-6 h-6" /> },
+    { view: 'MY_APPLICATIONS', label: 'My Applications', icon: <DocumentCheckIcon className="w-6 h-6" /> },
   ];
 
   const secondaryViews: { view: View; label: string; icon: React.ReactNode }[] = [

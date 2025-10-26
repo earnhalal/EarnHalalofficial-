@@ -14,6 +14,7 @@ export type View =
   | 'ABOUT_US'
   | 'CONTACT_US'
   | 'JOBS'
+  | 'MY_APPLICATIONS'
   | 'PRIVACY_POLICY'
   | 'TERMS_CONDITIONS';
 
@@ -96,4 +97,11 @@ export interface Job {
     type: string; // e.g., 'Full-time', 'Part-time'
     salary: string;
     isPremium: boolean;
+}
+
+export interface Application {
+    jobId: string;
+    jobTitle: string;
+    date: string; // ISO string
+    status: 'Submitted' | 'Under Review' | 'Rejected';
 }

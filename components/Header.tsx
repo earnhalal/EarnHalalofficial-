@@ -26,6 +26,7 @@ const viewTitles: Record<View, string> = {
   ABOUT_US: 'About Us',
   CONTACT_US: 'Contact Us',
   JOBS: 'Jobs',
+  MY_APPLICATIONS: 'My Job Applications',
   PRIVACY_POLICY: 'Privacy Policy',
   TERMS_CONDITIONS: 'Terms & Conditions',
 };

@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import type { UserProfile, Job, JobSubscriptionPlan } from '../types';
+import type { UserProfile, Job, JobSubscriptionPlan, Application } from '../types';
 import { CheckCircleIcon } from './icons';
 
 interface JobsViewProps {
@@ -10,7 +10,7 @@ interface JobsViewProps {
     jobs: Job[];
     onSubscribe: (plan: JobSubscriptionPlan, cost: number) => void;
     onApply: (jobId: string) => void;
-    appliedJobIds: string[];
+    applications: Application[];
 }
 
 const plans = [
@@ -20,7 +20,7 @@ const plans = [
     { name: 'Enterprise' as JobSubscriptionPlan, price: 5000, duration: 90, features: ['All Business features', 'Dedicated Account Manager'], color: 'green', limit: Infinity },
 ];
 
-const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubscribe, onApply, appliedJobIds }) => {
+const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubscribe, onApply, applications }) => {
     
     if (!userProfile?.jobSubscription) {
         return (
@@ -84,7 +84,7 @@ const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubsc
 
             <div className="space-y-6">
                 {jobs.filter(job => !job.isPremium || (job.isPremium && plan !== 'Starter')).map(job => {
-                    const hasApplied = appliedJobIds.includes(job.id);
+                    const hasApplied = applications.some(app => app.jobId === job.id);
 
                     return (
                         <div key={job.id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-1">

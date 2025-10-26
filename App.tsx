@@ -23,9 +23,10 @@ import SpinWheelView from './components/SpinWheelView';
 import PinLockView from './components/PinLockView';
 import AIAgentChatbot from './components/AIAgentChatbot';
 import WelcomeModal from './components/WelcomeModal';
+import MyApplicationsView from './components/MyApplicationsView';
 
 
-import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails } from './types';
+import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application } from './types';
 import { TransactionType, TaskType } from './types';
 
 // --- HELPERS ---
@@ -136,7 +137,7 @@ const App: React.FC = () => {
     const [userTasks, setUserTasks] = useState<UserCreatedTask[]>([]);
     const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
-    const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+    const [applications, setApplications] = useState<Application[]>([]);
     const [referrals, setReferrals] = useState<{ level1: number; level2: number; }>({level1: 0, level2: 0});
     const [savedWithdrawalDetails, setSavedWithdrawalDetails] = useState<WithdrawalDetails | null>(null);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -188,6 +189,7 @@ const App: React.FC = () => {
         setBalance(parseFloat(localStorage.getItem(`balance_${profile.username}`) || '0'));
         setTransactions(JSON.parse(localStorage.getItem(`transactions_${profile.username}`) || '[]'));
         setCompletedTaskIds(JSON.parse(localStorage.getItem(`completedTaskIds_${profile.username}`) || '[]'));
+        setApplications(JSON.parse(localStorage.getItem(`applications_${profile.username}`) || '[]'));
         setReferrals(JSON.parse(localStorage.getItem(`referrals_${profile.username}`) || '{"level1":0, "level2":0}'));
         setWalletPin(localStorage.getItem(`walletPin_${profile.username}`));
         setSavedWithdrawalDetails(JSON.parse(localStorage.getItem(`savedWithdrawalDetails_${profile.username}`) || 'null'));
@@ -204,11 +206,21 @@ const App: React.FC = () => {
         }
     }, []);
     
-    const saveUserData = (profile: UserProfile, newBalance: number, newTransactions: Transaction[], newCompletedIds: string[], newReferrals: {level1: number, level2: number}, newPin: string | null = walletPin, newDetails: WithdrawalDetails | null = savedWithdrawalDetails) => {
+    const saveUserData = (
+        profile: UserProfile, 
+        newBalance: number, 
+        newTransactions: Transaction[], 
+        newCompletedIds: string[], 
+        newReferrals: {level1: number, level2: number}, 
+        newApplications: Application[],
+        newPin: string | null = walletPin, 
+        newDetails: WithdrawalDetails | null = savedWithdrawalDetails
+    ) => {
         localStorage.setItem(`balance_${profile.username}`, newBalance.toString());
         localStorage.setItem(`transactions_${profile.username}`, JSON.stringify(newTransactions));
         localStorage.setItem(`completedTaskIds_${profile.username}`, JSON.stringify(newCompletedIds));
         localStorage.setItem(`referrals_${profile.username}`, JSON.stringify(newReferrals));
+        localStorage.setItem(`applications_${profile.username}`, JSON.stringify(newApplications));
         if (newPin) localStorage.setItem(`walletPin_${profile.username}`, newPin);
         if (newDetails) localStorage.setItem(`savedWithdrawalDetails_${profile.username}`, JSON.stringify(newDetails));
     };
@@ -255,7 +267,7 @@ const App: React.FC = () => {
              newSavedDetails = withdrawalDetails;
         }
 
-        saveUserData(profile, newBalance, newTransactions, completedTaskIds, customReferrals, walletPin, newSavedDetails);
+        saveUserData(profile, newBalance, newTransactions, completedTaskIds, customReferrals, applications, walletPin, newSavedDetails);
     };
 
     const handleLogin = (username: string, password: string) => {
@@ -325,7 +337,7 @@ const App: React.FC = () => {
                     setBalance(initialBalance);
                     setTransactions(initialTransactions);
                     
-                    saveUserData(verifiedProfile, initialBalance, initialTransactions, [], { level1: 0, level2: 0 });
+                    saveUserData(verifiedProfile, initialBalance, initialTransactions, [], { level1: 0, level2: 0 }, []);
                 }
             }
         }, 5000);
@@ -378,13 +390,11 @@ const App: React.FC = () => {
         const newCompletedTaskIds = [...completedTaskIds, userCreatedTaskId];
         setCompletedTaskIds(newCompletedTaskIds);
 
-        // Add transaction for the user
         addTransaction(userProfile, TransactionType.EARNING, `Completed: ${taskToComplete.title}`, taskToComplete.reward, referrals);
 
-        // Note: The main saveUserData call is now inside addTransaction, so we just need to update completed IDs separately for persistence.
         const currentBalance = balance + taskToComplete.reward;
         const updatedTransactions = [...transactions, { id: `tx_${Date.now()}`, type: TransactionType.EARNING, description: `Completed: ${taskToComplete.title}`, amount: taskToComplete.reward, date: new Date().toISOString() }];
-        saveUserData(userProfile, currentBalance, updatedTransactions, newCompletedTaskIds, referrals);
+        saveUserData(userProfile, currentBalance, updatedTransactions, newCompletedTaskIds, referrals, applications);
     };
 
     const handleWithdraw = (amount: number, details: WithdrawalDetails) => {
@@ -416,7 +426,6 @@ const App: React.FC = () => {
         let subscription = { ...userProfile.jobSubscription };
         const today = new Date().toISOString().split('T')[0];
 
-        // Reset if it's a new day
         if (subscription.lastApplicationDate !== today) {
             subscription.applicationsToday = 0;
             subscription.lastApplicationDate = today;
@@ -428,10 +437,23 @@ const App: React.FC = () => {
         if (subscription.applicationsToday < limit) {
             subscription.applicationsToday += 1;
             const updatedProfile = { ...userProfile, jobSubscription: subscription };
+            
+            const job = jobs.find(j => j.id === jobId);
+            if (!job) return;
+
+            const newApplication: Application = {
+                jobId: job.id,
+                jobTitle: job.title,
+                date: new Date().toISOString(),
+                status: 'Submitted',
+            };
+            const newApplications = [...applications, newApplication];
+            setApplications(newApplications);
             setUserProfile(updatedProfile);
+            
             localStorage.setItem('earnHalalCurrentUser', JSON.stringify(updatedProfile));
-            setAppliedJobIds(prev => [...prev, jobId]);
-            // No need for separate saveUserData call, everything is in the main profile object
+            saveUserData(updatedProfile, balance, transactions, completedTaskIds, referrals, newApplications);
+
             alert('Application submitted successfully!');
         } else {
             alert('You have reached your daily application limit.');
@@ -443,6 +465,7 @@ const App: React.FC = () => {
         setBalance(0);
         setTransactions([]);
         setCompletedTaskIds([]);
+        setApplications([]);
         setReferrals({level1: 0, level2: 0});
         setWalletPin(null);
         setSavedWithdrawalDetails(null);
@@ -498,7 +521,7 @@ const App: React.FC = () => {
         setTransactions(newTransactions);
         
         const updatedProfile = { ...userProfile };
-        saveUserData(updatedProfile, balance, newTransactions, completedTaskIds, referrals);
+        saveUserData(updatedProfile, balance, newTransactions, completedTaskIds, referrals, applications);
         
         alert(`Your deposit request for ${amount.toFixed(2)} Rs has been submitted and is pending verification.`);
     };
@@ -583,7 +606,8 @@ const App: React.FC = () => {
                         case 'CONTACT_US': return <ContactUsView />;
                         case 'PRIVACY_POLICY': return <PrivacyPolicyView />;
                         case 'TERMS_CONDITIONS': return <TermsAndConditionsView />;
-                        case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} appliedJobIds={appliedJobIds} />;
+                        case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} applications={applications} />;
+                        case 'MY_APPLICATIONS': return <MyApplicationsView applications={applications} />;
                         default: return <DashboardView balance={balance} tasksCompleted={0} referrals={0} setActiveView={handleSetActiveView} transactions={[]} onSimulateNewTask={() => {}} />;
                     }
                 })()}
