@@ -133,6 +133,7 @@ const App: React.FC = () => {
     // User & Data State
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [balance, setBalance] = useState(0);
+    const [pendingRewards, setPendingRewards] = useState(0);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [userTasks, setUserTasks] = useState<UserCreatedTask[]>([]);
     const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
@@ -187,6 +188,7 @@ const App: React.FC = () => {
 
         // Reload user data based on profile
         setBalance(parseFloat(localStorage.getItem(`balance_${profile.username}`) || '0'));
+        setPendingRewards(parseFloat(localStorage.getItem(`pendingRewards_${profile.username}`) || '125.50')); // Mock pending
         setTransactions(JSON.parse(localStorage.getItem(`transactions_${profile.username}`) || '[]'));
         setCompletedTaskIds(JSON.parse(localStorage.getItem(`completedTaskIds_${profile.username}`) || '[]'));
         setApplications(JSON.parse(localStorage.getItem(`applications_${profile.username}`) || '[]'));
@@ -595,7 +597,7 @@ const App: React.FC = () => {
                         case 'DASHBOARD': return <DashboardView balance={balance} tasksCompleted={tasksCompletedCount} referrals={referrals.level1} setActiveView={handleSetActiveView} transactions={transactions} onSimulateNewTask={simulateNewTaskNotification} />;
                         case 'EARN': return <EarnView tasks={availableTasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={completedTaskIds} />;
                         case 'SPIN_WHEEL': return <SpinWheelView onWin={handleSpinWin} balance={balance} onBuySpin={handleBuySpin} />;
-                        case 'WALLET': return <WalletView balance={balance} transactions={transactions} onWithdraw={handleWithdraw} username={userProfile.username} savedDetails={savedWithdrawalDetails} hasPin={!!walletPin} onSetupPin={() => setShowPinModal('set')} />;
+                        case 'WALLET': return <WalletView balance={balance} pendingRewards={pendingRewards} transactions={transactions} onWithdraw={handleWithdraw} username={userProfile.username} savedDetails={savedWithdrawalDetails} hasPin={!!walletPin} onSetupPin={() => setShowPinModal('set')} />;
                         case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
                         case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
                         case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
