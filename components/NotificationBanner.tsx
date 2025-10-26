@@ -7,7 +7,7 @@ interface NotificationBannerProps {
 
 const NotificationBanner: React.FC<NotificationBannerProps> = ({ onRequestPermission, onDismiss }) => {
   return (
-    <div className="bg-primary-500 text-white p-3 shadow-lg z-50">
+    <div className="bg-primary-600 text-white p-3 shadow-lg z-50">
       <div className="container mx-auto flex items-center justify-between">
         <p className="font-semibold">
           Get notified about new tasks and account updates!

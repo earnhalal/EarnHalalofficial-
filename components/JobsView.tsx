@@ -14,25 +14,29 @@ interface JobsViewProps {
 }
 
 const plans = [
-    { name: 'Starter' as JobSubscriptionPlan, price: 500, duration: 30, features: ['Access to basic jobs', '5 applications per day'], color: 'gray', limit: 5 },
+    { name: 'Starter' as JobSubscriptionPlan, price: 500, duration: 30, features: ['Access to basic jobs', '5 applications per day'], color: 'slate', limit: 5 },
     { name: 'Growth' as JobSubscriptionPlan, price: 1000, duration: 30, features: ['Access to all jobs', '15 applications per day', 'Email support'], color: 'primary', limit: 15 },
-    { name: 'Business' as JobSubscriptionPlan, price: 2500, duration: 60, features: ['Access to all jobs', 'Unlimited applications', 'Priority support'], color: 'green', limit: Infinity },
-    { name: 'Enterprise' as JobSubscriptionPlan, price: 5000, duration: 90, features: ['All Business features', 'Dedicated Account Manager'], color: 'indigo', limit: Infinity },
+    { name: 'Business' as JobSubscriptionPlan, price: 2500, duration: 60, features: ['Access to all jobs', 'Unlimited applications', 'Priority support'], color: 'accent', limit: Infinity },
+    { name: 'Enterprise' as JobSubscriptionPlan, price: 5000, duration: 90, features: ['All Business features', 'Dedicated Account Manager'], color: 'green', limit: Infinity },
 ];
 
 const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubscribe, onApply, appliedJobIds }) => {
     
     if (!userProfile?.jobSubscription) {
         return (
-            <div className="text-center">
+            <div className="text-center animate-fade-in">
                 <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">Unlock Your Earning Potential</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
-                    Subscribe to a plan to access high-paying, exclusive jobs. Choose the plan that best fits your ambitions. Your current balance is <span className="font-bold text-primary-500">{balance.toFixed(2)} Rs</span>.
+                    Subscribe to a plan to access high-paying, exclusive jobs. Your current balance is <span className="font-bold text-primary-500">{balance.toFixed(2)} Rs</span>.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {plans.map(plan => (
-                        <div key={plan.name} className={`border-2 border-${plan.color}-500 rounded-xl shadow-lg p-6 flex flex-col`}>
-                            <h3 className={`text-2xl font-bold text-${plan.color}-500`}>{plan.name}</h3>
+                    {plans.map((plan, index) => (
+                        <div 
+                            key={plan.name} 
+                            className={`border-2 border-${plan.color === 'primary' || plan.color === 'accent' ? plan.color + '-500' : 'slate-300 dark:border-slate-600'} rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-fade-in-up`}
+                            style={{ animationDelay: `${index * 100}ms`}}
+                        >
+                            <h3 className={`text-2xl font-bold text-${plan.color === 'primary' || plan.color === 'accent' ? plan.color + '-500' : 'slate-800 dark:text-slate-100'}`}>{plan.name}</h3>
                             <p className="text-4xl font-extrabold my-4 text-gray-800 dark:text-gray-100">{plan.price} <span className="text-lg font-medium">Rs</span></p>
                             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">For {plan.duration} days</p>
                             <ul className="space-y-3 text-left text-gray-600 dark:text-gray-300 flex-grow">

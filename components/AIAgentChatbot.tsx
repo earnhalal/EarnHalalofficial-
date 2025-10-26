@@ -165,13 +165,13 @@ const AIAgentChatbot: React.FC = () => {
                 }
             `}</style>
 
-            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl flex flex-col z-50 ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
-                <div className="flex-shrink-0 p-4 bg-gradient-to-r from-green-600 to-primary-600 text-white rounded-t-2xl flex items-center justify-between shadow-md">
+            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col z-50 ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
+                <div className="flex-shrink-0 p-4 bg-gradient-to-r from-accent-600 to-primary-600 text-white rounded-t-2xl flex items-center justify-between shadow-md">
                     <div>
                         <h3 className="font-bold text-lg">{agentName}</h3>
                         <div className="flex items-center gap-2">
                              <div className="w-2 h-2 bg-green-300 rounded-full"></div>
-                             <p className="text-xs text-green-200">🟢 Online</p>
+                             <p className="text-xs text-primary-200">🟢 Online</p>
                         </div>
                     </div>
                     <button onClick={handleToggle} className="text-white hover:bg-white/20 rounded-full p-1 transition-colors">
@@ -179,7 +179,7 @@ const AIAgentChatbot: React.FC = () => {
                     </button>
                 </div>
                 
-                <div className="flex-grow p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900/50 space-y-4">
+                <div className="flex-grow p-4 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 space-y-4">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             <div className={`message-bubble max-w-xs md:max-w-md px-4 py-2 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-primary-500 text-white rounded-br-lg' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-lg'}`}>
@@ -191,11 +191,11 @@ const AIAgentChatbot: React.FC = () => {
                      <div ref={messagesEndRef} />
                 </div>
                 
-                <div className="flex-shrink-0 p-4 border-t dark:border-gray-700 space-y-3">
+                <div className="flex-shrink-0 p-4 border-t dark:border-slate-700 space-y-3">
                     {suggestions.length > 0 && !isLoading && (
                         <div className="flex flex-wrap gap-2 justify-center">
                             {suggestions.map(option => (
-                               <button key={option} onClick={() => handleSendMessage(option)} className="px-3 py-1.5 bg-primary-100 dark:bg-gray-700 text-primary-700 dark:text-gray-200 rounded-full text-sm hover:bg-primary-200 dark:hover:bg-gray-600 transition-colors">
+                               <button key={option} onClick={() => handleSendMessage(option)} className="px-3 py-1.5 bg-primary-100 dark:bg-slate-700 text-primary-700 dark:text-slate-200 rounded-full text-sm hover:bg-primary-200 dark:hover:bg-slate-600 transition-colors">
                                    {option}
                                </button>
                             ))}
@@ -207,7 +207,7 @@ const AIAgentChatbot: React.FC = () => {
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder="Type your question..."
-                            className="flex-1 w-full p-2 border border-gray-300 rounded-full shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                            className="flex-1 w-full p-2 border border-slate-300 rounded-full shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
                         />
                          <button type="submit" className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
@@ -218,7 +218,7 @@ const AIAgentChatbot: React.FC = () => {
 
             <button
                 onClick={handleToggle}
-                className={`chatbot-icon fixed bottom-4 right-4 sm:right-6 w-16 h-16 bg-gradient-to-br from-green-500 to-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 ${!isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}
+                className={`chatbot-icon fixed bottom-4 right-4 sm:right-6 w-16 h-16 bg-gradient-to-br from-accent-500 to-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 ${!isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}
                 aria-label="Open support chat"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>

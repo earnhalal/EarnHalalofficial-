@@ -54,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
       <style>{`
         @keyframes balance-pop {
           0% { transform: scale(1); }
-          50% { transform: scale(1.25); color: #2dd4bf; } /* teal-400 */
+          50% { transform: scale(1.25); color: #ec4899; } /* accent-500 */
           100% { transform: scale(1); }
         }
         .balance-increase {
@@ -67,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
                 {isSidebarOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
             </button>
             {canGoBack && (
-              <button onClick={onBack} className="text-slate-600 dark:text-slate-300 hover:text-teal-500">
+              <button onClick={onBack} className="text-slate-600 dark:text-slate-300 hover:text-primary-500">
                 <ArrowLeftIcon className="w-6 h-6" />
               </button>
             )}
@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
         <div className="flex items-center space-x-4">
             <div className="text-right">
                 <p className="font-semibold text-slate-800 dark:text-slate-100">{username}</p>
-                <p className={`text-sm text-teal-600 dark:text-teal-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
+                <p className={`text-sm text-primary-600 dark:text-primary-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
             </div>
         </div>
       </div>

@@ -111,11 +111,15 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
           />
       )}
       <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Available Tasks</h2>
-      {tasks.map(task => {
+      {tasks.map((task, index) => {
         const isCompletedByUser = completedTaskIds.includes(task.id);
 
         return (
-            <div key={task.id} className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div 
+                key={task.id} 
+                className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-1 animate-fade-in-up"
+                style={{ animationDelay: `${index * 75}ms`}}
+            >
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div>
                   <span className="text-xs font-semibold uppercase text-primary-500">{task.type}</span>

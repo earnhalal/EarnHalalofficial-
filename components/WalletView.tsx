@@ -138,7 +138,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
                         <tfoot>
                             <tr>
                                 <td class="text-right p-3 font-bold text-gray-800 text-lg" colspan="1">Total Paid</td>
-                                <td class="text-right p-3 font-bold text-teal-600 text-lg" colspan="1">${Math.abs(tx.amount).toFixed(2)} Rs</td>
+                                <td class="text-right p-3 font-bold text-primary-600 text-lg" colspan="1">${Math.abs(tx.amount).toFixed(2)} Rs</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -151,7 +151,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
                     </div>
                     <div class="text-center mt-8 text-sm text-gray-500">
                         <p>Thank you for using Earn Halal!</p>
-                        <button onclick="window.print()" class="no-print mt-4 bg-teal-500 text-white py-2 px-4 rounded-lg">Print Receipt</button>
+                        <button onclick="window.print()" class="no-print mt-4 bg-primary-500 text-white py-2 px-4 rounded-lg">Print Receipt</button>
                     </div>
                     <div class="border-t pt-4 mt-8 text-center text-xs text-gray-400">
                         <p class="font-semibold">Earn Halal</p>
@@ -170,16 +170,16 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-1 space-y-6">
-        <div className="bg-gradient-to-br from-teal-500 to-primary-600 p-6 rounded-xl shadow-md text-center text-white">
+        <div className="bg-gradient-to-br from-primary-600 to-accent-600 p-6 rounded-xl shadow-md text-center text-white">
             <p className="text-white/80">Current Balance</p>
             <p className="text-4xl font-bold my-2">{balance.toFixed(2)} Rs</p>
         </div>
         
         {!hasPin && (
-            <div className="bg-teal-50 dark:bg-slate-700/50 p-4 rounded-xl shadow-md text-center">
-                <h4 className="font-bold text-teal-800 dark:text-teal-200">Enhance Your Security</h4>
-                <p className="text-sm text-teal-700 dark:text-teal-300 my-2">Protect your wallet with a 4-digit PIN for withdrawals and access.</p>
-                <button onClick={onSetupPin} className="bg-teal-500 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-teal-600">
+            <div className="bg-primary-50 dark:bg-slate-700/50 p-4 rounded-xl shadow-md text-center">
+                <h4 className="font-bold text-primary-800 dark:text-primary-200">Enhance Your Security</h4>
+                <p className="text-sm text-primary-700 dark:text-primary-300 my-2">Protect your wallet with a 4-digit PIN for withdrawals and access.</p>
+                <button onClick={onSetupPin} className="bg-primary-500 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary-600">
                     Set Up PIN
                 </button>
             </div>
@@ -192,7 +192,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Method</label>
                     <div className="mt-2 grid grid-cols-3 gap-2 rounded-lg bg-slate-100 dark:bg-slate-900 p-1">
                         {(['JazzCash', 'EasyPaisa', 'Bank Transfer'] as Method[]).map(m => (
-                            <button key={m} onClick={() => setMethod(m)} className={`px-2 py-2 text-sm font-semibold rounded-md transition-colors ${method === m ? 'bg-teal-500 text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'}`}>
+                            <button key={m} onClick={() => setMethod(m)} className={`px-2 py-2 text-sm font-semibold rounded-md transition-colors ${method === m ? 'bg-primary-500 text-white shadow' : 'text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'}`}>
                                 {m}
                             </button>
                         ))}
@@ -216,7 +216,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
                         <input type="text" id="bankName" value={bankName} onChange={e => setBankName(e.target.value)} className="mt-1 block w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., HBL" />
                     </div>
                 )}
-                <button onClick={handleWithdraw} className="w-full bg-teal-600 text-white py-3 rounded-lg font-semibold hover:bg-teal-700">
+                <button onClick={handleWithdraw} className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700">
                     Submit Request
                 </button>
                 {message && <p className={`text-sm text-center mt-2 ${message.includes('submitted') ? 'text-green-600' : 'text-red-500'}`}>{message}</p>}
@@ -241,7 +241,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, transactions, username
                         </div>
                          {tx.type === TransactionType.WITHDRAWAL && tx.withdrawalDetails && (
                             <div className="text-right mt-1">
-                                <button onClick={() => handleDownloadReceipt(tx)} className="text-xs font-semibold text-teal-600 dark:text-teal-400 hover:underline">
+                                <button onClick={() => handleDownloadReceipt(tx)} className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">
                                     Download Receipt
                                 </button>
                             </div>

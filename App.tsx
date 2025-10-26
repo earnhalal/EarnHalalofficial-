@@ -22,6 +22,7 @@ import DepositView from './components/DepositView';
 import SpinWheelView from './components/SpinWheelView';
 import PinLockView from './components/PinLockView';
 import AIAgentChatbot from './components/AIAgentChatbot';
+import WelcomeModal from './components/WelcomeModal';
 
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails } from './types';
@@ -138,6 +139,8 @@ const App: React.FC = () => {
     const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
     const [referrals, setReferrals] = useState<{ level1: number; level2: number; }>({level1: 0, level2: 0});
     const [savedWithdrawalDetails, setSavedWithdrawalDetails] = useState<WithdrawalDetails | null>(null);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
 
     // Security State
     const [walletPin, setWalletPin] = useState<string | null>(null); // 'null': not set, 'SKIPPED': skipped, '1234': pin is set
@@ -306,6 +309,8 @@ const App: React.FC = () => {
                     const verifiedUsers = allUsersNow.map(u => u.username === verifiedProfile.username ? verifiedProfile : u);
                     localStorage.setItem('earnHalalUsers', JSON.stringify(verifiedUsers));
                     
+                    setShowWelcomeModal(true);
+
                     // Initialize user's financial state properly upon verification.
                     const feeTransaction: Transaction = {
                         id: `tx_${Date.now()}`,
@@ -560,24 +565,30 @@ const App: React.FC = () => {
     // --- RENDER LOGIC ---
     const renderContent = () => {
         if (!userProfile) return null;
-        switch (view) {
-            case 'DASHBOARD': return <DashboardView balance={balance} tasksCompleted={tasksCompletedCount} referrals={referrals.level1} setActiveView={handleSetActiveView} transactions={transactions} onSimulateNewTask={simulateNewTaskNotification} />;
-            case 'EARN': return <EarnView tasks={availableTasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={completedTaskIds} />;
-            case 'SPIN_WHEEL': return <SpinWheelView onWin={handleSpinWin} balance={balance} onBuySpin={handleBuySpin} />;
-            case 'WALLET': return <WalletView balance={balance} transactions={transactions} onWithdraw={handleWithdraw} username={userProfile.username} savedDetails={savedWithdrawalDetails} hasPin={!!walletPin} onSetupPin={() => setShowPinModal('set')} />;
-            case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
-            case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
-            case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
-            case 'INVITE': return <InviteView referrals={referrals} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} />;
-            case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} />;
-            case 'HOW_IT_WORKS': return <HowItWorksView />;
-            case 'ABOUT_US': return <AboutUsView />;
-            case 'CONTACT_US': return <ContactUsView />;
-            case 'PRIVACY_POLICY': return <PrivacyPolicyView />;
-            case 'TERMS_CONDITIONS': return <TermsAndConditionsView />;
-            case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} appliedJobIds={appliedJobIds} />;
-            default: return <DashboardView balance={balance} tasksCompleted={0} referrals={0} setActiveView={handleSetActiveView} transactions={[]} onSimulateNewTask={() => {}} />;
-        }
+        return (
+             <div key={view} className="animate-fade-in">
+                {(() => {
+                    switch (view) {
+                        case 'DASHBOARD': return <DashboardView balance={balance} tasksCompleted={tasksCompletedCount} referrals={referrals.level1} setActiveView={handleSetActiveView} transactions={transactions} onSimulateNewTask={simulateNewTaskNotification} />;
+                        case 'EARN': return <EarnView tasks={availableTasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={completedTaskIds} />;
+                        case 'SPIN_WHEEL': return <SpinWheelView onWin={handleSpinWin} balance={balance} onBuySpin={handleBuySpin} />;
+                        case 'WALLET': return <WalletView balance={balance} transactions={transactions} onWithdraw={handleWithdraw} username={userProfile.username} savedDetails={savedWithdrawalDetails} hasPin={!!walletPin} onSetupPin={() => setShowPinModal('set')} />;
+                        case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
+                        case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
+                        case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
+                        case 'INVITE': return <InviteView referrals={referrals} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} />;
+                        case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} />;
+                        case 'HOW_IT_WORKS': return <HowItWorksView />;
+                        case 'ABOUT_US': return <AboutUsView />;
+                        case 'CONTACT_US': return <ContactUsView />;
+                        case 'PRIVACY_POLICY': return <PrivacyPolicyView />;
+                        case 'TERMS_CONDITIONS': return <TermsAndConditionsView />;
+                        case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} appliedJobIds={appliedJobIds} />;
+                        default: return <DashboardView balance={balance} tasksCompleted={0} referrals={0} setActiveView={handleSetActiveView} transactions={[]} onSimulateNewTask={() => {}} />;
+                    }
+                })()}
+            </div>
+        )
     };
     
     if (showLanding && !userProfile) {
@@ -598,6 +609,7 @@ const App: React.FC = () => {
 
     return (
         <div className="bg-slate-100 dark:bg-slate-900 min-h-screen font-sans flex">
+            {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
             {showPinModal && (
                 <PinLockView 
                     mode={showPinModal}

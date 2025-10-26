@@ -19,7 +19,7 @@ const NavItem: React.FC<{
     onClick={onClick}
     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group ${
       isActive
-        ? 'bg-gradient-to-r from-teal-500 to-primary-500 text-white shadow-lg'
+        ? 'bg-gradient-to-r from-accent-500 to-primary-500 text-white shadow-lg'
         : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
     }`}
   >
@@ -60,8 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
            <svg className="w-10 h-10" viewBox="0 0 24 24" fill="url(#logo-gradient)">
             <defs>
               <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{stopColor: 'rgb(20 184 166)'}} />
-                <stop offset="100%" style={{stopColor: 'rgb(14 165 233)'}} />
+                <stop offset="0%" style={{stopColor: 'rgb(219 39 119)'}} />
+                <stop offset="100%" style={{stopColor: 'rgb(139 92 246)'}} />
               </linearGradient>
             </defs>
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>

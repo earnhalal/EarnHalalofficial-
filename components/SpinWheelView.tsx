@@ -15,17 +15,20 @@ const WinAnimation: React.FC<{ prize: number; onAnimationEnd: () => void; }> = (
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="absolute inset-0 overflow-hidden">
-                {Array.from({ length: 50 }).map((_, i) => (
+                {Array.from({ length: 100 }).map((_, i) => (
                     <div
                         key={i}
-                        className="absolute rounded-full animate-fall bg-gradient-to-br from-amber-300 to-amber-500"
+                        className="absolute rounded-full animate-fall bg-gradient-to-br"
                         style={{
                             width: `${Math.random() * 10 + 5}px`,
                             height: `${Math.random() * 10 + 5}px`,
                             left: `${Math.random() * 100}%`,
                             animationDelay: `${Math.random() * 4}s`,
                             animationDuration: `${Math.random() * 3 + 3}s`,
-                            opacity: Math.random()
+                            opacity: Math.random(),
+                            '--color-from': i % 3 === 0 ? '#fde047' : (i % 3 === 1 ? '#f472b6' : '#a78bfa'),
+                            '--color-to': i % 3 === 0 ? '#fbbf24' : (i % 3 === 1 ? '#ec4899' : '#8b5cf6'),
+                            backgroundImage: `linear-gradient(to bottom right, var(--color-from), var(--color-to))`
                         }}
                     ></div>
                 ))}
@@ -195,7 +198,7 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
         }, 5000); // Animation duration
     };
     
-    const segmentColors = ['#0d9488', '#f59e0b', '#be185d', '#0d9488', '#f59e0b', '#be185d', '#0d9488', '#f59e0b']; // Teal, Gold, Magenta theme
+    const segmentColors = ['#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b']; // primary-700, amber-500, accent-600
 
     return (
       <div className="flex flex-col items-center justify-center p-4 text-center">
@@ -264,7 +267,7 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-200 rounded-full"></div>
             </div>
              {/* Center Hub */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-full border-8 border-white dark:border-slate-600 z-10 flex items-center justify-center font-bold text-teal-600 shadow-inner">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-full border-8 border-white dark:border-slate-600 z-10 flex items-center justify-center font-bold text-primary-600 shadow-inner">
                 SPIN
             </div>
         </div>
@@ -280,7 +283,7 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
             <button
                 onClick={() => handleSpin(false)}
                 disabled={isSpinning || balance < 5}
-                className="flex-1 px-8 py-4 bg-gradient-to-br from-teal-500 to-primary-600 text-white font-bold text-xl rounded-full hover:from-teal-600 hover:to-primary-700 transition-all transform hover:scale-105 shadow-lg disabled:bg-slate-400 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed disabled:scale-100"
+                className="flex-1 px-8 py-4 bg-gradient-to-br from-accent-500 to-primary-600 text-white font-bold text-xl rounded-full hover:from-accent-600 hover:to-primary-700 transition-all transform hover:scale-105 shadow-lg disabled:bg-slate-400 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed disabled:scale-100"
             >
                 Buy Spin (5 Rs)
             </button>

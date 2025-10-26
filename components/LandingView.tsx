@@ -71,69 +71,70 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   }, []);
 
   return (
-    <div className="bg-white dark:bg-gray-900">
+    <div className="bg-white dark:bg-slate-900 relative">
+       <div className="absolute inset-0 bg-gradient-to-br from-primary-500/10 via-transparent to-accent-500/10 dark:from-primary-900/20 dark:to-accent-900/20 animate-background-pan"></div>
+
       <div
-        className={`fixed bottom-4 left-4 z-50 flex items-center gap-4 bg-gray-800/90 dark:bg-gray-900/90 backdrop-blur-sm text-white p-4 rounded-xl shadow-lg transition-transform duration-500 ease-in-out ${
+        className={`fixed bottom-4 left-4 z-50 flex items-center gap-4 bg-slate-800/90 dark:bg-slate-900/90 backdrop-blur-sm text-white p-4 rounded-xl shadow-lg transition-transform duration-500 ease-in-out ${
           isFeedVisible ? 'translate-x-0' : '-translate-x-[150%]'
         }`}
       >
         <CheckCircleIcon className="w-8 h-8 text-green-400 shrink-0" />
         <div>
           <p className="font-bold">{liveFeed?.name}</p>
-          <p className="text-sm text-gray-300">
+          <p className="text-sm text-slate-300">
             has successfully withdrawn{' '}
             <span className="font-bold text-green-400">{liveFeed?.amount} Rs</span>
           </p>
         </div>
       </div>
 
-
-      <div className="container mx-auto px-6 py-16 text-center">
+      <div className="relative container mx-auto px-6 py-16 text-center">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-gray-800 dark:text-white leading-tight">
-            Welcome to <span className="text-primary-500">Earn Halal</span>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-800 dark:text-white leading-tight">
+            Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent-500 to-primary-500">Earn Halal</span>
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-gray-600 dark:text-gray-300">
+          <p className="mt-6 text-lg md:text-xl text-slate-600 dark:text-slate-300">
             The most trusted platform to earn rewards by completing simple online tasks. Join our growing community and start earning today, the Halal way.
           </p>
           <button
             onClick={onGetStarted}
-            className="mt-8 px-8 py-4 bg-primary-600 text-white font-bold rounded-full hover:bg-primary-700 transition-transform transform hover:scale-105 shadow-lg text-lg"
+            className="mt-8 px-8 py-4 bg-gradient-to-r from-accent-500 to-primary-500 text-white font-bold rounded-full hover:shadow-xl transition-all transform hover:scale-105 shadow-lg text-lg"
           >
             Get Started Now
           </button>
         </div>
       </div>
 
-      <div className="bg-gray-50 dark:bg-gray-800 py-12">
+      <div className="bg-slate-50 dark:bg-slate-800/50 py-12 relative">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row items-center justify-center space-y-8 md:space-y-0 md:space-x-12">
             <div className="text-center">
-              <p className="text-5xl font-extrabold text-primary-500" style={{ textShadow: '0px 2px 4px rgba(99, 102, 241, 0.2)' }}>
+              <p className="text-5xl font-extrabold text-primary-500">
                 {displayCount.toLocaleString()}
               </p>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">Happy Users Joined</p>
+              <p className="text-slate-600 dark:text-slate-300 mt-2 text-lg">Happy Users Joined</p>
             </div>
             <div className="text-center">
-              <p className="text-5xl font-extrabold text-primary-500" style={{ textShadow: '0px 2px 4px rgba(99, 102, 241, 0.2)' }}>100%</p>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">Verified Tasks</p>
+              <p className="text-5xl font-extrabold text-primary-500">100%</p>
+              <p className="text-slate-600 dark:text-slate-300 mt-2 text-lg">Verified Tasks</p>
             </div>
              <div className="text-center">
-              <p className="text-5xl font-extrabold text-primary-500" style={{ textShadow: '0px 2px 4px rgba(99, 102, 241, 0.2)' }}>24/7</p>
-              <p className="text-gray-600 dark:text-gray-300 mt-2 text-lg">Support</p>
+              <p className="text-5xl font-extrabold text-primary-500">24/7</p>
+              <p className="text-slate-600 dark:text-slate-300 mt-2 text-lg">Support</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="py-16">
+      <div className="py-16 relative">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8">Our Trusted Partners</h2>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-8">Our Trusted Partners</h2>
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            <span className="text-gray-400 dark:text-gray-500 text-2xl font-semibold">PARTNER A</span>
-            <span className="text-gray-400 dark:text-gray-500 text-2xl font-semibold">PARTNER B</span>
-            <span className="text-gray-400 dark:text-gray-500 text-2xl font-semibold">PARTNER C</span>
-            <span className="text-gray-400 dark:text-gray-500 text-2xl font-semibold">PARTNER D</span>
+            <span className="text-slate-400 dark:text-slate-500 text-2xl font-semibold">PARTNER A</span>
+            <span className="text-slate-400 dark:text-slate-500 text-2xl font-semibold">PARTNER B</span>
+            <span className="text-slate-400 dark:text-slate-500 text-2xl font-semibold">PARTNER C</span>
+            <span className="text-slate-400 dark:text-slate-500 text-2xl font-semibold">PARTNER D</span>
           </div>
         </div>
       </div>

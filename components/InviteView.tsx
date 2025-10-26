@@ -39,7 +39,7 @@ const InviteView: React.FC<InviteViewProps> = ({ referrals, referralEarnings, on
   return (
     <div className="space-y-8">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-primary-600 to-green-500 p-8 rounded-2xl shadow-2xl text-white text-center relative overflow-hidden">
+        <div className="bg-gradient-to-br from-primary-600 to-accent-500 p-8 rounded-2xl shadow-2xl text-white text-center relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
             <div className="absolute -bottom-16 -left-12 w-52 h-52 bg-white/10 rounded-full"></div>
             <InviteIcon className="w-20 h-20 mx-auto text-white/80 mb-4" />
