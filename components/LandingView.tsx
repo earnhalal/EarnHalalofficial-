@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EarnIcon, InviteIcon, GiftIcon, SparklesIcon, CheckCircleIcon, WalletIcon, BankIcon } from './icons';
+import { EarnIcon, InviteIcon, GiftIcon, SparklesIcon, CheckCircleIcon, WalletIcon, BankIcon, MenuIcon, CloseIcon, DocumentTextIcon, InfoIcon, RefundIcon, DisclaimerIcon } from './icons';
+import { InfoModal, renderModalContent } from './LandingInfoViews';
 
 interface LandingViewProps {
   onGetStarted: () => void;
@@ -14,7 +15,9 @@ const useOnScreen = (ref: React.RefObject<HTMLElement>, rootMargin = '0px') => {
             ([entry]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
-                    observer.unobserve(entry.target);
+                } else {
+                    // Set to false when it goes off-screen to allow re-triggering animation
+                    setIsVisible(false);
                 }
             },
             { rootMargin }
@@ -34,44 +37,55 @@ const useOnScreen = (ref: React.RefObject<HTMLElement>, rootMargin = '0px') => {
     return isVisible;
 };
 
-// Custom hook for animating numbers
-const useCountUp = (endValue: number, duration: number, isVisible: boolean) => {
+// Custom hook for animating numbers with continuous updates
+const useAnimatedCounter = (targetValue: number, isVisible: boolean, duration: number = 2500) => {
     const [count, setCount] = useState(0);
     const frameRef = useRef<number | null>(null);
-    const startTimestampRef = useRef<number | null>(null);
+    const prevTargetValue = useRef<number>(0);
+    const initialAnimationDone = useRef(false);
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!isVisible) {
+            setCount(0);
+            initialAnimationDone.current = false;
+            prevTargetValue.current = 0;
+            return;
+        }
+
+        const startValue = initialAnimationDone.current ? prevTargetValue.current : 0;
+        const animationDuration = initialAnimationDone.current ? 1000 : duration;
+        let startTimestamp: number | null = null;
 
         const step = (timestamp: number) => {
-            if (!startTimestampRef.current) {
-                startTimestampRef.current = timestamp;
-            }
-            const progress = Math.min((timestamp - startTimestampRef.current) / duration, 1);
-            const currentCount = Math.floor(progress * endValue);
-            setCount(currentCount);
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / animationDuration, 1);
+            const newCount = Math.floor(startValue + (targetValue - startValue) * progress);
+            setCount(newCount);
 
             if (progress < 1) {
                 frameRef.current = requestAnimationFrame(step);
+            } else {
+                if (!initialAnimationDone.current) initialAnimationDone.current = true;
+                prevTargetValue.current = targetValue;
             }
         };
 
+        if (frameRef.current) cancelAnimationFrame(frameRef.current);
         frameRef.current = requestAnimationFrame(step);
 
         return () => {
-            if (frameRef.current) {
-                cancelAnimationFrame(frameRef.current);
-            }
+            if (frameRef.current) cancelAnimationFrame(frameRef.current);
         };
-    }, [endValue, duration, isVisible]);
+    }, [targetValue, isVisible, duration]);
 
     return count;
 };
 
+
 const AnimatedStatCard: React.FC<{ title: string; value: number; prefix?: string; suffix?: string; icon: React.ReactNode; animationDelay: string; }> = ({ title, value, prefix = '', suffix = '', icon, animationDelay }) => {
     const ref = useRef<HTMLDivElement>(null);
     const isVisible = useOnScreen(ref);
-    const count = useCountUp(value, 2500, isVisible);
+    const count = useAnimatedCounter(value, isVisible, 2500);
 
     return (
       <div ref={ref} className="relative p-6 rounded-2xl bg-white/5 backdrop-blur-md border border-green-400/20 shadow-lg text-center transition-all duration-300 hover:border-green-400/50 hover:shadow-green-500/10 animate-fade-in-up" style={{ animationDelay }}>
@@ -151,9 +165,46 @@ const RefLinkLogo: React.FC = () => (
     </svg>
 );
 
+const MenuItem: React.FC<{icon: React.ReactNode; children: React.ReactNode; onClick: () => void;}> = ({ icon, children, onClick }) => (
+    <button onClick={onClick} className="w-full flex items-center gap-4 px-4 py-3 text-lg text-slate-300 hover:text-amber-400 hover:bg-white/5 rounded-lg transition-colors">
+        <span className="text-amber-400/80">{icon}</span>
+        <span>{children}</span>
+    </button>
+);
+
+
 const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null);
   
+  const [activeUsers, setActiveUsers] = useState(11512);
+  const [rewardsDistributed, setRewardsDistributed] = useState(245784);
+  const [tasksCompleted, setTasksCompleted] = useState(3773);
+
+  useEffect(() => {
+    // Active users: every 15s
+    const usersInterval = setInterval(() => {
+        setActiveUsers(prev => prev + Math.floor(Math.random() * 3) + 1);
+    }, 15000);
+
+    // Rewards distributed: every ~8s
+    const rewardsInterval = setInterval(() => {
+        setRewardsDistributed(prev => prev + Math.floor(Math.random() * 9501) + 500);
+    }, 8000);
+
+    // Tasks completed: every 10s
+    const tasksInterval = setInterval(() => {
+        setTasksCompleted(prev => prev + Math.floor(Math.random() * 12) + 1);
+    }, 10000);
+
+    return () => {
+        clearInterval(usersInterval);
+        clearInterval(rewardsInterval);
+        clearInterval(tasksInterval);
+    };
+  }, []);
+
   const partners = [
     { name: 'PayEase Wallet', logo: <PayEaseLogo /> },
     { name: 'TaskBlitz Global', logo: <TaskBlitzLogo /> },
@@ -164,6 +215,40 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
     { name: 'Boostly Media', logo: <BoostlyMediaLogo /> },
     { name: 'RefLink Network', logo: <RefLinkLogo /> },
   ];
+  
+  const navLinks = [
+    { name: 'Home', href: '#' },
+    { name: 'Tasks', href: '#' },
+    { name: 'Refer & Earn', href: '#' },
+    { name: 'Withdraw', href: '#' },
+    { name: 'Support', href: '#' },
+  ];
+
+  const handleMenuLinkClick = (modalKey: string) => {
+    setActiveInfoModal(modalKey);
+    setIsMenuOpen(false);
+  };
+
+  const handleAuthClick = () => {
+      onGetStarted();
+      setIsMenuOpen(false);
+  }
+
+  const getModalTitle = (modalKey: string): string => {
+      switch (modalKey) {
+          case 'how-it-works': return 'How It Works';
+          case 'about': return 'About Us';
+          case 'support': return 'Support & Contact';
+          case 'privacy': return 'Privacy Policy';
+          case 'terms': return 'Terms & Conditions';
+          case 'withdrawal': return 'Withdrawal Details';
+          case 'deposit': return 'Deposit Information';
+          case 'refund': return 'Refund Policy';
+          case 'disclaimer': return 'Disclaimer';
+          default: return 'Information';
+      }
+  }
+
 
   return (
     <>
@@ -198,6 +283,13 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         @keyframes scroll {
           0% { transform: translateX(0); }
           100% { transform: translateX(-100%); }
+        }
+        @keyframes soft-pulse {
+            0%, 100% { transform: translateY(0); opacity: 0.8; }
+            50% { transform: translateY(5px); opacity: 1; }
+        }
+        .animate-soft-pulse {
+            animation: soft-pulse 2s infinite ease-in-out;
         }
       `}</style>
       
@@ -250,10 +342,65 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
           ))}
         </div>
         
+        {/* Sticky Navigation Bar */}
+        <header className="sticky top-0 z-40 bg-[#0a192f]/80 backdrop-blur-md border-b border-amber-400/10 transition-all duration-300">
+            <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
+                <a href="#" className="text-2xl font-bold text-amber-400 transition-all hover:text-amber-300" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.5))' }}>Earn Halal</a>
+                <div className="hidden md:flex items-center space-x-8">
+                    {navLinks.map(link => (
+                        <a key={link.name} href={link.href} className="text-slate-300 hover:text-amber-400 transition-colors font-medium">{link.name}</a>
+                    ))}
+                    <button onClick={onGetStarted} className="px-5 py-2 bg-amber-500/10 border border-amber-400 text-amber-400 font-semibold rounded-lg hover:bg-amber-400 hover:text-slate-900 transition-all">Login</button>
+                </div>
+                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-300 hover:text-amber-400 z-50">
+                    {isMenuOpen ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
+                </button>
+            </nav>
+        </header>
+        
+        {/* Mobile Menu */}
+        <div className={`fixed top-0 left-0 w-full h-full bg-[#0a192f] z-30 transition-transform duration-300 ease-in-out md:hidden flex flex-col ${isMenuOpen ? 'translate-y-0' : '-translate-y-full'}`}>
+            <div className="flex-shrink-0 container mx-auto px-6 py-4 flex justify-between items-center border-b border-amber-400/10">
+                <span className="text-2xl font-bold text-amber-400">Menu</span>
+                <button onClick={() => setIsMenuOpen(false)} className="text-slate-300 hover:text-amber-400 z-50">
+                    <CloseIcon className="w-7 h-7" />
+                </button>
+            </div>
+            <div className="flex-grow overflow-y-auto">
+                <div className="container mx-auto px-6 py-8 flex flex-col space-y-2">
+                    <button onClick={handleAuthClick} className="w-full px-5 py-3 bg-amber-500/10 border border-amber-400 text-amber-400 font-semibold rounded-lg hover:bg-amber-400 hover:text-slate-900 transition-all text-left text-lg">
+                        Login / Signup
+                    </button>
+
+                    <div className="pt-6">
+                        <h4 className="px-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">Information</h4>
+                        <div className="mt-2 space-y-1">
+                            <MenuItem icon={<InfoIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('how-it-works')}>How It Works</MenuItem>
+                            <MenuItem icon={<WalletIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('withdrawal')}>Withdrawal Details</MenuItem>
+                            <MenuItem icon={<BankIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('deposit')}>Deposit Info</MenuItem>
+                        </div>
+                    </div>
+
+                    <div className="pt-6">
+                        <h4 className="px-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">Legal & Help</h4>
+                        <div className="mt-2 space-y-1">
+                            <MenuItem icon={<InfoIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('about')}>About Us</MenuItem>
+                            <MenuItem icon={<InfoIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('support')}>Support</MenuItem>
+                            <MenuItem icon={<DocumentTextIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('terms')}>Terms & Conditions</MenuItem>
+                            <MenuItem icon={<DocumentTextIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('privacy')}>Privacy Policy</MenuItem>
+                            <MenuItem icon={<RefundIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('refund')}>Refund Policy</MenuItem>
+                            <MenuItem icon={<DisclaimerIcon className="w-6 h-6"/>} onClick={() => handleMenuLinkClick('disclaimer')}>Disclaimer</MenuItem>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
         {/* Main Content */}
         <div className="relative z-10">
           {/* Hero Section */}
-          <div className="container mx-auto px-6 py-24 md:py-32 text-center">
+          <div className="container mx-auto px-6 pt-20 pb-12 md:pt-24 md:pb-16 text-center">
             <div className="max-w-4xl mx-auto">
               <div className="animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                 <h1 className="text-4xl md:text-6xl font-extrabold leading-tight" style={{ textShadow: '0 3px 15px rgba(0,0,0,0.2)' }}>
@@ -279,23 +426,29 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                   Get Started Now
                 </button>
               </div>
+              <div className="mt-12 animate-fade-in-up animate-soft-pulse" style={{ animationDelay: '0.6s' }}>
+                    <a href="#stats" className="text-slate-400 hover:text-amber-400 transition-colors flex flex-col items-center space-y-1 group">
+                       <svg className="w-6 h-6 group-hover:translate-y-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                        <span className="text-xs font-semibold tracking-widest uppercase">Scroll to explore</span>
+                    </a>
+                </div>
             </div>
           </div>
           
           {/* Live Stats Section */}
-          <div className="py-20 bg-slate-900/20">
+          <div id="stats" className="py-20 bg-slate-900/20">
             <div className="container mx-auto px-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <AnimatedStatCard 
                       title="Active Users" 
-                      value={11512} 
+                      value={activeUsers} 
                       suffix="+"
                       icon={<InviteIcon className="w-10 h-10 text-green-400/80 mx-auto" />} 
                       animationDelay="0.6s"
                   />
                   <AnimatedStatCard 
                       title="Total Rewards Distributed" 
-                      value={2870000}
+                      value={rewardsDistributed}
                       prefix="PKR "
                       suffix="+"
                       icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-green-400/80 mx-auto" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.75A.75.75 0 0 1 3 4.5h.75m0 0h.75A.75.75 0 0 1 5.25 6v.75m0 0h-.75A.75.75 0 0 1 3.75 6v-.75m0 0V4.5m-1.5 1.5v.75A.75.75 0 0 0 3 6.75h.75m0 0v.75A.75.75 0 0 0 4.5 8.25h.75M6 12h12M6 12v6h12v-6" /></svg>}
@@ -303,7 +456,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                   />
                   <AnimatedStatCard 
                       title="Tasks Completed" 
-                      value={95000}
+                      value={tasksCompleted}
                       suffix="+"
                       icon={<CheckCircleIcon className="w-10 h-10 text-green-400/80 mx-auto" />} 
                       animationDelay="0.8s"
@@ -408,6 +561,11 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
           </footer>
         </div>
       </div>
+      {activeInfoModal && (
+          <InfoModal title={getModalTitle(activeInfoModal)} onClose={() => setActiveInfoModal(null)}>
+              {renderModalContent(activeInfoModal)}
+          </InfoModal>
+      )}
     </>
   );
 };

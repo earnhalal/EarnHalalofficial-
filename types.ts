@@ -31,7 +31,7 @@ export enum TransactionType {
 }
 
 export interface WithdrawalDetails {
-  method: 'JazzCash' | 'EasyPaisa' | 'Bank Transfer';
+  method: 'JazzCash' | 'EasyPaisa' | 'Bank Transfer' | 'NayaPay' | 'SadaPay' | 'UPaisa';
   accountName: string;
   accountNumber: string;
   bankName?: string;
@@ -44,6 +44,7 @@ export interface Transaction {
   amount: number;
   date: string;
   withdrawalDetails?: WithdrawalDetails;
+  status?: 'Completed' | 'Pending' | 'Failed';
 }
 
 export enum TaskType {

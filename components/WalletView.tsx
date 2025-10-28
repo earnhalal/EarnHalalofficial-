@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import type { Transaction, WithdrawalDetails } from '../types';
 import { TransactionType } from '../types';
-import { WalletIcon, CheckCircleIcon } from './icons';
+import {
+  WalletIcon, CheckCircleIcon, PencilSquareIcon, BankIcon, NayaPayIcon,
+  SadaPayIcon, UPaisaIcon, JazzCashIcon, EasyPaisaIcon
+} from './icons';
 
 interface WalletViewProps {
   balance: number;
@@ -15,28 +18,50 @@ interface WalletViewProps {
   onSetupPin: () => void;
 }
 
-type Method = 'JazzCash' | 'EasyPaisa' | 'Bank Transfer';
+type Method = 'JazzCash' | 'EasyPaisa' | 'Bank Transfer' | 'NayaPay' | 'SadaPay' | 'UPaisa';
+
+const paymentMethods: { id: Method; name: string; icon: React.ReactNode }[] = [
+    { id: 'JazzCash', name: 'JazzCash', icon: <JazzCashIcon className="w-8 h-8"/> },
+    { id: 'EasyPaisa', name: 'EasyPaisa', icon: <EasyPaisaIcon className="w-8 h-8"/> },
+    { id: 'NayaPay', name: 'NayaPay', icon: <NayaPayIcon className="w-8 h-8"/> },
+    { id: 'SadaPay', name: 'SadaPay', icon: <SadaPayIcon className="w-8 h-8"/> },
+    { id: 'UPaisa', name: 'UPaisa', icon: <UPaisaIcon className="w-8 h-8"/> },
+    { id: 'Bank Transfer', name: 'Bank Transfer', icon: <BankIcon className="w-8 h-8"/> },
+];
 
 const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin }) => {
   const [amount, setAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<Method | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<Method | null>(savedDetails?.method || null);
   const [accountName, setAccountName] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [bankName, setBankName] = useState('');
   const [message, setMessage] = useState('');
-  
+  const [isEditingDetails, setIsEditingDetails] = useState(!savedDetails);
+
   useEffect(() => {
-      if (savedDetails) {
+      if (savedDetails && !isEditingDetails) {
+          setSelectedMethod(savedDetails.method);
           setAccountName(savedDetails.accountName);
           setAccountNumber(savedDetails.accountNumber);
           setBankName(savedDetails.bankName || '');
+      } else if (isEditingDetails) {
+          // Clear form if user wants to enter new details
+          setAccountName('');
+          setAccountNumber('');
+          setBankName('');
       }
-  }, [savedDetails]);
+  }, [savedDetails, isEditingDetails]);
+  
+  const handleUseDifferentAccount = () => {
+    setIsEditingDetails(true);
+    setSelectedMethod(null); // Force user to re-select method
+    setMessage('');
+  };
 
   const handleMethodSelect = (method: Method) => {
     setSelectedMethod(method);
     setMessage('');
-  }
+  };
 
   const handleWithdraw = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,15 +71,23 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
       setMessage('Please enter a valid amount.');
       return;
     }
+    if (numAmount < 100) {
+      setMessage('Minimum withdrawal amount is 100 Rs.');
+      return;
+    }
     if (numAmount > balance) {
       setMessage('Insufficient balance.');
       return;
     }
-    if (!accountName || !accountNumber || !selectedMethod) {
-        setMessage('Account details are required.');
+    if (!selectedMethod) {
+      setMessage('Please select a withdrawal method.');
+      return;
+    }
+    if (!accountName || !accountNumber) {
+        setMessage('Account name and number are required.');
         return;
     }
-     if (selectedMethod === 'Bank Transfer' && !bankName) {
+    if (selectedMethod === 'Bank Transfer' && !bankName) {
         setMessage('Bank name is required for bank transfers.');
         return;
     }
@@ -67,25 +100,80 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
     };
 
     onWithdraw(numAmount, details);
-    setMessage(`Withdrawal request for ${numAmount.toFixed(2)} Rs submitted.`);
+    setMessage(`Withdrawal request for ${numAmount.toFixed(2)} Rs has been submitted and is now pending.`);
     setAmount('');
-    // Optionally clear form or keep details
+    setIsEditingDetails(false); // After withdrawal, lock in the details as "saved"
   };
   
-  const getTransactionColor = (type: TransactionType) => {
-    // ... (same as before)
-  }
-  
-  // ... (handleDownloadReceipt logic is unchanged)
-  const handleDownloadReceipt = (tx: Transaction) => {
-    // This function can remain as it is.
-  };
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-2">
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">Request a Withdrawal</h2>
+            
+            {savedDetails && !isEditingDetails ? (
+                 <div className="mb-6 p-4 bg-primary-50 dark:bg-slate-700/50 rounded-xl border border-primary-200 dark:border-slate-600">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200 mb-2">Using Saved Account:</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-300"><strong>Method:</strong> {savedDetails.method}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300"><strong>Name:</strong> {savedDetails.accountName}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-300"><strong>Number:</strong> {savedDetails.accountNumber}</p>
+                    {savedDetails.bankName && <p className="text-sm text-slate-600 dark:text-slate-300"><strong>Bank:</strong> {savedDetails.bankName}</p>}
+                    <button onClick={handleUseDifferentAccount} className="mt-3 flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
+                        <PencilSquareIcon className="w-4 h-4" /> Use Different Account
+                    </button>
+                </div>
+            ) : (
+                <>
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">1. Select Withdrawal Method</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {paymentMethods.map(({ id, name, icon }) => (
+                                <button
+                                key={id}
+                                onClick={() => handleMethodSelect(id)}
+                                className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
+                                    selectedMethod === id ? 'border-primary-500 bg-primary-50 dark:bg-primary-500/10 shadow-md' : 'border-slate-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-600'
+                                }`}
+                                >
+                                <div className={`${selectedMethod === id ? 'text-primary-600 dark:text-primary-400' : 'text-slate-500 dark:text-slate-400'}`}>{icon}</div>
+                                <span className={`mt-2 font-semibold text-sm ${selectedMethod === id ? 'text-primary-700 dark:text-primary-300' : 'text-slate-700 dark:text-slate-200'}`}>{name}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    {selectedMethod && (
+                        <div className="space-y-4 animate-fade-in">
+                            <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300">2. Enter Account Details for <span className="font-bold text-primary-500">{selectedMethod}</span></h3>
+                            <input type="text" value={accountName} onChange={e => setAccountName(e.target.value)} placeholder="Account Holder Name" className="w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" required />
+                            <input type="text" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number" className="w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" required />
+                            {selectedMethod === 'Bank Transfer' && (
+                                <input type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank Name" className="w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" required />
+                            )}
+                        </div>
+                    )}
+                </>
+            )}
+
+            <form onSubmit={handleWithdraw} className="mt-6 border-t dark:border-slate-700 pt-6">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">3. Enter Amount (Rs)</label>
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        placeholder={`Min 100.00`}
+                        className="flex-grow w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600 text-lg"
+                        required
+                    />
+                    <button type="submit" className="w-full sm:w-auto bg-primary-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-primary-700 transition-colors disabled:bg-slate-400">
+                        Withdraw
+                    </button>
+                </div>
+                 {message && <p className={`mt-4 text-center text-sm ${message.includes('successfully') || message.includes('pending') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{message}</p>}
+            </form>
+        </div>
+      </div>
       <div className="lg:col-span-1 space-y-6">
-        
-        {/* Balance Card */}
         <div className="relative p-6 rounded-2xl shadow-lg text-white bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden">
              <div className="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/10 rounded-full"></div>
              <p className="text-slate-300">Total Balance</p>
@@ -99,7 +187,6 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
              </div>
         </div>
         
-        {/* Security PIN Setup */}
         {!hasPin && (
              <div className="bg-primary-50 dark:bg-slate-700/50 p-4 rounded-xl shadow-md text-center">
                 <h4 className="font-bold text-primary-800 dark:text-primary-200">Enhance Your Security</h4>
@@ -110,72 +197,33 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
             </div>
         )}
 
-        {/* Withdrawal Options */}
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Request Withdrawal</h3>
-            <div className="space-y-3">
-              <button onClick={() => handleMethodSelect('JazzCash')} className={`w-full p-4 rounded-lg border-2 transition-all ${selectedMethod === 'JazzCash' ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-amber-400'}`}>
-                <span className="font-semibold text-slate-700 dark:text-slate-200">Withdraw via JazzCash</span>
-              </button>
-              <button onClick={() => handleMethodSelect('EasyPaisa')} className={`w-full p-4 rounded-lg border-2 transition-all ${selectedMethod === 'EasyPaisa' ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-amber-400'}`}>
-                 <span className="font-semibold text-slate-700 dark:text-slate-200">Withdraw via EasyPaisa</span>
-              </button>
-              <button onClick={() => handleMethodSelect('Bank Transfer')} className={`w-full p-4 rounded-lg border-2 transition-all ${selectedMethod === 'Bank Transfer' ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10' : 'border-slate-200 dark:border-slate-700 hover:border-amber-400'}`}>
-                 <span className="font-semibold text-slate-700 dark:text-slate-200">Withdraw via Bank</span>
-              </button>
-            </div>
-        </div>
-
-        {/* Withdrawal Form */}
-        {selectedMethod && (
-           <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md animate-fade-in">
-              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4">Enter Details for {selectedMethod}</h3>
-              <form onSubmit={handleWithdraw} className="space-y-4">
-                  <div>
-                      <label htmlFor="amount" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Amount (Rs)</label>
-                      <input type="number" id="amount" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., 500" required />
-                  </div>
-                  <div>
-                      <label htmlFor="accountName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Account Holder Name</label>
-                      <input type="text" id="accountName" value={accountName} onChange={e => setAccountName(e.target.value)} className="mt-1 block w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., John Doe" required />
-                  </div>
-                  <div>
-                      <label htmlFor="accountNumber" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Account Number</label>
-                      <input type="text" id="accountNumber" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="mt-1 block w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., 03001234567" required />
-                  </div>
-                  {selectedMethod === 'Bank Transfer' && (
-                      <div>
-                          <label htmlFor="bankName" className="block text-sm font-medium text-slate-700 dark:text-slate-300">Bank Name</label>
-                          <input type="text" id="bankName" value={bankName} onChange={e => setBankName(e.target.value)} className="mt-1 block w-full p-3 border rounded-md dark:bg-slate-700 dark:border-slate-600" placeholder="e.g., HBL" required />
-                      </div>
-                  )}
-                  <button type="submit" className="w-full bg-primary-600 text-white py-3 rounded-lg font-semibold hover:bg-primary-700">
-                      Submit Request
-                  </button>
-                  {message && <p className={`text-sm text-center mt-2 ${message.includes('submitted') ? 'text-green-600' : 'text-red-500'}`}>{message}</p>}
-              </form>
-            </div>
-        )}
-      </div>
-
-      <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 rounded-xl shadow-md">
-        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Transaction History</h3>
-        <div className="space-y-1 max-h-[500px] overflow-y-auto pr-2">
-            {transactions.length > 0 ? (
-                [...transactions].reverse().map(tx => (
-                    <div key={tx.id} className="p-3 rounded-lg transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/50 flex justify-between items-center">
-                        <div>
-                            <p className="font-semibold text-slate-700 dark:text-slate-200">{tx.description}</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(tx.date).toLocaleString()}</p>
-                        </div>
-                        <p className={`font-bold whitespace-nowrap ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                           {tx.amount > 0 ? `+${tx.amount.toFixed(2)}` : tx.amount.toFixed(2)} Rs
-                        </p>
-                    </div>
-                ))
-            ) : (
-                <p className="text-slate-500 dark:text-slate-400 text-center py-4">No transactions yet.</p>
-            )}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
+          <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Transaction History</h3>
+          <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+            {[...transactions].reverse().map(tx => (
+              <div key={tx.id} className="flex justify-between items-center">
+                <div>
+                   <p className="font-semibold text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2 flex-wrap">
+                        <span>{tx.description}</span>
+                        {(tx.type === TransactionType.WITHDRAWAL || tx.type === TransactionType.PENDING_DEPOSIT) && tx.status && (
+                            <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
+                                tx.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' 
+                                : tx.status === 'Failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                            }`}>
+                                {tx.status}
+                            </span>
+                        )}
+                    </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(tx.date).toLocaleString()}</p>
+                </div>
+                <p className={`font-bold text-sm whitespace-nowrap ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                  {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} Rs
+                </p>
+              </div>
+            ))}
+            {transactions.length === 0 && <p className="text-center text-slate-500 dark:text-slate-400 py-4">No transactions yet.</p>}
+          </div>
         </div>
       </div>
     </div>

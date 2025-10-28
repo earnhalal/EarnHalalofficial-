@@ -12,11 +12,11 @@ type Message = {
 
 const TypingIndicator: React.FC = () => (
     <div className="flex justify-start">
-        <div className="px-4 py-2 rounded-2xl bg-gray-200 dark:bg-gray-700 rounded-bl-lg">
+        <div className="px-4 py-2 rounded-2xl bg-slate-200 dark:bg-slate-700 rounded-bl-lg">
             <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-short"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-short delay-150"></div>
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce-short delay-300"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce-short"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce-short delay-150"></div>
+                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce-short delay-300"></div>
             </div>
         </div>
         <style>{`
@@ -46,7 +46,28 @@ const AIAgentChatbot: React.FC = () => {
     const initializeChat = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-            const systemInstruction = `You are a friendly and respectful customer support agent for a web app called 'Earn Halal'. Your name is ${agentName}. You MUST ALWAYS respond in Roman Urdu, naturally mixing in simple English words. Your tone is helpful and polite. Greet the user with 'Assalam o Alaikum' when the conversation starts. Keep answers concise. The app lets users earn by completing tasks, spinning a wheel, and referring friends. Users can create tasks. Withdrawals are via JazzCash/EasyPaisa. User levels and a feature called 'Sky Rain' exist.`;
+            const systemInstruction = `You are a friendly and respectful customer support agent for a web app called 'Earn Halal'. Your name is ${agentName}.
+
+**Core Instructions:**
+1.  **Language:** You MUST ALWAYS respond in Roman Urdu, naturally mixing in simple English words (like 'task', 'withdraw', 'balance').
+2.  **Tone:** Be helpful, polite, and encouraging. Start the first conversation with 'Assalam o Alaikum'. Keep answers concise and to the point.
+3.  **Privacy is CRITICAL:** You must NEVER ask for or share any personal user information like username, email, phone number, password, or financial details. If a user asks for help with their specific account, you MUST direct them to the official support email: support@earnhalal.com. Do not try to solve personal account issues.
+
+**App Knowledge Base:**
+*   **Main Goal:** Users earn money by completing simple online tasks. It is a platform for supplementary income, not a get-rich-quick scheme.
+*   **Earning Methods:**
+    *   **Tasks:** Visit websites, subscribe to YouTube, like Facebook pages, follow on Instagram/TikTok. Found in the 'Earn' section.
+    *   **Spin & Win:** Users get one free spin daily. They can also buy more spins for 5 Rs to win bigger prizes.
+    *   **Referrals:** Two-level system. Level 1 (direct referral) earns the user 20 Rs. Level 2 (friend of a friend) earns the user 5 Rs.
+*   **Creating Tasks:** Users can spend their earnings or deposit money to create their own tasks for others to complete. This is for promoting their own content.
+*   **Wallet & Money:**
+    *   **Joining Fee:** There is a one-time joining fee of 50 Rs to ensure serious users. This is non-refundable.
+    *   **Deposits:** Users can deposit money. Verification can take 1-2 hours.
+    *   **Withdrawals:** Minimum withdrawal is 100 Rs. Supported methods are JazzCash, EasyPaisa, NayaPay, SadaPay, UPaisa, and Bank Transfer. Processing takes 24-48 hours.
+*   **Jobs Feature:**
+    *   This is a separate, premium feature. Users must subscribe to a plan to apply for jobs.
+    *   Plans: Starter (500 Rs, 5 applications/day), Growth (1000 Rs, 15 applications/day), Business & Enterprise (unlimited applications).
+*   **Security:** Users can set a 4-digit PIN for their wallet to secure withdrawals.`;
             
             chatSession.current = ai.chats.create({
                 model: 'gemini-2.5-flash',
@@ -66,7 +87,7 @@ const AIAgentChatbot: React.FC = () => {
                 text: `Assalam o Alaikum 😊 Main ${agentName} hoon, Earn Halal Support se. Kis cheez mein madad chahiye?`,
                 sender: 'bot'
             }]);
-             setSuggestions(['How to complete tasks?', 'How to withdraw?', 'Referral system']);
+             setSuggestions(['Tasks kese karun?', 'Pese kese nikalun?', 'Referral ka system?']);
         }
     }, [isOpen]);
 
@@ -82,7 +103,7 @@ const AIAgentChatbot: React.FC = () => {
         if (!chatSession.current) return;
         try {
              const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-             const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask. Respond with ONLY a valid JSON array of strings. Example: ["How do I withdraw?", "Task rules?", "What is Sky Rain?"]`;
+             const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Sky Rain kia hai?"]`;
              
              const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
@@ -96,7 +117,7 @@ const AIAgentChatbot: React.FC = () => {
              }
         } catch (e) {
             console.error("Failed to generate suggestions:", e);
-            setSuggestions(['How to earn?', 'Withdrawal limit?', 'Tell me more.']);
+            setSuggestions(['Earning methods?', 'Withdrawal limit?', 'Aur batayen.']);
         }
     }
 
@@ -165,13 +186,13 @@ const AIAgentChatbot: React.FC = () => {
                 }
             `}</style>
 
-            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl flex flex-col z-50 ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
-                <div className="flex-shrink-0 p-4 bg-gradient-to-r from-accent-600 to-primary-600 text-white rounded-t-2xl flex items-center justify-between shadow-md">
+            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-slate-800 rounded-2xl shadow-2xl flex flex-col z-50 ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
+                <div className="flex-shrink-0 p-4 bg-gradient-to-r from-amber-600 to-yellow-500 text-white rounded-t-2xl flex items-center justify-between shadow-md">
                     <div>
                         <h3 className="font-bold text-lg">{agentName}</h3>
                         <div className="flex items-center gap-2">
                              <div className="w-2 h-2 bg-green-300 rounded-full"></div>
-                             <p className="text-xs text-primary-200">🟢 Online</p>
+                             <p className="text-xs text-yellow-200">🟢 Online</p>
                         </div>
                     </div>
                     <button onClick={handleToggle} className="text-white hover:bg-white/20 rounded-full p-1 transition-colors">
@@ -179,10 +200,10 @@ const AIAgentChatbot: React.FC = () => {
                     </button>
                 </div>
                 
-                <div className="flex-grow p-4 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 space-y-4">
+                <div className="flex-grow p-4 overflow-y-auto bg-slate-900/50 space-y-4">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`message-bubble max-w-xs md:max-w-md px-4 py-2 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-primary-500 text-white rounded-br-lg' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-lg'}`}>
+                            <div className={`message-bubble max-w-xs md:max-w-md px-4 py-2 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-amber-500 text-white rounded-br-lg' : 'bg-slate-700 text-slate-200 rounded-bl-lg'}`}>
                                 <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                             </div>
                         </div>
@@ -191,11 +212,11 @@ const AIAgentChatbot: React.FC = () => {
                      <div ref={messagesEndRef} />
                 </div>
                 
-                <div className="flex-shrink-0 p-4 border-t dark:border-slate-700 space-y-3">
+                <div className="flex-shrink-0 p-4 border-t border-slate-700 space-y-3">
                     {suggestions.length > 0 && !isLoading && (
                         <div className="flex flex-wrap gap-2 justify-center">
                             {suggestions.map(option => (
-                               <button key={option} onClick={() => handleSendMessage(option)} className="px-3 py-1.5 bg-primary-100 dark:bg-slate-700 text-primary-700 dark:text-slate-200 rounded-full text-sm hover:bg-primary-200 dark:hover:bg-slate-600 transition-colors">
+                               <button key={option} onClick={() => handleSendMessage(option)} className="px-3 py-1.5 bg-slate-700 text-amber-300 rounded-full text-sm hover:bg-slate-600 transition-colors">
                                    {option}
                                </button>
                             ))}
@@ -206,10 +227,10 @@ const AIAgentChatbot: React.FC = () => {
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Type your question..."
-                            className="flex-1 w-full p-2 border border-slate-300 rounded-full shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-slate-700 dark:border-slate-600"
+                            placeholder="Aap ka sawal..."
+                            className="flex-1 w-full p-3 border-2 border-slate-600 rounded-full shadow-sm focus:ring-2 focus:ring-amber-500/80 focus:border-amber-500 bg-slate-700 text-slate-100 placeholder:text-slate-400"
                         />
-                         <button type="submit" className="w-10 h-10 flex items-center justify-center bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors shrink-0">
+                         <button type="submit" className="w-11 h-11 flex items-center justify-center bg-amber-500 text-white rounded-full hover:bg-amber-600 transition-colors shrink-0">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
                         </button>
                     </form>
@@ -218,7 +239,7 @@ const AIAgentChatbot: React.FC = () => {
 
             <button
                 onClick={handleToggle}
-                className={`chatbot-icon fixed bottom-4 right-4 sm:right-6 w-16 h-16 bg-gradient-to-br from-accent-500 to-primary-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 ${!isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}
+                className={`chatbot-icon fixed bottom-4 right-4 sm:right-6 w-16 h-16 bg-gradient-to-br from-amber-500 to-yellow-500 text-white rounded-full shadow-2xl flex items-center justify-center z-50 ${!isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}
                 aria-label="Open support chat"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>

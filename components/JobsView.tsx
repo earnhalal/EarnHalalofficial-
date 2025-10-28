@@ -1,5 +1,4 @@
-
-
+// components/JobsView.tsx
 import React from 'react';
 import type { UserProfile, Job, JobSubscriptionPlan, Application } from '../types';
 import { CheckCircleIcon } from './icons';
@@ -20,6 +19,14 @@ const plans = [
     { name: 'Enterprise' as JobSubscriptionPlan, price: 5000, duration: 90, features: ['All Business features', 'Dedicated Account Manager'], color: 'green', limit: Infinity },
 ];
 
+const planColorClasses = {
+    slate: { border: 'border-slate-300 dark:border-slate-600', text: 'text-slate-800 dark:text-slate-100', bg: 'bg-slate-500', hoverBg: 'hover:bg-slate-600' },
+    primary: { border: 'border-primary-500', text: 'text-primary-500', bg: 'bg-primary-500', hoverBg: 'hover:bg-primary-600' },
+    accent: { border: 'border-accent-500', text: 'text-accent-500', bg: 'bg-accent-500', hoverBg: 'hover:bg-accent-600' },
+    green: { border: 'border-green-500', text: 'text-green-500', bg: 'bg-green-500', hoverBg: 'hover:bg-green-600' },
+};
+
+
 const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubscribe, onApply, applications }) => {
     
     if (!userProfile?.jobSubscription) {
@@ -29,33 +36,43 @@ const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubsc
                 <p className="text-gray-600 dark:text-gray-300 mb-10 max-w-2xl mx-auto">
                     Subscribe to a plan to access high-paying, exclusive jobs. Your current balance is <span className="font-bold text-primary-500">{balance.toFixed(2)} Rs</span>.
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {plans.map((plan, index) => (
-                        <div 
-                            key={plan.name} 
-                            className={`border-2 border-${plan.color === 'primary' || plan.color === 'accent' ? plan.color + '-500' : 'slate-300 dark:border-slate-600'} rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-fade-in-up`}
-                            style={{ animationDelay: `${index * 100}ms`}}
-                        >
-                            <h3 className={`text-2xl font-bold text-${plan.color === 'primary' || plan.color === 'accent' ? plan.color + '-500' : 'slate-800 dark:text-slate-100'}`}>{plan.name}</h3>
-                            <p className="text-4xl font-extrabold my-4 text-gray-800 dark:text-gray-100">{plan.price} <span className="text-lg font-medium">Rs</span></p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">For {plan.duration} days</p>
-                            <ul className="space-y-3 text-left text-gray-600 dark:text-gray-300 flex-grow">
-                                {plan.features.map(feature => (
-                                    <li key={feature} className="flex items-center">
-                                        <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2 shrink-0" />
-                                        <span>{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <button 
-                                onClick={() => onSubscribe(plan.name, plan.price)}
-                                disabled={balance < plan.price}
-                                className={`mt-8 w-full bg-${plan.color}-500 text-white py-3 rounded-lg font-semibold hover:bg-${plan.color}-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-center">
+                    {plans.map((plan, index) => {
+                        const colors = planColorClasses[plan.color as keyof typeof planColorClasses] || planColorClasses.slate;
+                        const isRecommended = plan.name === 'Growth';
+                        
+                        return (
+                            <div 
+                                key={plan.name} 
+                                className={`relative bg-white dark:bg-slate-800 border-2 ${colors.border} rounded-xl shadow-lg p-6 flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 animate-fade-in-up ${isRecommended ? 'lg:scale-110 shadow-primary-500/30 dark:shadow-primary-500/20' : ''}`}
+                                style={{ animationDelay: `${index * 100}ms`}}
                             >
-                                {balance < plan.price ? 'Insufficient Balance' : 'Choose Plan'}
-                            </button>
-                        </div>
-                    ))}
+                                {isRecommended && (
+                                    <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary-500 text-white text-xs font-bold uppercase rounded-full shadow-md z-10">
+                                        Most Popular
+                                    </div>
+                                )}
+                                <h3 className={`text-2xl font-bold ${colors.text}`}>{plan.name}</h3>
+                                <p className="text-4xl font-extrabold my-4 text-gray-800 dark:text-gray-100">{plan.price} <span className="text-lg font-medium">Rs</span></p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">For {plan.duration} days</p>
+                                <ul className="space-y-3 text-left text-gray-600 dark:text-gray-300 flex-grow">
+                                    {plan.features.map(feature => (
+                                        <li key={feature} className="flex items-center">
+                                            <CheckCircleIcon className="w-5 h-5 text-green-500 mr-2 shrink-0" />
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button 
+                                    onClick={() => onSubscribe(plan.name, plan.price)}
+                                    disabled={balance < plan.price}
+                                    className={`mt-8 w-full ${colors.bg} text-white py-3 rounded-lg font-semibold ${colors.hoverBg} transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed`}
+                                >
+                                    {balance < plan.price ? 'Insufficient Balance' : 'Choose Plan'}
+                                </button>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         );

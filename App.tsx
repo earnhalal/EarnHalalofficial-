@@ -251,8 +251,8 @@ const App: React.FC = () => {
         }
     };
     
-    const addTransaction = (profile: UserProfile, type: TransactionType, description: string, amount: number, customReferrals = referrals, withdrawalDetails?: WithdrawalDetails) => {
-        const newTransaction: Transaction = { id: `tx_${Date.now()}`, type, description, amount, date: new Date().toISOString(), withdrawalDetails };
+    const addTransaction = (profile: UserProfile, type: TransactionType, description: string, amount: number, customReferrals = referrals, withdrawalDetails?: WithdrawalDetails, status: 'Completed' | 'Pending' | 'Failed' = 'Completed') => {
+        const newTransaction: Transaction = { id: `tx_${Date.now()}`, type, description, amount, date: new Date().toISOString(), withdrawalDetails, status };
         const newBalance = balance + amount;
         const newTransactions = [...transactions, newTransaction];
         
@@ -271,6 +271,24 @@ const App: React.FC = () => {
 
         saveUserData(profile, newBalance, newTransactions, completedTaskIds, customReferrals, applications, walletPin, newSavedDetails);
     };
+    
+    // Simulate processing of pending withdrawals
+    useEffect(() => {
+        if (!userProfile) return;
+
+        const interval = setInterval(() => {
+            const pendingTxIndex = transactions.findIndex(tx => tx.status === 'Pending');
+
+            if (pendingTxIndex !== -1) {
+                const newTransactions = [...transactions];
+                newTransactions[pendingTxIndex].status = 'Completed';
+                setTransactions(newTransactions);
+                localStorage.setItem(`transactions_${userProfile.username}`, JSON.stringify(newTransactions));
+            }
+        }, 20000); // Check every 20 seconds
+
+        return () => clearInterval(interval);
+    }, [transactions, userProfile]);
 
     const handleLogin = (username: string, password: string) => {
         const allUsers: UserProfile[] = JSON.parse(localStorage.getItem('earnHalalUsers') || '[]');
@@ -331,7 +349,8 @@ const App: React.FC = () => {
                         type: TransactionType.JOINING_FEE,
                         description: 'One-time joining fee',
                         amount: -50,
-                        date: new Date().toISOString()
+                        date: new Date().toISOString(),
+                        status: 'Completed'
                     };
                     const initialBalance = 0;
                     const initialTransactions = [feeTransaction];
@@ -342,7 +361,7 @@ const App: React.FC = () => {
                     saveUserData(verifiedProfile, initialBalance, initialTransactions, [], { level1: 0, level2: 0 }, []);
                 }
             }
-        }, 5000);
+        }, 10000);
     };
 
     const handleCreateTask = (taskData: Omit<Task, 'id'>, quantity: number, totalCost: number) => {
@@ -395,13 +414,13 @@ const App: React.FC = () => {
         addTransaction(userProfile, TransactionType.EARNING, `Completed: ${taskToComplete.title}`, taskToComplete.reward, referrals);
 
         const currentBalance = balance + taskToComplete.reward;
-        const updatedTransactions = [...transactions, { id: `tx_${Date.now()}`, type: TransactionType.EARNING, description: `Completed: ${taskToComplete.title}`, amount: taskToComplete.reward, date: new Date().toISOString() }];
+        const updatedTransactions = [...transactions, { id: `tx_${Date.now()}`, type: TransactionType.EARNING, description: `Completed: ${taskToComplete.title}`, amount: taskToComplete.reward, date: new Date().toISOString(), status: 'Completed' }];
         saveUserData(userProfile, currentBalance, updatedTransactions, newCompletedTaskIds, referrals, applications);
     };
 
     const handleWithdraw = (amount: number, details: WithdrawalDetails) => {
         if (!userProfile) return;
-        addTransaction(userProfile, TransactionType.WITHDRAWAL, `Withdrawal via ${details.method}`, -amount, referrals, details);
+        addTransaction(userProfile, TransactionType.WITHDRAWAL, `Withdrawal via ${details.method}`, -amount, referrals, details, 'Pending');
     };
 
     const handleSubscribeToJob = (plan: JobSubscriptionPlan, cost: number) => {
@@ -634,7 +653,7 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="bg-slate-100 dark:bg-slate-900 min-h-screen font-sans flex">
+        <div className="bg-[#0a192f] text-slate-300 min-h-screen font-sans flex">
             {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
             {showPinModal && (
                 <PinLockView 
