@@ -1,7 +1,29 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { EarnIcon, WalletIcon, CreateTaskIcon, BriefcaseIcon, GiftIcon, InviteIcon, ChartBarIcon } from './icons';
 import type { View, Transaction } from '../types';
 import { TransactionType } from '../types';
+
+const AdsenseBanner: React.FC = () => {
+    useEffect(() => {
+        try {
+            ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        } catch (err) {
+            console.error("AdSense error:", err);
+        }
+    }, []);
+
+    return (
+        <div className="bg-slate-800/50 backdrop-blur-md border border-white/10 p-4 rounded-2xl shadow-lg animate-fade-in-up" style={{ animationDelay: '600ms' }}>
+             <h3 className="text-xs font-semibold text-slate-500 mb-2 text-center uppercase tracking-wider">Advertisement</h3>
+             <ins className="adsbygoogle"
+                 style={{ display: 'block', minHeight: '100px' }}
+                 data-ad-client="ca-pub-9056218549588930"
+                 data-ad-slot="1234567890"
+                 data-ad-format="auto"
+                 data-full-width-responsive="true"></ins>
+        </div>
+    );
+};
 
 interface DashboardViewProps {
   balance: number;
@@ -146,6 +168,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
             </div>
         </div>
       </div>
+      <AdsenseBanner />
     </div>
   );
 };
