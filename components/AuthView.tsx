@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import type { UserProfile } from '../types';
 import { UserIcon, EmailIcon, PhoneIcon, LockIcon } from './icons';
 
 interface AuthViewProps {
-    onSignup: (profileData: Omit<UserProfile, 'paymentStatus' | 'jobSubscription'> & { password: string }) => void;
-    onLogin: (username: string, password: string) => void;
+    onSignup: (data: {username: string, email: string, phone: string, password: string}) => void;
+    onLogin: (email: string, password: string) => void;
 }
 
 const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, required?: boolean }> = 
@@ -20,6 +19,7 @@ const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, 
             placeholder={placeholder}
             className="w-full py-3 pl-12 pr-4 text-slate-200 bg-slate-800/50 border-2 border-slate-700 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all duration-300 placeholder:text-slate-500" 
             required={required}
+            autoComplete="off"
         />
     </div>
 );
@@ -57,12 +57,12 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
     
     const handleLoginSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!username || !password) {
-            setError('Username and password are required.');
+        if (!email || !password) {
+            setError('Email and password are required.');
             return;
         }
         setError('');
-        onLogin(username, password);
+        onLogin(email, password);
     };
 
     const iconProps = { className: "w-5 h-5" };
@@ -130,13 +130,14 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
                 <form key={formKey} onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-4 form-animate">
                     {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-md">{error}</p>}
                     
-                    <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-                    
                     {!isLogin && (
-                        <>
-                            <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
-                            <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
-                        </>
+                        <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+                    )}
+                    
+                    <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
+
+                    {!isLogin && (
+                        <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
                     )}
                     
                     <AuthInput icon={<LockIcon {...iconProps} />} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />

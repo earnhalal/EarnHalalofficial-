@@ -42,7 +42,7 @@ export interface Transaction {
   type: TransactionType;
   description: string;
   amount: number;
-  date: string;
+  date: any; // Can be string or Firestore timestamp
   withdrawalDetails?: WithdrawalDetails;
   status?: 'Completed' | 'Pending' | 'Failed';
 }
@@ -83,12 +83,18 @@ export interface JobSubscription {
 }
 
 export interface UserProfile {
+  uid: string;
   username: string;
   email: string;
   phone: string;
+  joinedAt: any; // Firestore Timestamp
   paymentStatus: PaymentStatus;
   jobSubscription: JobSubscription | null;
-  password?: string;
+  referralCount: number;
+  balance: number;
+  completedTaskIds: string[];
+  savedWithdrawalDetails: WithdrawalDetails | null;
+  walletPin: string | null;
 }
 
 export interface Job {
@@ -101,8 +107,9 @@ export interface Job {
 }
 
 export interface Application {
+    id: string; // Firestore document ID
     jobId: string;
     jobTitle: string;
-    date: string; // ISO string
+    date: any; // Firestore timestamp
     status: 'Submitted' | 'Under Review' | 'Rejected';
 }

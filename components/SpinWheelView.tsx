@@ -19,6 +19,7 @@ const WinAnimation: React.FC<{ prize: number; onAnimationEnd: () => void; }> = (
                     <div
                         key={i}
                         className="absolute rounded-full animate-fall bg-gradient-to-br"
+                        // FIX: Cast style object to React.CSSProperties to allow for custom CSS variables.
                         style={{
                             width: `${Math.random() * 10 + 5}px`,
                             height: `${Math.random() * 10 + 5}px`,
@@ -29,7 +30,7 @@ const WinAnimation: React.FC<{ prize: number; onAnimationEnd: () => void; }> = (
                             '--color-from': i % 3 === 0 ? '#fde047' : (i % 3 === 1 ? '#f472b6' : '#a78bfa'),
                             '--color-to': i % 3 === 0 ? '#fbbf24' : (i % 3 === 1 ? '#ec4899' : '#8b5cf6'),
                             backgroundImage: `linear-gradient(to bottom right, var(--color-from), var(--color-to))`
-                        }}
+                        } as React.CSSProperties}
                     ></div>
                 ))}
             </div>
