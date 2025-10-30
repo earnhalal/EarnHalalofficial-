@@ -12,7 +12,7 @@ type Message = {
 
 const TypingIndicator: React.FC = () => (
     <div className="flex justify-start">
-        <div className="px-4 py-2 rounded-2xl bg-slate-200 dark:bg-slate-700 rounded-bl-lg">
+        <div className="px-4 py-2 rounded-2xl bg-slate-700 rounded-bl-lg">
             <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce-short"></div>
                 <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce-short delay-150"></div>
@@ -103,7 +103,7 @@ const AIAgentChatbot: React.FC = () => {
         if (!chatSession.current) return;
         try {
              const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-             const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Sky Rain kia hai?"]`;
+             const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Jobs feature kia hai?"]`;
              
              const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',

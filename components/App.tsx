@@ -1,4 +1,3 @@
-
 // App.tsx
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Sidebar from './Sidebar';
@@ -171,9 +170,12 @@ const App: React.FC = () => {
                         setUserProfile({ ...data, uid: doc.id });
                         setBalance(data.balance || 0);
                     } else {
-                        // This might happen briefly after signup before doc is created
                         console.log("User document not found, waiting for creation...");
                     }
+                    setIsAuthLoading(false);
+                }, (error) => {
+                    console.error("Error fetching user profile:", error);
+                    alert("Could not load your profile. Please check your internet connection and refresh.");
                     setIsAuthLoading(false);
                 });
                 unsubscribeCallbacks.current.push(unsubProfile);
@@ -182,6 +184,8 @@ const App: React.FC = () => {
                 const unsubTransactions = userRef.collection('transactions').orderBy('date', 'desc').onSnapshot(snapshot => {
                     const txs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
                     setTransactions(txs);
+                }, (error) => {
+                     console.error("Error fetching transactions:", error);
                 });
                 unsubscribeCallbacks.current.push(unsubTransactions);
 
@@ -189,6 +193,8 @@ const App: React.FC = () => {
                 const unsubApplications = userRef.collection('applications').orderBy('date', 'desc').onSnapshot(snapshot => {
                     const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
                     setApplications(apps);
+                }, (error) => {
+                    console.error("Error fetching applications:", error);
                 });
                 unsubscribeCallbacks.current.push(unsubApplications);
 
@@ -208,21 +214,36 @@ const App: React.FC = () => {
 
     // --- HELPER FUNCTIONS ---
     const updateBalance = async (userId: string, amount: number) => {
-        const userRef = db.collection('users').doc(userId);
-        await userRef.update({ balance: increment(amount) });
-        if (amount > 0) playBalanceSound();
+        try {
+            const userRef = db.collection('users').doc(userId);
+            await userRef.update({ balance: increment(amount) });
+            if (amount > 0) playBalanceSound();
+        } catch (error) {
+            console.error("Error updating balance:", error);
+            throw error; // Re-throw to be caught by caller
+        }
     };
 
     const addReferral = async (referrerId: string) => {
-        const userRef = db.collection('users').doc(referrerId);
-        await userRef.update({ referralCount: increment(1) });
+        try {
+            const userRef = db.collection('users').doc(referrerId);
+            await userRef.update({ referralCount: increment(1) });
+        } catch (error) {
+            console.error("Error adding referral:", error);
+            throw error;
+        }
     };
 
-    const addTransaction = (userId: string, type: TransactionType, description: string, amount: number) => {
-        const userRef = db.collection('users').doc(userId);
-        userRef.collection('transactions').add({
-            type, description, amount, date: serverTimestamp(), status: 'Completed'
-        });
+    const addTransaction = async (userId: string, type: TransactionType, description: string, amount: number) => {
+       try {
+            const userRef = db.collection('users').doc(userId);
+            await userRef.collection('transactions').add({
+                type, description, amount, date: serverTimestamp(), status: 'Completed'
+            });
+        } catch (error) {
+            console.error("Error adding transaction:", error);
+            throw error;
+        }
     };
     
     // --- HANDLERS ---
@@ -266,6 +287,7 @@ const App: React.FC = () => {
                 });
             }
         } catch (error: any) {
+            console.error("Signup error:", error);
             alert(error.message);
         }
     };
@@ -274,6 +296,7 @@ const App: React.FC = () => {
         try {
             await auth.signInWithEmailAndPassword(email, password);
         } catch (error: any) {
+            console.error("Login error:", error);
             alert(error.message);
         }
     };
@@ -283,31 +306,69 @@ const App: React.FC = () => {
     };
 
     const handlePaymentSubmit = async () => {
-        if (!userProfile) return;
-        await db.collection('users').doc(userProfile.uid).update({ paymentStatus: 'PENDING_VERIFICATION' });
-        
-        setTimeout(async () => {
-            const latestUser = auth.currentUser;
-            if (latestUser && latestUser.uid === userProfile.uid) {
-                await db.collection('users').doc(userProfile.uid).update({ paymentStatus: 'VERIFIED' });
-                addTransaction(userProfile.uid, TransactionType.JOINING_FEE, 'One-time joining fee', -50);
-                await updateBalance(userProfile.uid, -50); // Deduct fee
-                setShowWelcomeModal(true);
-            }
-        }, 10000);
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            console.error("Payment submitted without a logged-in user.");
+            alert("You must be logged in to submit payment.");
+            return;
+        }
+        const userId = currentUser.uid;
+
+        try {
+            await db.collection('users').doc(userId).update({ paymentStatus: 'PENDING_VERIFICATION' });
+            
+            setTimeout(() => {
+                (async () => {
+                    try {
+                        const userAfterDelay = auth.currentUser;
+                        if (userAfterDelay && userAfterDelay.uid === userId) {
+                            const userDocRef = db.collection('users').doc(userId);
+                            
+                            const userDoc = await userDocRef.get();
+                            if (userDoc.exists && userDoc.data()?.paymentStatus === 'PENDING_VERIFICATION') {
+                                await userDocRef.update({ paymentStatus: 'VERIFIED', balance: 0 });
+                                await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
+                                setShowWelcomeModal(true);
+                            } else {
+                                console.log("User status is no longer 'PENDING_VERIFICATION'. Skipping update.");
+                            }
+                        } else {
+                            console.log("User changed during verification delay. Aborting.");
+                        }
+                    } catch(error) {
+                        console.error("Error during the final verification step:", error);
+                        alert("A final error occurred during verification. Please contact support.");
+                    }
+                })();
+            }, 10000);
+        } catch (error) {
+            console.error("Error updating payment status to pending:", error);
+            alert("There was an error submitting your payment proof. Please try again.");
+        }
     };
 
-    const handleCreateTask = (taskData: Omit<Task, 'id'>, quantity: number, totalCost: number) => {
+    const handleCreateTask = async (taskData: Omit<Task, 'id'>, quantity: number, totalCost: number) => {
         if (!userProfile) return;
-        updateBalance(userProfile.uid, -totalCost);
-        addTransaction(userProfile.uid, TransactionType.TASK_CREATION, `Campaign: ${taskData.title}`, -totalCost);
-        // The global task list logic remains in localStorage as per original design.
-        const newUserTask: UserCreatedTask = {
-            id: `utask_${Date.now()}`, ...taskData, quantity, completions: 0, views: 0
-        };
-        const updatedGlobalTasks = [...userTasks, newUserTask];
-        setUserTasks(updatedGlobalTasks);
-        localStorage.setItem('globalUserTasks', JSON.stringify(updatedGlobalTasks));
+        try {
+            await updateBalance(userProfile.uid, -totalCost);
+            try {
+                await addTransaction(userProfile.uid, TransactionType.TASK_CREATION, `Campaign: ${taskData.title}`, -totalCost);
+                // The global task list logic remains in localStorage as per original design.
+                const newUserTask: UserCreatedTask = {
+                    id: `utask_${Date.now()}`, ...taskData, quantity, completions: 0, views: 0
+                };
+                const updatedGlobalTasks = [...userTasks, newUserTask];
+                setUserTasks(updatedGlobalTasks);
+                localStorage.setItem('globalUserTasks', JSON.stringify(updatedGlobalTasks));
+            } catch (transactionError) {
+                console.error("Task transaction failed, reverting balance.", transactionError);
+                await updateBalance(userProfile.uid, totalCost); // Revert
+                throw transactionError; // Re-throw to be caught by outer handler
+            }
+        } catch (error) {
+            console.error("Error creating task:", error);
+            alert("An error occurred while creating your task. Please check your balance and try again.");
+        }
     };
 
     const handleTaskView = (taskId: string) => {
@@ -318,37 +379,48 @@ const App: React.FC = () => {
         localStorage.setItem('globalUserTasks', JSON.stringify(newTasks));
     };
 
-    const handleCompleteTask = (taskId: string) => {
+    const handleCompleteTask = async (taskId: string) => {
         if (!userProfile) return;
         const task = userTasks.find(t => t.id === taskId);
         if (!task || userProfile.completedTaskIds?.includes(taskId)) return;
+        try {
+            await db.collection('users').doc(userProfile.uid).update({
+                completedTaskIds: arrayUnion(taskId)
+            });
+            await updateBalance(userProfile.uid, task.reward);
+            await addTransaction(userProfile.uid, TransactionType.EARNING, `Completed: ${task.title}`, task.reward);
 
-        db.collection('users').doc(userProfile.uid).update({
-            completedTaskIds: arrayUnion(taskId)
-        });
-        updateBalance(userProfile.uid, task.reward);
-        addTransaction(userProfile.uid, TransactionType.EARNING, `Completed: ${task.title}`, task.reward);
-
-        // Update global task list in localStorage
-        const updatedUserTasks = userTasks.map(t =>
-            t.id === taskId ? { ...t, completions: t.completions + 1 } : t
-        );
-        setUserTasks(updatedUserTasks);
-        localStorage.setItem('globalUserTasks', JSON.stringify(updatedUserTasks));
+            // Update global task list in localStorage
+            const updatedUserTasks = userTasks.map(t =>
+                t.id === taskId ? { ...t, completions: t.completions + 1 } : t
+            );
+            setUserTasks(updatedUserTasks);
+            localStorage.setItem('globalUserTasks', JSON.stringify(updatedUserTasks));
+        } catch (error) {
+            console.error("Error completing task:", error);
+            alert("Failed to record task completion. Please try again.");
+        }
     };
 
     const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
         if (!userProfile) return;
-        await updateBalance(userProfile.uid, -amount);
-        await db.collection('users').doc(userProfile.uid).collection('transactions').add({
-            type: TransactionType.WITHDRAWAL,
-            description: `Withdrawal via ${details.method}`,
-            amount: -amount,
-            date: serverTimestamp(),
-            status: 'Pending',
-            withdrawalDetails: details
-        });
-        await db.collection('users').doc(userProfile.uid).update({ savedWithdrawalDetails: details });
+        try {
+            await updateBalance(userProfile.uid, -amount);
+            await db.collection('users').doc(userProfile.uid).collection('transactions').add({
+                type: TransactionType.WITHDRAWAL,
+                description: `Withdrawal via ${details.method}`,
+                amount: -amount,
+                date: serverTimestamp(),
+                status: 'Pending',
+                withdrawalDetails: details
+            });
+            await db.collection('users').doc(userProfile.uid).update({ savedWithdrawalDetails: details });
+        } catch (error) {
+            console.error("Error processing withdrawal:", error);
+            alert("There was an error processing your withdrawal request. Please try again.");
+            // Revert balance change on failure
+            try { await updateBalance(userProfile.uid, amount); } catch (revertError) { console.error("FATAL: Could not revert balance after failed withdrawal.", revertError); }
+        }
     };
 
     const handleSubscribeToJob = async (plan: JobSubscriptionPlan, cost: number) => {
@@ -362,44 +434,59 @@ const App: React.FC = () => {
             applicationsToday: 0,
             lastApplicationDate: new Date().toISOString().split('T')[0]
         };
-        await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
-        await updateBalance(userProfile.uid, -cost);
-        addTransaction(userProfile.uid, TransactionType.JOB_SUBSCRIPTION, `Subscribed to ${plan} plan`, -cost);
+        try {
+            await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
+            await updateBalance(userProfile.uid, -cost);
+            await addTransaction(userProfile.uid, TransactionType.JOB_SUBSCRIPTION, `Subscribed to ${plan} plan`, -cost);
+        } catch (error) {
+            console.error("Error subscribing to job plan:", error);
+            alert("Failed to subscribe. Please check your balance and try again.");
+        }
     };
 
     const handleApplyForJob = async (jobId: string) => {
         if (!userProfile || !userProfile.jobSubscription) return;
-        let subscription = { ...userProfile.jobSubscription };
-        const today = new Date().toISOString().split('T')[0];
+        
+        try {
+            let subscription = { ...userProfile.jobSubscription };
+            const today = new Date().toISOString().split('T')[0];
 
-        if (subscription.lastApplicationDate !== today) {
-            subscription.applicationsToday = 0;
-            subscription.lastApplicationDate = today;
-        }
+            if (subscription.lastApplicationDate !== today) {
+                subscription.applicationsToday = 0;
+                subscription.lastApplicationDate = today;
+            }
 
-        const limits = { Starter: 5, Growth: 15, Business: Infinity, Enterprise: Infinity };
-        const limit = limits[subscription.plan] || 0;
+            const limits = { Starter: 5, Growth: 15, Business: Infinity, Enterprise: Infinity };
+            const limit = limits[subscription.plan] || 0;
 
-        if (subscription.applicationsToday < limit) {
-            subscription.applicationsToday += 1;
-            const job = jobs.find(j => j.id === jobId);
-            if (!job) return;
+            if (subscription.applicationsToday < limit) {
+                subscription.applicationsToday += 1;
+                const job = jobs.find(j => j.id === jobId);
+                if (!job) return;
 
-            await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
-            await db.collection('users').doc(userProfile.uid).collection('applications').add({
-                jobId: job.id, jobTitle: job.title, date: serverTimestamp(), status: 'Submitted',
-            });
-            alert('Application submitted successfully!');
-        } else {
-            alert('You have reached your daily application limit.');
+                await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
+                await db.collection('users').doc(userProfile.uid).collection('applications').add({
+                    jobId: job.id, jobTitle: job.title, date: serverTimestamp(), status: 'Submitted',
+                });
+                alert('Application submitted successfully!');
+            } else {
+                alert('You have reached your daily application limit.');
+            }
+        } catch (error) {
+            console.error("Error applying for job:", error);
+            alert("There was an error submitting your application. Please try again.");
         }
     };
     
     const handleUpdateProfile = async (updatedData: { name: string; email: string; }) => {
         if (!userProfile || !authUser) return;
         try {
-            await authUser.updateEmail(updatedData.email);
-            await authUser.updateProfile({ displayName: updatedData.name });
+            if (authUser.email !== updatedData.email) {
+                await authUser.updateEmail(updatedData.email);
+            }
+            if (authUser.displayName !== updatedData.name) {
+                await authUser.updateProfile({ displayName: updatedData.name });
+            }
             await db.collection('users').doc(userProfile.uid).update({
                 username: updatedData.name,
                 email: updatedData.email,
@@ -409,55 +496,85 @@ const App: React.FC = () => {
         }
     };
 
-    const handleDeposit = (amount: number, transactionId: string) => {
+    const handleDeposit = async (amount: number, transactionId: string) => {
         if (!userProfile) return;
-        db.collection('users').doc(userProfile.uid).collection('transactions').add({
-            type: TransactionType.PENDING_DEPOSIT,
-            description: `Deposit via TXID: ${transactionId}`, 
-            amount, 
-            date: serverTimestamp(),
-            status: 'Pending'
-        });
-        alert(`Your deposit request for ${amount.toFixed(2)} Rs has been submitted and is pending verification.`);
+        try {
+            await db.collection('users').doc(userProfile.uid).collection('transactions').add({
+                type: TransactionType.PENDING_DEPOSIT,
+                description: `Deposit via TXID: ${transactionId}`, 
+                amount, 
+                date: serverTimestamp(),
+                status: 'Pending'
+            });
+            alert(`Your deposit request for ${amount.toFixed(2)} Rs has been submitted and is pending verification.`);
+        } catch (error) {
+            console.error("Error submitting deposit:", error);
+            alert("There was an error submitting your deposit. Please try again.");
+        }
     };
 
-    const handleSpinWin = (amount: number) => {
+    const handleSpinWin = async (amount: number) => {
         if (!userProfile) return;
-        updateBalance(userProfile.uid, amount);
-        addTransaction(userProfile.uid, TransactionType.EARNING, 'Spin Wheel Prize', amount);
+        try {
+            await updateBalance(userProfile.uid, amount);
+            await addTransaction(userProfile.uid, TransactionType.EARNING, 'Spin Wheel Prize', amount);
+        } catch (error) {
+            console.error("Error processing spin win:", error);
+        }
     };
     
-    const handleBuySpin = (cost: number): boolean => {
-        if (!userProfile || balance < cost) return false;
-        updateBalance(userProfile.uid, -cost);
-        addTransaction(userProfile.uid, TransactionType.SPIN_PURCHASE, `Spin purchase (${cost} Rs)`, -cost);
-        return true;
+    const handleBuySpin = async (cost: number): Promise<boolean> => {
+        if (!userProfile || balance < cost) {
+            return false;
+        }
+        try {
+            await updateBalance(userProfile.uid, -cost);
+            await addTransaction(userProfile.uid, TransactionType.SPIN_PURCHASE, `Spin purchase (${cost} Rs)`, -cost);
+            return true;
+        } catch (error) {
+            console.error("Error buying spin:", error);
+            // Revert balance if update succeeded but transaction failed
+            try { await updateBalance(userProfile.uid, cost); } catch (revertError) { console.error("FATAL: Could not revert balance after failed spin purchase.", revertError); }
+            return false;
+        }
     };
 
-    const handleSimulateReferral = (level: 1 | 2) => {
+    const handleSimulateReferral = async (level: 1 | 2) => {
         if(!userProfile) return;
-        // In a real app, this would be triggered by another user signing up with a referral code.
-        // For simulation, we'll just add the bonus to the current user.
-        if (level === 1) {
-            addReferral(userProfile.uid);
-            updateBalance(userProfile.uid, 20);
-            addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 1 Referral Bonus', 20);
-        } else {
-            updateBalance(userProfile.uid, 5);
-            addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 2 Referral Bonus', 5);
+        try {
+            if (level === 1) {
+                await addReferral(userProfile.uid);
+                await updateBalance(userProfile.uid, 20);
+                await addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 1 Referral Bonus', 20);
+            } else {
+                await updateBalance(userProfile.uid, 5);
+                await addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 2 Referral Bonus', 5);
+            }
+        } catch(error) {
+            console.error("Error simulating referral:", error);
         }
     }
     
     const handlePinSet = async (newPin: string) => {
         if (!userProfile) return;
-        await db.collection('users').doc(userProfile.uid).update({ walletPin: newPin });
-        setShowPinModal(false);
+        try {
+            await db.collection('users').doc(userProfile.uid).update({ walletPin: newPin });
+            setShowPinModal(false);
+        } catch (error) {
+            console.error("Error setting PIN:", error);
+            alert("Failed to set PIN. Please try again.");
+        }
     };
 
     const handlePinSkip = async () => {
         if (!userProfile) return;
-        await db.collection('users').doc(userProfile.uid).update({ walletPin: 'SKIPPED' });
-        setShowPinModal(false);
+        try {
+            await db.collection('users').doc(userProfile.uid).update({ walletPin: 'SKIPPED' });
+            setShowPinModal(false);
+        } catch (error) {
+            console.error("Error skipping PIN setup:", error);
+            alert("An error occurred. Please try again.");
+        }
     };
     
     // Derived state

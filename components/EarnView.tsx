@@ -61,7 +61,7 @@ const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({ task, onClo
                         htmlFor="payment-proof" 
                         className="w-full flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                     >
-                         <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+                         <svg xmlns="http://www.w.org/2000/svg" className="w-10 h-10 text-slate-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                         <span className="font-semibold text-primary-500">Upload Screenshot</span>
                         <span className="text-xs text-slate-500">Click or drag file here</span>
                     </label>
@@ -107,7 +107,6 @@ const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({ task, onClo
   );
 };
 
-// FIX: Define EarnViewProps interface to resolve TypeScript error.
 interface EarnViewProps {
   tasks: UserCreatedTask[];
   onCompleteTask: (taskId: string) => void;

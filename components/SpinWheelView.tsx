@@ -19,7 +19,6 @@ const WinAnimation: React.FC<{ prize: number; onAnimationEnd: () => void; }> = (
                     <div
                         key={i}
                         className="absolute rounded-full animate-fall bg-gradient-to-br"
-                        // FIX: Cast style object to React.CSSProperties to allow for custom CSS variables.
                         style={{
                             width: `${Math.random() * 10 + 5}px`,
                             height: `${Math.random() * 10 + 5}px`,
@@ -58,7 +57,7 @@ const WinAnimation: React.FC<{ prize: number; onAnimationEnd: () => void; }> = (
 interface SpinWheelViewProps {
   onWin: (amount: number) => void;
   balance: number;
-  onBuySpin: (cost: number) => boolean;
+  onBuySpin: (cost: number) => Promise<boolean>;
 }
 
 // Prize segments for the Free Spin (rewards 1-2 Rs)
@@ -148,7 +147,7 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
         }
     };
     
-    const handleSpin = (isFreeSpin: boolean) => {
+    const handleSpin = async (isFreeSpin: boolean) => {
         if (isSpinning) return;
 
         let currentSegments;
@@ -159,9 +158,9 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
             setHasUsedDailySpin(true);
             currentSegments = freeSegments;
         } else {
-            const purchaseSuccess = onBuySpin(5);
+            const purchaseSuccess = await onBuySpin(5);
             if (!purchaseSuccess) {
-                 alert("Insufficient balance to buy a spin.");
+                 alert("Insufficient balance or an error occurred. Could not buy spin.");
                  return;
             }
             currentSegments = buySegments;
