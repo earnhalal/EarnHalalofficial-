@@ -1,14 +1,17 @@
 
 
+
 import React, { useState } from 'react';
 import type { UserProfile } from '../types';
+import { LogoutIcon } from './icons';
 
 interface ProfileSettingsViewProps {
     userProfile: UserProfile | null;
     onUpdateProfile: (updatedData: { name: string; email: string; password?: string }) => void;
+    onLogout: () => void;
 }
 
-const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile }) => {
+const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile, onLogout }) => {
     const [name, setName] = useState(userProfile?.username || '');
     const [email, setEmail] = useState(userProfile?.email || '');
     const [password, setPassword] = useState('');
@@ -51,6 +54,15 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, 
                     Save Changes
                 </button>
             </form>
+            <div className="mt-8 border-t pt-6 dark:border-gray-700">
+                <button
+                    onClick={onLogout}
+                    className="w-full bg-red-500/10 text-red-400 font-semibold py-3 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2"
+                >
+                    <LogoutIcon className="w-5 h-5" />
+                    Logout of Your Account
+                </button>
+            </div>
         </div>
     );
 };

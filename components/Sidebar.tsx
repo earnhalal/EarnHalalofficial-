@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
-  InfoIcon, LogoutIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon,
+  InfoIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon,
   PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon
 } from './icons';
 import type { View } from '../types';
@@ -9,7 +9,6 @@ import type { View } from '../types';
 interface SidebarProps {
   activeView: View;
   setActiveView: (view: View) => void;
-  onLogout: () => void;
   isSidebarOpen: boolean;
 }
 
@@ -34,7 +33,7 @@ const NavItem: React.FC<{
   </button>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, isSidebarOpen }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen }) => {
   const mainViews: { view: View; label: string; icon: React.ReactNode }[] = [
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-6 h-6" /> },
@@ -133,14 +132,6 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, onLogout, 
               </div>
             </div>
           </div>
-          <div className="border-t border-amber-400/10 my-2"></div>
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <LogoutIcon className="w-6 h-6" />
-            <span className="font-semibold">Logout</span>
-          </button>
         </div>
       </div>
     </aside>

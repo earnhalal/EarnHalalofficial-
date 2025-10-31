@@ -45,9 +45,9 @@ const DepositView: React.FC<DepositViewProps> = ({ onDeposit }) => {
         </p>
         <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg space-y-2">
           <h3 className="font-semibold text-lg text-gray-800 dark:text-gray-100">Our Account Details</h3>
-          <p className="text-gray-600 dark:text-gray-300"><strong>Account Title:</strong> <span className="font-mono">Earn Halal Inc.</span></p>
-          <p className="text-gray-600 dark:text-gray-300"><strong>Account Number:</strong> <span className="font-mono">0123-45678901</span></p>
-          <p className="text-gray-600 dark:text-gray-300"><strong>Bank / Service:</strong> <span className="font-mono">JazzCash / EasyPaisa</span></p>
+          <p className="text-gray-600 dark:text-gray-300"><strong>Account Title:</strong> <span className="font-mono">M-WASEEM</span></p>
+          <p className="text-gray-600 dark:text-gray-300"><strong>Account Number:</strong> <span className="font-mono">03338739929</span></p>
+          <p className="text-gray-600 dark:text-gray-300"><strong>Bank / Service:</strong> <span className="font-mono">EasyPaisa</span></p>
         </div>
       </div>
 

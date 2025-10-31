@@ -645,7 +645,7 @@ const App: React.FC = () => {
                 />
             )}
             {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-            <Sidebar activeView={view} setActiveView={handleSetActiveView} onLogout={handleLogout} isSidebarOpen={isSidebarOpen} />
+            <Sidebar activeView={view} setActiveView={handleSetActiveView} isSidebarOpen={isSidebarOpen} />
             <div className={`flex-1 flex flex-col transition-all duration-300 lg:ml-64`}>
                 <Header activeView={view} balance={balance} username={userProfile.username} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} canGoBack={viewHistory.length > 1} onBack={handleBack} />
                 <main className="flex-grow p-4 sm:p-6 lg:p-8">
@@ -660,7 +660,7 @@ const App: React.FC = () => {
                                 case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
                                 case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
                                 case 'INVITE': return <InviteView referrals={{level1: userProfile.referralCount, level2: 0}} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} />;
-                                case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} />;
+                                case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} />;
                                 case 'HOW_IT_WORKS': return <HowItWorksView />;
                                 case 'ABOUT_US': return <AboutUsView />;
                                 case 'CONTACT_US': return <ContactUsView />;

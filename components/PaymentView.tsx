@@ -38,9 +38,9 @@ const PaymentView: React.FC<PaymentViewProps> = ({ onSubmit }) => {
 
                 <div className="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-lg mb-6 text-left">
                     <h3 className="font-semibold text-lg text-slate-800 dark:text-slate-100 mb-2">Payment Details</h3>
-                    <p className="text-slate-600 dark:text-slate-300">Account Title: <span className="font-mono float-right">Earn Halal Inc.</span></p>
-                    <p className="text-slate-600 dark:text-slate-300">Account Number: <span className="font-mono float-right">0123-45678901</span></p>
-                    <p className="text-slate-600 dark:text-slate-300">Bank: <span className="font-mono float-right">JazzCash / EasyPaisa</span></p>
+                    <p className="text-slate-600 dark:text-slate-300">Account Title: <span className="font-mono float-right">M-WASEEM</span></p>
+                    <p className="text-slate-600 dark:text-slate-300">Account Number: <span className="font-mono float-right">03338739929</span></p>
+                    <p className="text-slate-600 dark:text-slate-300">Bank: <span className="font-mono float-right">EasyPaisa</span></p>
                 </div>
 
                 <div className="mb-6">
