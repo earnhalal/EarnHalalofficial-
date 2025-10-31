@@ -28,6 +28,9 @@ import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSub
 import { TransactionType, TaskType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+
 
 // --- HELPERS ---
 const generateRandomString = (length: number) => {
@@ -153,7 +156,7 @@ const App: React.FC = () => {
 
     // --- FIREBASE AUTH & DATA SYNC ---
     useEffect(() => {
-        const unsubscribeAuth = auth.onAuthStateChanged(user => {
+        const unsubscribeAuth = onAuthStateChanged(auth, user => {
             // Clear previous user's listeners
             unsubscribeCallbacks.current.forEach(cb => cb());
             unsubscribeCallbacks.current = [];
@@ -163,11 +166,11 @@ const App: React.FC = () => {
                 setShowLanding(false);
 
                 // Listen to user profile
-                const userRef = db.collection('users').doc(user.uid);
-                const unsubProfile = userRef.onSnapshot(doc => {
-                    if (doc.exists) {
-                        const data = doc.data() as Omit<UserProfile, 'uid'>;
-                        setUserProfile({ ...data, uid: doc.id });
+                const userRef = doc(db, 'users', user.uid);
+                const unsubProfile = onSnapshot(userRef, docSnap => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data() as Omit<UserProfile, 'uid'>;
+                        setUserProfile({ ...data, uid: docSnap.id });
                         setBalance(data.balance || 0);
                     } else {
                         console.log("User document not found, waiting for creation...");
@@ -181,7 +184,8 @@ const App: React.FC = () => {
                 unsubscribeCallbacks.current.push(unsubProfile);
 
                 // Listen to transactions subcollection
-                const unsubTransactions = userRef.collection('transactions').orderBy('date', 'desc').onSnapshot(snapshot => {
+                const transactionsQuery = query(collection(db, 'users', user.uid, 'transactions'), orderBy('date', 'desc'));
+                const unsubTransactions = onSnapshot(transactionsQuery, snapshot => {
                     const txs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
                     setTransactions(txs);
                 }, (error) => {
@@ -190,7 +194,8 @@ const App: React.FC = () => {
                 unsubscribeCallbacks.current.push(unsubTransactions);
 
                 // Listen to applications subcollection
-                const unsubApplications = userRef.collection('applications').orderBy('date', 'desc').onSnapshot(snapshot => {
+                const applicationsQuery = query(collection(db, 'users', user.uid, 'applications'), orderBy('date', 'desc'));
+                const unsubApplications = onSnapshot(applicationsQuery, snapshot => {
                     const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
                     setApplications(apps);
                 }, (error) => {
@@ -215,8 +220,8 @@ const App: React.FC = () => {
     // --- HELPER FUNCTIONS ---
     const updateBalance = async (userId: string, amount: number) => {
         try {
-            const userRef = db.collection('users').doc(userId);
-            await userRef.update({ balance: increment(amount) });
+            const userRef = doc(db, 'users', userId);
+            await updateDoc(userRef, { balance: increment(amount) });
             if (amount > 0) playBalanceSound();
         } catch (error) {
             console.error("Error updating balance:", error);
@@ -226,8 +231,8 @@ const App: React.FC = () => {
 
     const addReferral = async (referrerId: string) => {
         try {
-            const userRef = db.collection('users').doc(referrerId);
-            await userRef.update({ referralCount: increment(1) });
+            const userRef = doc(db, 'users', referrerId);
+            await updateDoc(userRef, { referralCount: increment(1) });
         } catch (error) {
             console.error("Error adding referral:", error);
             throw error;
@@ -236,8 +241,8 @@ const App: React.FC = () => {
 
     const addTransaction = async (userId: string, type: TransactionType, description: string, amount: number) => {
        try {
-            const userRef = db.collection('users').doc(userId);
-            await userRef.collection('transactions').add({
+            const transactionsColRef = collection(db, 'users', userId, 'transactions');
+            await addDoc(transactionsColRef, {
                 type, description, amount, date: serverTimestamp(), status: 'Completed'
             });
         } catch (error) {
@@ -270,11 +275,12 @@ const App: React.FC = () => {
 
     const handleSignup = async ({ username, email, phone, password }: any) => {
         try {
-            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             if (user) {
-                await user.updateProfile({ displayName: username });
-                await db.collection('users').doc(user.uid).set({
+                await updateProfile(user, { displayName: username });
+                const userDocRef = doc(db, 'users', user.uid);
+                await setDoc(userDocRef, {
                     uid: user.uid, username, email, phone,
                     joinedAt: serverTimestamp(),
                     paymentStatus: 'UNPAID',
@@ -294,7 +300,7 @@ const App: React.FC = () => {
 
     const handleLogin = async (email: string, password: string) => {
         try {
-            await auth.signInWithEmailAndPassword(email, password);
+            await signInWithEmailAndPassword(auth, email, password);
         } catch (error: any) {
             console.error("Login error:", error);
             alert(error.message);
@@ -302,7 +308,7 @@ const App: React.FC = () => {
     };
 
     const handleLogout = () => {
-        auth.signOut();
+        signOut(auth);
     };
 
     const handlePaymentSubmit = async () => {
@@ -313,20 +319,20 @@ const App: React.FC = () => {
             return;
         }
         const userId = currentUser.uid;
+        const userDocRef = doc(db, 'users', userId);
 
         try {
-            await db.collection('users').doc(userId).update({ paymentStatus: 'PENDING_VERIFICATION' });
+            await updateDoc(userDocRef, { paymentStatus: 'PENDING_VERIFICATION' });
             
             setTimeout(() => {
                 (async () => {
                     try {
                         const userAfterDelay = auth.currentUser;
                         if (userAfterDelay && userAfterDelay.uid === userId) {
-                            const userDocRef = db.collection('users').doc(userId);
                             
-                            const userDoc = await userDocRef.get();
-                            if (userDoc.exists && userDoc.data()?.paymentStatus === 'PENDING_VERIFICATION') {
-                                await userDocRef.update({ paymentStatus: 'VERIFIED', balance: 0 });
+                            const userDoc = await getDoc(userDocRef);
+                            if (userDoc.exists() && userDoc.data()?.paymentStatus === 'PENDING_VERIFICATION') {
+                                await updateDoc(userDocRef, { paymentStatus: 'VERIFIED', balance: 0 });
                                 await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
                                 setShowWelcomeModal(true);
                             } else {
@@ -384,7 +390,8 @@ const App: React.FC = () => {
         const task = userTasks.find(t => t.id === taskId);
         if (!task || userProfile.completedTaskIds?.includes(taskId)) return;
         try {
-            await db.collection('users').doc(userProfile.uid).update({
+            const userDocRef = doc(db, 'users', userProfile.uid);
+            await updateDoc(userDocRef, {
                 completedTaskIds: arrayUnion(taskId)
             });
             await updateBalance(userProfile.uid, task.reward);
@@ -404,9 +411,12 @@ const App: React.FC = () => {
 
     const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
         if (!userProfile) return;
+        const userDocRef = doc(db, 'users', userProfile.uid);
         try {
             await updateBalance(userProfile.uid, -amount);
-            await db.collection('users').doc(userProfile.uid).collection('transactions').add({
+            
+            const transactionsColRef = collection(db, 'users', userProfile.uid, 'transactions');
+            await addDoc(transactionsColRef, {
                 type: TransactionType.WITHDRAWAL,
                 description: `Withdrawal via ${details.method}`,
                 amount: -amount,
@@ -414,7 +424,8 @@ const App: React.FC = () => {
                 status: 'Pending',
                 withdrawalDetails: details
             });
-            await db.collection('users').doc(userProfile.uid).update({ savedWithdrawalDetails: details });
+            
+            await updateDoc(userDocRef, { savedWithdrawalDetails: details });
         } catch (error) {
             console.error("Error processing withdrawal:", error);
             alert("There was an error processing your withdrawal request. Please try again.");
@@ -435,7 +446,8 @@ const App: React.FC = () => {
             lastApplicationDate: new Date().toISOString().split('T')[0]
         };
         try {
-            await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
+            const userDocRef = doc(db, 'users', userProfile.uid);
+            await updateDoc(userDocRef, { jobSubscription: subscription });
             await updateBalance(userProfile.uid, -cost);
             await addTransaction(userProfile.uid, TransactionType.JOB_SUBSCRIPTION, `Subscribed to ${plan} plan`, -cost);
         } catch (error) {
@@ -464,8 +476,11 @@ const App: React.FC = () => {
                 const job = jobs.find(j => j.id === jobId);
                 if (!job) return;
 
-                await db.collection('users').doc(userProfile.uid).update({ jobSubscription: subscription });
-                await db.collection('users').doc(userProfile.uid).collection('applications').add({
+                const userDocRef = doc(db, 'users', userProfile.uid);
+                await updateDoc(userDocRef, { jobSubscription: subscription });
+                
+                const applicationsColRef = collection(db, 'users', userProfile.uid, 'applications');
+                await addDoc(applicationsColRef, {
                     jobId: job.id, jobTitle: job.title, date: serverTimestamp(), status: 'Submitted',
                 });
                 alert('Application submitted successfully!');
@@ -482,12 +497,13 @@ const App: React.FC = () => {
         if (!userProfile || !authUser) return;
         try {
             if (authUser.email !== updatedData.email) {
-                await authUser.updateEmail(updatedData.email);
+                await updateEmail(authUser, updatedData.email);
             }
             if (authUser.displayName !== updatedData.name) {
-                await authUser.updateProfile({ displayName: updatedData.name });
+                await updateProfile(authUser, { displayName: updatedData.name });
             }
-            await db.collection('users').doc(userProfile.uid).update({
+            const userDocRef = doc(db, 'users', userProfile.uid);
+            await updateDoc(userDocRef, {
                 username: updatedData.name,
                 email: updatedData.email,
             });
@@ -499,7 +515,8 @@ const App: React.FC = () => {
     const handleDeposit = async (amount: number, transactionId: string) => {
         if (!userProfile) return;
         try {
-            await db.collection('users').doc(userProfile.uid).collection('transactions').add({
+            const transactionsColRef = collection(db, 'users', userProfile.uid, 'transactions');
+            await addDoc(transactionsColRef, {
                 type: TransactionType.PENDING_DEPOSIT,
                 description: `Deposit via TXID: ${transactionId}`, 
                 amount, 
@@ -558,7 +575,8 @@ const App: React.FC = () => {
     const handlePinSet = async (newPin: string) => {
         if (!userProfile) return;
         try {
-            await db.collection('users').doc(userProfile.uid).update({ walletPin: newPin });
+            const userDocRef = doc(db, 'users', userProfile.uid);
+            await updateDoc(userDocRef, { walletPin: newPin });
             setShowPinModal(false);
         } catch (error) {
             console.error("Error setting PIN:", error);
@@ -569,7 +587,8 @@ const App: React.FC = () => {
     const handlePinSkip = async () => {
         if (!userProfile) return;
         try {
-            await db.collection('users').doc(userProfile.uid).update({ walletPin: 'SKIPPED' });
+            const userDocRef = doc(db, 'users', userProfile.uid);
+            await updateDoc(userDocRef, { walletPin: 'SKIPPED' });
             setShowPinModal(false);
         } catch (error) {
             console.error("Error skipping PIN setup:", error);

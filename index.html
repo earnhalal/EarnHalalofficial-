@@ -18,7 +18,11 @@
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/"
   }
 }
 </script>
@@ -113,40 +117,6 @@
 </head>
 <body class="bg-[#0a192f]">
   <div id="root"></div>
-
-  <!-- ✅ Firebase SDKs (for App + Auth + Realtime Database) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-  <!-- ✅ Firebase Initialization -->
-  <script>
-    // Your web app's Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyClUJLYwy9SEjF_YERVTYuI-vlRFC31EPw",
-      authDomain: "earnhalal-5105b.firebaseapp.com",
-      databaseURL: "https://earnhalal-5105b-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "earnhalal-5105b",
-      storageBucket: "earnhalal-5105b.appspot.com",
-      messagingSenderId: "1077759003577",
-      appId: "1:1077759003577:web:bde4fe4da663e506780468",
-      measurementId: "G-DQ43TYB9CN"
-    };
-
-    // ✅ Initialize Firebase safely
-    try {
-      if (firebase.apps.length === 0) {
-        firebase.initializeApp(firebaseConfig);
-        console.log("✅ Firebase initialized successfully");
-      }
-    } catch (e) {
-      console.error("❌ Firebase initialization error:", e);
-    }
-
-    // ✅ Connect to Realtime Database
-    const db = firebase.database();
-    console.log("✅ Connected to Realtime Database");
-  </script>
 
   <!-- Your app’s entry file -->
   <script type="module" src="/index.tsx"></script>
