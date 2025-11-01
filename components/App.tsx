@@ -138,14 +138,17 @@ const App: React.FC = () => {
 
     // --- MOCK DATA, GLOBAL TASKS & REFERRAL ROUTING ---
     useEffect(() => {
-        // Handle referral links
+        // Handle referral links on initial load
         const path = window.location.pathname;
         const match = path.match(/^\/ref\/([^/]+)/);
         if (match && match[1]) {
             const referrerUsername = match[1];
             console.log(`Referrer found: ${referrerUsername}`);
             localStorage.setItem('referrerUsername', referrerUsername);
+            // Clean the URL to avoid re-triggering on refresh
             window.history.replaceState({}, document.title, '/');
+            // Ensure landing page is shown
+            setShowLanding(true);
         }
 
         const initialUserTasks = localStorage.getItem('globalUserTasks');
@@ -313,9 +316,12 @@ const App: React.FC = () => {
             const user = userCredential.user;
             if (user) {
                 await updateProfile(user, { displayName: username });
-                const userDocRef = doc(db, 'users', user.uid);
-                await setDoc(userDocRef, {
-                    uid: user.uid, username, email, phone,
+                
+                const userDocData: Omit<UserProfile, 'uid'> = {
+                    username,
+                    username_lowercase: username.toLowerCase(),
+                    email,
+                    phone,
                     joinedAt: serverTimestamp(),
                     paymentStatus: 'UNPAID',
                     jobSubscription: null,
@@ -324,36 +330,31 @@ const App: React.FC = () => {
                     completedTaskIds: [],
                     savedWithdrawalDetails: null,
                     walletPin: null,
-                });
-                
-                // --- Referral Logic ---
+                };
+    
+                // --- Referral Logic: Tag user with referrer info ---
                 const referrerUsername = localStorage.getItem('referrerUsername');
                 if (referrerUsername) {
                     const usersRef = collection(db, 'users');
-                    const q = query(usersRef, where("username", "==", referrerUsername));
+                    const referrerUsernameLower = referrerUsername.toLowerCase();
+                    const q = query(usersRef, where("username_lowercase", "==", referrerUsernameLower));
                     const querySnapshot = await getDocs(q);
-
+    
                     if (!querySnapshot.empty) {
                         const referrerDoc = querySnapshot.docs[0];
-                        const referrerId = referrerDoc.id;
-
-                        const referralsColRef = collection(db, 'referrals');
-                        await addDoc(referralsColRef, {
-                            referrerId: referrerId,
-                            referrerUsername: referrerUsername,
-                            referredId: user.uid,
-                            referredUsername: username,
-                            status: 'pending_payment',
-                            isPaid: false,
-                            bonusAmount: 20,
-                            createdAt: serverTimestamp(),
-                        });
-                        console.log(`Referral link processed for referrer: ${referrerUsername} (${referrerId})`);
+                        userDocData.referredBy = { 
+                            uid: referrerDoc.id, 
+                            username: referrerDoc.data().username 
+                        };
+                        console.log(`New user was referred by ${referrerUsername} (${referrerDoc.id})`);
                     } else {
                         console.warn(`Referrer username "${referrerUsername}" not found.`);
                     }
                     localStorage.removeItem('referrerUsername');
                 }
+                
+                const userDocRef = doc(db, 'users', user.uid);
+                await setDoc(userDocRef, userDocData);
             }
         } catch (error: any) {
             console.error("Signup error:", error);
@@ -383,7 +384,7 @@ const App: React.FC = () => {
         }
         const userId = currentUser.uid;
         const userDocRef = doc(db, 'users', userId);
-
+    
         try {
             await updateDoc(userDocRef, { paymentStatus: 'PENDING_VERIFICATION' });
             
@@ -393,27 +394,29 @@ const App: React.FC = () => {
                         const userAfterDelay = auth.currentUser;
                         if (userAfterDelay && userAfterDelay.uid === userId) {
                             
-                            const userDoc = await getDoc(userDocRef);
-                            if (userDoc.exists() && userDoc.data()?.paymentStatus === 'PENDING_VERIFICATION') {
-                                await updateDoc(userDocRef, { paymentStatus: 'VERIFIED', balance: 0 });
-                                await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
-
-                                // --- Update Referral Status Logic ---
-                                const referralsRef = collection(db, 'referrals');
-                                const q = query(referralsRef, where("referredId", "==", userId), where("status", "==", "pending_payment"));
-                                const querySnapshot = await getDocs(q);
-
-                                if (!querySnapshot.empty) {
-                                    const referralDoc = querySnapshot.docs[0];
-                                    const referralDocRef = doc(db, 'referrals', referralDoc.id);
-                                    await updateDoc(referralDocRef, {
-                                        status: 'pending_bonus',
-                                        isPaid: true
+                            const userDocSnap = await getDoc(userDocRef);
+                            if (userDocSnap.exists() && userDocSnap.data()?.paymentStatus === 'PENDING_VERIFICATION') {
+                                const userData = userDocSnap.data() as UserProfile;
+    
+                                // --- Referral Logic: Create referral doc on payment verification ---
+                                if (userData.referredBy?.uid && userData.referredBy?.username) {
+                                    const referralsColRef = collection(db, 'referrals');
+                                    await addDoc(referralsColRef, {
+                                        referrerId: userData.referredBy.uid,
+                                        referrerUsername: userData.referredBy.username,
+                                        referredId: userId,
+                                        referredUsername: userData.username,
+                                        status: 'pending_bonus', // Admin needs to approve
+                                        bonusAmount: 20, // Level 1 bonus
+                                        isReferredUserPaid: true,
+                                        createdAt: serverTimestamp(),
                                     });
-                                    console.log(`Referral status updated to pending_bonus for user ${userId}`);
+                                    console.log(`Referral record created for referrer ${userData.referredBy.username}`);
                                 }
                                 // --- End of Referral Logic ---
-
+    
+                                await updateDoc(userDocRef, { paymentStatus: 'VERIFIED', balance: 0 });
+                                await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
                                 setShowWelcomeModal(true);
                             } else {
                                 console.log("User status is no longer 'PENDING_VERIFICATION'. Skipping update.");
@@ -622,6 +625,7 @@ const App: React.FC = () => {
             const userDocRef = doc(db, 'users', userProfile.uid);
             await updateDoc(userDocRef, {
                 username: updatedData.name,
+                username_lowercase: updatedData.name.toLowerCase(),
                 email: updatedData.email,
             });
         } catch(error: any) {

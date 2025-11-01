@@ -86,6 +86,7 @@ export interface JobSubscription {
 export interface UserProfile {
   uid: string;
   username: string;
+  username_lowercase: string;
   email: string;
   phone: string;
   joinedAt: any; // Firestore Timestamp
@@ -96,6 +97,10 @@ export interface UserProfile {
   completedTaskIds: string[];
   savedWithdrawalDetails: WithdrawalDetails | null;
   walletPin: string | null;
+  referredBy?: {
+    uid: string;
+    username: string;
+  };
 }
 
 export interface Job {
