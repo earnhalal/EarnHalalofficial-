@@ -48,7 +48,12 @@ const MyApplicationsView: React.FC<MyApplicationsViewProps> = ({ applications })
                             <div>
                                 <p className="font-bold text-lg text-gray-800 dark:text-gray-100">{app.jobTitle}</p>
                                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Applied on: {new Date(app.date).toLocaleDateString()}
+                                    Applied on: {(() => {
+                                        const dateRaw = app.date as any;
+                                        if (!dateRaw) return 'N/A';
+                                        const dateObj = dateRaw.toDate ? dateRaw.toDate() : new Date(dateRaw);
+                                        return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
+                                    })()}
                                 </p>
                             </div>
                             <div className="flex-shrink-0">

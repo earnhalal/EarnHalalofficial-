@@ -74,7 +74,12 @@ const WeeklyChart: React.FC<{ transactions: Transaction[] }> = ({ transactions }
             dayLabels[6-i] = date.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 1);
 
             const earningsForDay = transactions.filter(tx => {
-                const txDate = new Date(tx.date);
+                const txDateRaw = tx.date as any;
+                if (!txDateRaw) return false;
+                
+                const txDate = txDateRaw.toDate ? txDateRaw.toDate() : new Date(txDateRaw);
+                if (isNaN(txDate.getTime())) return false;
+
                 return tx.type === TransactionType.EARNING &&
                        txDate.getFullYear() === date.getFullYear() &&
                        txDate.getMonth() === date.getMonth() &&
@@ -155,7 +160,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
                         <div key={tx.id} className="flex justify-between items-center p-2 rounded-md hover:bg-white/5">
                             <div>
                                 <p className="font-semibold text-sm text-slate-200">{tx.description}</p>
-                                <p className="text-xs text-slate-400">{new Date(tx.date).toLocaleDateString()}</p>
+                                <p className="text-xs text-slate-400">{
+                                    (() => {
+                                        const dateRaw = tx.date as any;
+                                        if (!dateRaw) return 'N/A';
+                                        const dateObj = dateRaw.toDate ? dateRaw.toDate() : new Date(dateRaw);
+                                        return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleDateString();
+                                    })()
+                                }</p>
                             </div>
                             <p className="font-bold text-green-400 text-sm whitespace-nowrap">
                                 +{tx.amount.toFixed(2)} Rs

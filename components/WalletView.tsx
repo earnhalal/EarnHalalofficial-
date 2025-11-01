@@ -215,7 +215,14 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                             </span>
                         )}
                     </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{new Date(tx.date).toLocaleString()}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{
+                      (() => {
+                          const dateRaw = tx.date as any;
+                          if (!dateRaw) return 'N/A';
+                          const dateObj = dateRaw.toDate ? dateRaw.toDate() : new Date(dateRaw);
+                          return isNaN(dateObj.getTime()) ? 'Invalid Date' : dateObj.toLocaleString();
+                      })()
+                  }</p>
                 </div>
                 <p className={`font-bold text-sm whitespace-nowrap ${tx.amount > 0 ? 'text-green-500' : 'text-red-500'}`}>
                   {tx.amount > 0 ? '+' : ''}{tx.amount.toFixed(2)} Rs

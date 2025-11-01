@@ -29,7 +29,7 @@ import { TransactionType, TaskType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction } from 'firebase/firestore';
 
 
 // --- HELPERS ---
@@ -411,26 +411,54 @@ const App: React.FC = () => {
 
     const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
         if (!userProfile) return;
-        const userDocRef = doc(db, 'users', userProfile.uid);
+        const userId = userProfile.uid;
+
         try {
-            await updateBalance(userProfile.uid, -amount);
-            
-            const transactionsColRef = collection(db, 'users', userProfile.uid, 'transactions');
-            await addDoc(transactionsColRef, {
-                type: TransactionType.WITHDRAWAL,
-                description: `Withdrawal via ${details.method}`,
-                amount: -amount,
-                date: serverTimestamp(),
-                status: 'Pending',
-                withdrawalDetails: details
+            await runTransaction(db, async (transaction) => {
+                const userDocRef = doc(db, 'users', userId);
+                const userDoc = await transaction.get(userDocRef);
+
+                if (!userDoc.exists()) {
+                    throw "User document does not exist!";
+                }
+
+                const currentBalance = userDoc.data().balance || 0;
+                if (currentBalance < amount) {
+                    throw "Insufficient balance.";
+                }
+
+                // Deduct from balance
+                transaction.update(userDocRef, { balance: increment(-amount) });
+
+                // Create request in top-level withdrawalRequests collection
+                const withdrawalRequestRef = doc(collection(db, 'withdrawalRequests'));
+                transaction.set(withdrawalRequestRef, {
+                    userId: userId,
+                    username: userProfile.username, // For easier admin review
+                    amount: amount,
+                    status: 'Pending',
+                    ...details,
+                    createdAt: serverTimestamp()
+                });
+
+                // Create history record in user's transactions sub-collection
+                const transactionHistoryRef = doc(collection(db, 'users', userId, 'transactions'));
+                transaction.set(transactionHistoryRef, {
+                    type: TransactionType.WITHDRAWAL,
+                    description: `Withdrawal via ${details.method}`,
+                    amount: -amount,
+                    date: serverTimestamp(),
+                    status: 'Pending',
+                    withdrawalDetails: details
+                });
             });
-            
+
+            // Update saved details (can be outside transaction)
+            const userDocRef = doc(db, 'users', userId);
             await updateDoc(userDocRef, { savedWithdrawalDetails: details });
         } catch (error) {
             console.error("Error processing withdrawal:", error);
-            alert("There was an error processing your withdrawal request. Please try again.");
-            // Revert balance change on failure
-            try { await updateBalance(userProfile.uid, amount); } catch (revertError) { console.error("FATAL: Could not revert balance after failed withdrawal.", revertError); }
+            alert(`There was an error processing your withdrawal request. ${error}`);
         }
     };
 
