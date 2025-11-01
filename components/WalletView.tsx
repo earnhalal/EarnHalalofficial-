@@ -200,7 +200,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
         <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-lg">
           <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-4">Transaction History</h3>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-            {[...transactions].reverse().map(tx => (
+            {transactions.map(tx => (
               <div key={tx.id} className="flex justify-between items-center">
                 <div>
                    <p className="font-semibold text-sm text-slate-700 dark:text-slate-200 flex items-center gap-2 flex-wrap">
@@ -208,7 +208,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                         {(tx.type === TransactionType.WITHDRAWAL || tx.type === TransactionType.PENDING_DEPOSIT) && tx.status && (
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                 tx.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' 
-                                : tx.status === 'Failed' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                : tx.status === 'Failed' || tx.status === 'Rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
                                 : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                             }`}>
                                 {tx.status}

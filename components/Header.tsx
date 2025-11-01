@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { View } from '../types';
-import { MenuIcon, CloseIcon, ArrowLeftIcon } from './icons';
+import { MenuIcon, CloseIcon, ArrowLeftIcon, UserIcon } from './icons';
 
 interface HeaderProps {
   activeView: View;
@@ -10,6 +10,7 @@ interface HeaderProps {
   setIsSidebarOpen: (isOpen: boolean) => void;
   canGoBack: boolean;
   onBack: () => void;
+  setActiveView: (view: View) => void;
 }
 
 const viewTitles: Record<View, string> = {
@@ -31,7 +32,7 @@ const viewTitles: Record<View, string> = {
   TERMS_CONDITIONS: 'Terms & Conditions',
 };
 
-const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSidebarOpen, setIsSidebarOpen, canGoBack, onBack }) => {
+const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSidebarOpen, setIsSidebarOpen, canGoBack, onBack, setActiveView }) => {
   const title = viewTitles[activeView] || 'Dashboard';
   const [animateBalance, setAnimateBalance] = useState(false);
   const prevBalanceRef = useRef(balance);
@@ -74,12 +75,15 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
             )}
             <h1 className="text-2xl font-bold text-slate-100">{title}</h1>
         </div>
-        <div className="flex items-center space-x-4">
+        <button onClick={() => setActiveView('PROFILE_SETTINGS')} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors group">
             <div className="text-right">
-                <p className="font-semibold text-slate-100">{username}</p>
+                <p className="font-semibold text-slate-100 group-hover:text-amber-300 transition-colors">{username}</p>
                 <p className={`text-sm text-amber-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
             </div>
-        </div>
+             <div className="p-2 bg-slate-700/50 rounded-full group-hover:bg-amber-500/10 transition-colors">
+                <UserIcon className="w-6 h-6 text-slate-300 group-hover:text-amber-300 transition-colors"/>
+            </div>
+        </button>
       </div>
     </header>
   );

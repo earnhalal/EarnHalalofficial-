@@ -28,8 +28,8 @@ import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSub
 import { TransactionType, TaskType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction } from 'firebase/firestore';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword } from 'firebase/auth';
+import { doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, where } from 'firebase/firestore';
 
 
 // --- HELPERS ---
@@ -136,8 +136,18 @@ const App: React.FC = () => {
     const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
     const [showNotificationBanner, setShowNotificationBanner] = useState(Notification.permission === 'default');
 
-    // --- MOCK DATA & GLOBAL TASKS ---
+    // --- MOCK DATA, GLOBAL TASKS & REFERRAL ROUTING ---
     useEffect(() => {
+        // Handle referral links
+        const path = window.location.pathname;
+        const match = path.match(/^\/ref\/([^/]+)/);
+        if (match && match[1]) {
+            const referrerUsername = match[1];
+            console.log(`Referrer found: ${referrerUsername}`);
+            localStorage.setItem('referrerUsername', referrerUsername);
+            window.history.replaceState({}, document.title, '/');
+        }
+
         const initialUserTasks = localStorage.getItem('globalUserTasks');
         if (!initialUserTasks) {
             const mockTasks = Array.from({ length: 8 }, (_, i) => generateMockTask(i + 1));
@@ -192,6 +202,30 @@ const App: React.FC = () => {
                      console.error("Error fetching transactions:", error);
                 });
                 unsubscribeCallbacks.current.push(unsubTransactions);
+
+                // Real-time listener for withdrawal request status changes
+                const withdrawalRequestsQuery = query(collection(db, 'withdrawalRequests'), where('userId', '==', user.uid));
+                const unsubWithdrawals = onSnapshot(withdrawalRequestsQuery, snapshot => {
+                    const statusUpdates = new Map<string, Transaction['status']>();
+                    snapshot.docs.forEach(doc => {
+                        const data = doc.data();
+                        statusUpdates.set(doc.id, data.status);
+                    });
+
+                    setTransactions(currentTransactions => 
+                        currentTransactions.map(tx => {
+                            if (tx.withdrawalRequestId && statusUpdates.has(tx.withdrawalRequestId)) {
+                                const newStatus = statusUpdates.get(tx.withdrawalRequestId);
+                                if (tx.status !== newStatus) {
+                                    return { ...tx, status: newStatus };
+                                }
+                            }
+                            return tx;
+                        })
+                    );
+                });
+                unsubscribeCallbacks.current.push(unsubWithdrawals);
+
 
                 // Listen to applications subcollection
                 const applicationsQuery = query(collection(db, 'users', user.uid, 'applications'), orderBy('date', 'desc'));
@@ -291,6 +325,35 @@ const App: React.FC = () => {
                     savedWithdrawalDetails: null,
                     walletPin: null,
                 });
+                
+                // --- Referral Logic ---
+                const referrerUsername = localStorage.getItem('referrerUsername');
+                if (referrerUsername) {
+                    const usersRef = collection(db, 'users');
+                    const q = query(usersRef, where("username", "==", referrerUsername));
+                    const querySnapshot = await getDocs(q);
+
+                    if (!querySnapshot.empty) {
+                        const referrerDoc = querySnapshot.docs[0];
+                        const referrerId = referrerDoc.id;
+
+                        const referralsColRef = collection(db, 'referrals');
+                        await addDoc(referralsColRef, {
+                            referrerId: referrerId,
+                            referrerUsername: referrerUsername,
+                            referredId: user.uid,
+                            referredUsername: username,
+                            status: 'pending_payment',
+                            isPaid: false,
+                            bonusAmount: 20,
+                            createdAt: serverTimestamp(),
+                        });
+                        console.log(`Referral link processed for referrer: ${referrerUsername} (${referrerId})`);
+                    } else {
+                        console.warn(`Referrer username "${referrerUsername}" not found.`);
+                    }
+                    localStorage.removeItem('referrerUsername');
+                }
             }
         } catch (error: any) {
             console.error("Signup error:", error);
@@ -334,6 +397,23 @@ const App: React.FC = () => {
                             if (userDoc.exists() && userDoc.data()?.paymentStatus === 'PENDING_VERIFICATION') {
                                 await updateDoc(userDocRef, { paymentStatus: 'VERIFIED', balance: 0 });
                                 await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
+
+                                // --- Update Referral Status Logic ---
+                                const referralsRef = collection(db, 'referrals');
+                                const q = query(referralsRef, where("referredId", "==", userId), where("status", "==", "pending_payment"));
+                                const querySnapshot = await getDocs(q);
+
+                                if (!querySnapshot.empty) {
+                                    const referralDoc = querySnapshot.docs[0];
+                                    const referralDocRef = doc(db, 'referrals', referralDoc.id);
+                                    await updateDoc(referralDocRef, {
+                                        status: 'pending_bonus',
+                                        isPaid: true
+                                    });
+                                    console.log(`Referral status updated to pending_bonus for user ${userId}`);
+                                }
+                                // --- End of Referral Logic ---
+
                                 setShowWelcomeModal(true);
                             } else {
                                 console.log("User status is no longer 'PENDING_VERIFICATION'. Skipping update.");
@@ -412,36 +492,38 @@ const App: React.FC = () => {
     const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
         if (!userProfile) return;
         const userId = userProfile.uid;
-
+    
         try {
             await runTransaction(db, async (transaction) => {
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await transaction.get(userDocRef);
-
+    
                 if (!userDoc.exists()) {
                     throw "User document does not exist!";
                 }
-
+    
                 const currentBalance = userDoc.data().balance || 0;
                 if (currentBalance < amount) {
                     throw "Insufficient balance.";
                 }
-
-                // Deduct from balance
+    
+                // 1. Deduct from balance
                 transaction.update(userDocRef, { balance: increment(-amount) });
-
-                // Create request in top-level withdrawalRequests collection
+    
+                // 2. Create request in top-level withdrawalRequests collection
                 const withdrawalRequestRef = doc(collection(db, 'withdrawalRequests'));
+                const withdrawalRequestId = withdrawalRequestRef.id; // Get the ID to link them
+    
                 transaction.set(withdrawalRequestRef, {
                     userId: userId,
-                    username: userProfile.username, // For easier admin review
+                    username: userProfile.username,
                     amount: amount,
                     status: 'Pending',
                     ...details,
                     createdAt: serverTimestamp()
                 });
-
-                // Create history record in user's transactions sub-collection
+    
+                // 3. Create history record in user's transactions with the link
                 const transactionHistoryRef = doc(collection(db, 'users', userId, 'transactions'));
                 transaction.set(transactionHistoryRef, {
                     type: TransactionType.WITHDRAWAL,
@@ -449,13 +531,15 @@ const App: React.FC = () => {
                     amount: -amount,
                     date: serverTimestamp(),
                     status: 'Pending',
-                    withdrawalDetails: details
+                    withdrawalDetails: details,
+                    withdrawalRequestId: withdrawalRequestId, // Add the link
                 });
             });
-
-            // Update saved details (can be outside transaction)
+    
+            // 4. Update saved details (can be outside transaction)
             const userDocRef = doc(db, 'users', userId);
             await updateDoc(userDocRef, { savedWithdrawalDetails: details });
+    
         } catch (error) {
             console.error("Error processing withdrawal:", error);
             alert(`There was an error processing your withdrawal request. ${error}`);
@@ -521,9 +605,14 @@ const App: React.FC = () => {
         }
     };
     
-    const handleUpdateProfile = async (updatedData: { name: string; email: string; }) => {
-        if (!userProfile || !authUser) return;
+    const handleUpdateProfile = async (updatedData: { name: string; email: string; password?: string; }) => {
+        if (!userProfile || !authUser) {
+             throw new Error("Not authenticated. Please log in again.");
+        }
         try {
+            if (updatedData.password) {
+                await updatePassword(authUser, updatedData.password);
+            }
             if (authUser.email !== updatedData.email) {
                 await updateEmail(authUser, updatedData.email);
             }
@@ -536,7 +625,8 @@ const App: React.FC = () => {
                 email: updatedData.email,
             });
         } catch(error: any) {
-            alert(`Error updating profile: ${error.message}. Please re-login if you changed your email.`);
+             console.error("Error updating profile:", error);
+             throw new Error(error.message || "An unknown error occurred. Please re-login.");
         }
     };
 
@@ -675,7 +765,7 @@ const App: React.FC = () => {
             {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-20 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
             <Sidebar activeView={view} setActiveView={handleSetActiveView} isSidebarOpen={isSidebarOpen} />
             <div className={`flex-1 flex flex-col transition-all duration-300 lg:ml-64`}>
-                <Header activeView={view} balance={balance} username={userProfile.username} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} canGoBack={viewHistory.length > 1} onBack={handleBack} />
+                <Header activeView={view} balance={balance} username={userProfile.username} isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} canGoBack={viewHistory.length > 1} onBack={handleBack} setActiveView={handleSetActiveView} />
                 <main className="flex-grow p-4 sm:p-6 lg:p-8">
                     <div key={view} className="animate-fade-in">
                         {(() => {

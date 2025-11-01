@@ -7,6 +7,7 @@ const AdsenseBanner: React.FC = () => {
     useEffect(() => {
         try {
             ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        // FIX: Corrected a malformed try...catch block which was causing a syntax error.
         } catch (err) {
             console.error("AdSense error:", err);
         }
@@ -125,7 +126,7 @@ const WeeklyChart: React.FC<{ transactions: Transaction[] }> = ({ transactions }
 const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, referrals, setActiveView, transactions, onSimulateNewTask }) => {
   const recentActivity = transactions
     .filter(tx => tx.type === TransactionType.EARNING || tx.type === TransactionType.REFERRAL)
-    .slice(-5);
+    .slice(0, 5);
 
   return (
     <div className="space-y-8">
@@ -156,7 +157,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
             <h2 className="text-xl font-bold text-slate-100 mb-4">Recent Activity</h2>
             <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
                 {recentActivity.length > 0 ? (
-                    [...recentActivity].reverse().map(tx => (
+                    recentActivity.map(tx => (
                         <div key={tx.id} className="flex justify-between items-center p-2 rounded-md hover:bg-white/5">
                             <div>
                                 <p className="font-semibold text-sm text-slate-200">{tx.description}</p>

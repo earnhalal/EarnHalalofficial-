@@ -44,7 +44,8 @@ export interface Transaction {
   amount: number;
   date: any; // Can be string or Firestore timestamp
   withdrawalDetails?: WithdrawalDetails;
-  status?: 'Completed' | 'Pending' | 'Failed';
+  status?: 'Completed' | 'Pending' | 'Failed' | 'Approved' | 'Rejected';
+  withdrawalRequestId?: string; // Link to the top-level withdrawal request
 }
 
 export enum TaskType {
