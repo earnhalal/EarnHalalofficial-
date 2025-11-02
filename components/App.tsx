@@ -119,6 +119,7 @@ const App: React.FC = () => {
     // User & Data State
     const [authUser, setAuthUser] = useState<any | null>(null);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const userProfileRef = useRef<UserProfile | null>(null);
     const [balance, setBalance] = useState(0);
     const [pendingRewards, setPendingRewards] = useState(0);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -160,9 +161,7 @@ const App: React.FC = () => {
         const match = path.match(/^\/ref\/([^/]+)/);
         if (match && match[1]) {
             const referrerUID = match[1];
-            // Basic validation for UID format could be added here
             localStorage.setItem('earnhalal_referrer_uid', referrerUID);
-            // Clean the URL to prevent re-triggering on refresh and remove referral code from address bar
             window.history.replaceState({}, document.title, '/');
         }
     }, []);
@@ -170,7 +169,6 @@ const App: React.FC = () => {
     // --- FIREBASE AUTH & DATA SYNC ---
     useEffect(() => {
         const unsubscribeAuth = onAuthStateChanged(auth, user => {
-            // Clear previous user's listeners
             unsubscribeCallbacks.current.forEach(cb => cb());
             unsubscribeCallbacks.current = [];
 
@@ -178,13 +176,43 @@ const App: React.FC = () => {
                 setAuthUser(user);
                 setShowLanding(false);
 
-                // Listen to user profile
                 const userRef = doc(db, 'users', user.uid);
-                const unsubProfile = onSnapshot(userRef, docSnap => {
+                const unsubProfile = onSnapshot(userRef, async (docSnap) => {
                     if (docSnap.exists()) {
+                        const previousProfile = userProfileRef.current;
                         const data = docSnap.data() as Omit<UserProfile, 'uid'>;
-                        setUserProfile({ ...data, uid: docSnap.id });
+                        const newProfile = { ...data, uid: docSnap.id };
+
+                        setUserProfile(newProfile);
                         setBalance(data.balance || 0);
+
+                        if (previousProfile && previousProfile.paymentStatus === 'PENDING_VERIFICATION' && newProfile.paymentStatus === 'VERIFIED') {
+                            await addTransaction(newProfile.uid, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
+                            
+                            const referrerUID = localStorage.getItem('earnhalal_referrer_uid');
+                            if (referrerUID) {
+                                try {
+                                    const referralsColRef = collection(db, 'referrals');
+                                    const referrerDoc = await getDoc(doc(db, 'users', referrerUID));
+                                    const referrerUsername = referrerDoc.exists() ? referrerDoc.data().username : 'unknown_referrer';
+
+                                    await addDoc(referralsColRef, {
+                                        referrerId: referrerUID,
+                                        referrerUsername,
+                                        referredId: newProfile.uid,
+                                        referredUsername: newProfile.username,
+                                        status: 'pending_bonus',
+                                        bonusAmount: 50,
+                                        isReferredUserPaid: true,
+                                        createdAt: serverTimestamp(),
+                                    });
+                                    localStorage.removeItem('earnhalal_referrer_uid');
+                                } catch (e) {
+                                    console.error("Failed to create referral record:", e);
+                                }
+                            }
+                            setShowWelcomeModal(true);
+                        }
                     } else {
                         console.log("User document not found, waiting for creation...");
                     }
@@ -196,7 +224,6 @@ const App: React.FC = () => {
                 });
                 unsubscribeCallbacks.current.push(unsubProfile);
 
-                // Listen to transactions subcollection
                 const transactionsQuery = query(collection(db, 'users', user.uid, 'transactions'), orderBy('date', 'desc'));
                 const unsubTransactions = onSnapshot(transactionsQuery, snapshot => {
                     const txs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction));
@@ -206,7 +233,6 @@ const App: React.FC = () => {
                 });
                 unsubscribeCallbacks.current.push(unsubTransactions);
 
-                // Real-time listener for withdrawal request status changes
                 const withdrawalRequestsQuery = query(collection(db, 'withdrawalRequests'), where('userId', '==', user.uid));
                 const unsubWithdrawals = onSnapshot(withdrawalRequestsQuery, snapshot => {
                     const statusUpdates = new Map<string, Transaction['status']>();
@@ -229,8 +255,6 @@ const App: React.FC = () => {
                 });
                 unsubscribeCallbacks.current.push(unsubWithdrawals);
 
-
-                // Listen to applications subcollection
                 const applicationsQuery = query(collection(db, 'users', user.uid, 'applications'), orderBy('date', 'desc'));
                 const unsubApplications = onSnapshot(applicationsQuery, snapshot => {
                     const apps = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Application));
@@ -241,7 +265,6 @@ const App: React.FC = () => {
                 unsubscribeCallbacks.current.push(unsubApplications);
 
             } else {
-                const isReferralPath = /^\/ref\/[^/]+/.test(window.location.pathname);
                 setAuthUser(null);
                 setUserProfile(null);
                 setBalance(0);
@@ -263,7 +286,7 @@ const App: React.FC = () => {
             if (amount > 0) playBalanceSound();
         } catch (error) {
             console.error("Error updating balance:", error);
-            throw error; // Re-throw to be caught by caller
+            throw error;
         }
     };
 
@@ -362,58 +385,25 @@ const App: React.FC = () => {
     const handlePaymentSubmit = async () => {
         const currentUser = auth.currentUser;
         if (!currentUser) {
-            console.error("Payment submitted without a logged-in user.");
             alert("You must be logged in to submit payment.");
             return;
         }
-        const userId = currentUser.uid;
-        const userDocRef = doc(db, 'users', userId);
+        const userDocRef = doc(db, 'users', currentUser.uid);
     
         try {
             await updateDoc(userDocRef, { paymentStatus: 'PENDING_VERIFICATION' });
             
-            setTimeout(() => {
-                (async () => {
-                    try {
-                        const userAfterDelay = auth.currentUser;
-                        if (userAfterDelay && userAfterDelay.uid === userId) {
-                            
-                            const userDocSnap = await getDoc(userDocRef);
-                            if (userDocSnap.exists() && userDocSnap.data()?.paymentStatus === 'PENDING_VERIFICATION') {
-                                const userData = userDocSnap.data() as UserProfile;
-    
-                                // --- New Referral Logic: Use localStorage ---
-                                const referrerUID = localStorage.getItem('earnhalal_referrer_uid');
-                                if (referrerUID) {
-                                    const referralsColRef = collection(db, 'referrals');
-                                    await addDoc(referralsColRef, {
-                                        referrerId: referrerUID,
-                                        referredId: userId,
-                                        referredUsername: userData.username,
-                                        status: 'pending_bonus', // Admin needs to approve
-                                        bonusAmount: 50,
-                                        isReferredUserPaid: true,
-                                        createdAt: serverTimestamp(),
-                                    });
-                                    // Clean up after use
-                                    localStorage.removeItem('earnhalal_referrer_uid');
-                                }
-                                // --- End of Referral Logic ---
-    
-                                await updateDoc(userDocRef, { paymentStatus: 'VERIFIED', balance: 0 });
-                                await addTransaction(userId, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
-                                setShowWelcomeModal(true);
-                            } else {
-                                console.log("User status is no longer 'PENDING_VERIFICATION'. Skipping update.");
-                            }
-                        } else {
-                            console.log("User changed during verification delay. Aborting.");
-                        }
-                    } catch(error) {
-                        console.error("Error during the final verification step:", error);
-                        alert("A final error occurred during verification. Please contact support.");
+            setTimeout(async () => {
+                try {
+                    const freshDoc = await getDoc(userDocRef);
+                    if (freshDoc.exists() && freshDoc.data().paymentStatus === 'PENDING_VERIFICATION') {
+                        await updateDoc(userDocRef, { paymentStatus: 'VERIFIED' });
                     }
-                })();
+                } catch (verificationError) {
+                    console.error("Error during simulated verification:", verificationError);
+                    await updateDoc(userDocRef, { paymentStatus: 'UNPAID' }).catch(err => console.error("Failed to reset payment status:", err));
+                    alert("There was an error verifying your payment. Please try submitting again.");
+                }
             }, 10000);
         } catch (error) {
             console.error("Error updating payment status to pending:", error);
@@ -427,7 +417,6 @@ const App: React.FC = () => {
             await updateBalance(userProfile.uid, -totalCost);
             try {
                 await addTransaction(userProfile.uid, TransactionType.TASK_CREATION, `Campaign: ${taskData.title}`, -totalCost);
-                // The global task list logic remains in localStorage as per original design.
                 const newUserTask: UserCreatedTask = {
                     id: `utask_${Date.now()}`, ...taskData, quantity, completions: 0, views: 0
                 };
@@ -436,8 +425,8 @@ const App: React.FC = () => {
                 localStorage.setItem('globalUserTasks', JSON.stringify(updatedGlobalTasks));
             } catch (transactionError) {
                 console.error("Task transaction failed, reverting balance.", transactionError);
-                await updateBalance(userProfile.uid, totalCost); // Revert
-                throw transactionError; // Re-throw to be caught by outer handler
+                await updateBalance(userProfile.uid, totalCost);
+                throw transactionError;
             }
         } catch (error) {
             console.error("Error creating task:", error);
@@ -465,7 +454,6 @@ const App: React.FC = () => {
             await updateBalance(userProfile.uid, task.reward);
             await addTransaction(userProfile.uid, TransactionType.EARNING, `Completed: ${task.title}`, task.reward);
 
-            // Update global task list in localStorage
             const updatedUserTasks = userTasks.map(t =>
                 t.id === taskId ? { ...t, completions: t.completions + 1 } : t
             );
@@ -486,21 +474,15 @@ const App: React.FC = () => {
                 const userDocRef = doc(db, 'users', userId);
                 const userDoc = await transaction.get(userDocRef);
     
-                if (!userDoc.exists()) {
-                    throw "User document does not exist!";
-                }
+                if (!userDoc.exists()) throw "User document does not exist!";
     
                 const currentBalance = userDoc.data().balance || 0;
-                if (currentBalance < amount) {
-                    throw "Insufficient balance.";
-                }
+                if (currentBalance < amount) throw "Insufficient balance.";
     
-                // 1. Deduct from balance
                 transaction.update(userDocRef, { balance: increment(-amount) });
     
-                // 2. Create request in top-level withdrawalRequests collection
                 const withdrawalRequestRef = doc(collection(db, 'withdrawalRequests'));
-                const withdrawalRequestId = withdrawalRequestRef.id; // Get the ID to link them
+                const withdrawalRequestId = withdrawalRequestRef.id;
     
                 transaction.set(withdrawalRequestRef, {
                     userId: userId,
@@ -511,7 +493,6 @@ const App: React.FC = () => {
                     createdAt: serverTimestamp()
                 });
     
-                // 3. Create history record in user's transactions with the link
                 const transactionHistoryRef = doc(collection(db, 'users', userId, 'transactions'));
                 transaction.set(transactionHistoryRef, {
                     type: TransactionType.WITHDRAWAL,
@@ -520,11 +501,10 @@ const App: React.FC = () => {
                     date: serverTimestamp(),
                     status: 'Pending',
                     withdrawalDetails: details,
-                    withdrawalRequestId: withdrawalRequestId, // Add the link
+                    withdrawalRequestId: withdrawalRequestId,
                 });
             });
     
-            // 4. Update saved details (can be outside transaction)
             const userDocRef = doc(db, 'users', userId);
             await updateDoc(userDocRef, { savedWithdrawalDetails: details });
     
@@ -704,6 +684,7 @@ const App: React.FC = () => {
     };
     
     // Derived state
+    userProfileRef.current = userProfile;
     const referralEarnings = useMemo(() => transactions.filter(tx => tx.type === TransactionType.REFERRAL).reduce((sum, tx) => sum + tx.amount, 0), [transactions]);
     const tasksCompletedCount = useMemo(() => userProfile?.completedTaskIds?.length || 0, [userProfile]);
     const availableTasks = useMemo(() => userTasks.filter(task => task.completions < task.quantity), [userTasks]);
