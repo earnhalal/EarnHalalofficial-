@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { UserIcon, EmailIcon, PhoneIcon, LockIcon, InviteIcon } from './icons';
 
 interface AuthViewProps {
-    onSignup: (data: {username: string, email: string, phone: string, password: string}) => void;
+    onSignup: (data: {username: string, email: string, phone: string, password: string, referrer?: string}) => void;
     onLogin: (email: string, password: string) => void;
 }
 
-const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, required?: boolean }> = 
-({ icon, type, value, onChange, placeholder, required = true }) => (
+const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder: string, required?: boolean, readOnly?: boolean }> = 
+({ icon, type, value, onChange, placeholder, required = true, readOnly = false }) => (
     <div className="relative group">
         <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 group-focus-within:text-amber-400 transition-colors duration-300">
             {icon}
@@ -17,9 +17,11 @@ const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, 
             value={value} 
             onChange={onChange}
             placeholder={placeholder}
-            className="w-full py-3 pl-12 pr-4 text-slate-200 bg-slate-800/50 border-2 border-slate-700 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all duration-300 placeholder:text-slate-500" 
+            className={`w-full py-3 pl-12 pr-4 text-slate-200 bg-slate-800/50 border-2 border-slate-700 rounded-lg focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all duration-300 placeholder:text-slate-500 ${readOnly ? 'cursor-not-allowed bg-slate-800 text-slate-400' : ''}`} 
             required={required}
             autoComplete="off"
+            readOnly={readOnly}
+            disabled={readOnly}
         />
     </div>
 );
@@ -33,14 +35,19 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [referrerUsername, setReferrerUsername] = useState('');
     const [error, setError] = useState('');
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const viewParam = params.get('view');
+        const referrerParam = params.get('referrer');
 
-        if (viewParam === 'signup') {
+        if (viewParam === 'signup' || referrerParam) {
             setIsLogin(false);
+        }
+        if (referrerParam) {
+            setReferrerUsername(referrerParam);
         }
     }, []);
 
@@ -64,7 +71,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
             return;
         }
         setError('');
-        onSignup({ username, email, phone, password });
+        onSignup({ username, email, phone, password, referrer: referrerUsername });
     };
     
     const handleLoginSubmit = (e: React.FormEvent) => {
@@ -142,19 +149,28 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
                 <form key={formKey} onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-4 form-animate">
                     {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-md">{error}</p>}
                     
-                    {!isLogin && (
+                    {isLogin ? (
+                        <>
+                            <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
+                            <AuthInput icon={<LockIcon {...iconProps} />} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+                        </>
+                    ) : (
                         <>
                             <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
                             <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
                             <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
+                            <AuthInput icon={<LockIcon {...iconProps} />} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
+                            <AuthInput 
+                                icon={<InviteIcon {...iconProps} />} 
+                                type="text" 
+                                value={referrerUsername} 
+                                onChange={()=>{}} 
+                                placeholder="Referred by" 
+                                readOnly={true} 
+                                required={false}
+                            />
                         </>
                     )}
-                    
-                    {isLogin && (
-                        <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
-                    )}
-                    
-                    <AuthInput icon={<LockIcon {...iconProps} />} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
                     <div className="pt-4">
                         <button type="submit" className="w-full bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 font-bold py-3 rounded-lg hover:shadow-xl hover:shadow-amber-500/20 transition-all transform hover:scale-105 ease-out-circ">

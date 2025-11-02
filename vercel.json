@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/ref/:uid", "destination": "/" },
-    { "source": "/ref/:uid/(.*)", "destination": "/" }
+    { "source": "/ref/:username", "destination": "/" },
+    { "source": "/ref/:username/(.*)", "destination": "/" }
   ]
 }

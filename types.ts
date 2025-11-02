@@ -101,6 +101,7 @@ export interface UserProfile {
     uid: string;
     username: string;
   };
+  referralBonusProcessed?: boolean;
 }
 
 export interface Job {

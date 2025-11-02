@@ -126,6 +126,7 @@ const App: React.FC = () => {
     const [userTasks, setUserTasks] = useState<UserCreatedTask[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [applications, setApplications] = useState<Application[]>([]);
+    const [pendingBonuses, setPendingBonuses] = useState(0);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const unsubscribeCallbacks = useRef<(() => void)[]>([]);
 
@@ -160,9 +161,12 @@ const App: React.FC = () => {
         const path = window.location.pathname;
         const match = path.match(/^\/ref\/([^/]+)/);
         if (match && match[1]) {
-            const referrerUID = match[1];
-            localStorage.setItem('earnhalal_referrer_uid', referrerUID);
-            window.history.replaceState({}, document.title, '/');
+            const referrerUsername = match[1];
+            // Directly redirect to the signup page with the referrer as a query parameter.
+            // This ensures the page reloads with the correct URL for AuthView to read.
+            window.location.replace(`/signup?referrer=${encodeURIComponent(referrerUsername)}`);
+        } else if (path === '/signup') {
+            setShowLanding(false); // Show auth view if directly navigating to /signup
         }
     }, []);
 
@@ -189,15 +193,14 @@ const App: React.FC = () => {
                         if (previousProfile && previousProfile.paymentStatus === 'PENDING_VERIFICATION' && newProfile.paymentStatus === 'VERIFIED') {
                             await addTransaction(newProfile.uid, TransactionType.JOINING_FEE, 'One-time joining fee', 0);
                             
-                            const referrerUID = localStorage.getItem('earnhalal_referrer_uid');
-                            if (referrerUID) {
+                            // Referral bonus processing
+                            if (newProfile.referredBy && !newProfile.referralBonusProcessed) {
                                 try {
-                                    const referralsColRef = collection(db, 'referrals');
-                                    const referrerDoc = await getDoc(doc(db, 'users', referrerUID));
-                                    const referrerUsername = referrerDoc.exists() ? referrerDoc.data().username : 'unknown_referrer';
+                                    const { uid: referrerId, username: referrerUsername } = newProfile.referredBy;
 
+                                    const referralsColRef = collection(db, 'referrals');
                                     await addDoc(referralsColRef, {
-                                        referrerId: referrerUID,
+                                        referrerId,
                                         referrerUsername,
                                         referredId: newProfile.uid,
                                         referredUsername: newProfile.username,
@@ -206,7 +209,11 @@ const App: React.FC = () => {
                                         isReferredUserPaid: true,
                                         createdAt: serverTimestamp(),
                                     });
-                                    localStorage.removeItem('earnhalal_referrer_uid');
+
+                                    await updateDoc(doc(db, 'users', newProfile.uid), {
+                                        referralBonusProcessed: true
+                                    });
+
                                 } catch (e) {
                                     console.error("Failed to create referral record:", e);
                                 }
@@ -263,6 +270,12 @@ const App: React.FC = () => {
                     console.error("Error fetching applications:", error);
                 });
                 unsubscribeCallbacks.current.push(unsubApplications);
+                
+                const referralsQuery = query(collection(db, 'referrals'), where('referrerId', '==', user.uid), where('status', '==', 'pending_bonus'));
+                const unsubPendingBonuses = onSnapshot(referralsQuery, (snapshot) => {
+                    setPendingBonuses(snapshot.size);
+                });
+                unsubscribeCallbacks.current.push(unsubPendingBonuses);
 
             } else {
                 setAuthUser(null);
@@ -286,16 +299,6 @@ const App: React.FC = () => {
             if (amount > 0) playBalanceSound();
         } catch (error) {
             console.error("Error updating balance:", error);
-            throw error;
-        }
-    };
-
-    const addReferral = async (referrerId: string) => {
-        try {
-            const userRef = doc(db, 'users', referrerId);
-            await updateDoc(userRef, { referralCount: increment(1) });
-        } catch (error) {
-            console.error("Error adding referral:", error);
             throw error;
         }
     };
@@ -338,14 +341,14 @@ const App: React.FC = () => {
         setShowLanding(false);
     };
 
-    const handleSignup = async ({ username, email, phone, password }: {username: string, email: string, phone: string, password: string}) => {
+    const handleSignup = async ({ username, email, phone, password, referrer }: {username: string, email: string, phone: string, password: string, referrer?: string}) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             if (user) {
                 await updateProfile(user, { displayName: username });
                 
-                const userDocData: Omit<UserProfile, 'uid'> = {
+                const userDocData: Partial<UserProfile> = {
                     username,
                     username_lowercase: username.toLowerCase(),
                     email,
@@ -360,6 +363,19 @@ const App: React.FC = () => {
                     walletPin: null,
                 };
     
+                if (referrer) {
+                    const usersRef = collection(db, 'users');
+                    const q = query(usersRef, where('username_lowercase', '==', referrer.toLowerCase()));
+                    const querySnapshot = await getDocs(q);
+                    if (!querySnapshot.empty) {
+                        const referrerDoc = querySnapshot.docs[0];
+                        userDocData.referredBy = {
+                            uid: referrerDoc.id,
+                            username: referrerDoc.data().username,
+                        };
+                    }
+                }
+
                 const userDocRef = doc(db, 'users', user.uid);
                 await setDoc(userDocRef, userDocData);
             }
@@ -642,22 +658,6 @@ const App: React.FC = () => {
             return false;
         }
     };
-
-    const handleSimulateReferral = async (level: 1 | 2) => {
-        if(!userProfile) return;
-        try {
-            if (level === 1) {
-                await addReferral(userProfile.uid);
-                await updateBalance(userProfile.uid, 20);
-                await addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 1 Referral Bonus', 20);
-            } else {
-                await updateBalance(userProfile.uid, 5);
-                await addTransaction(userProfile.uid, TransactionType.REFERRAL, 'Level 2 Referral Bonus', 5);
-            }
-        } catch(error) {
-            console.error("Error simulating referral:", error);
-        }
-    }
     
     const handlePinSet = async (newPin: string) => {
         if (!userProfile) return;
@@ -747,7 +747,7 @@ const App: React.FC = () => {
                                 case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
                                 case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
                                 case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
-                                case 'INVITE': return <InviteView referrals={{level1: userProfile.referralCount, level2: 0}} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} uid={userProfile.uid} />;
+                                case 'INVITE': return <InviteView totalReferrals={userProfile.referralCount} referralEarnings={referralEarnings} pendingBonuses={pendingBonuses} username={userProfile.username} />;
                                 case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} />;
                                 case 'HOW_IT_WORKS': return <HowItWorksView />;
                                 case 'ABOUT_US': return <AboutUsView />;
