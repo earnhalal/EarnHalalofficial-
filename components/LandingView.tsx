@@ -228,11 +228,11 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
     setActiveInfoModal(modalKey);
     setIsMenuOpen(false);
   };
-
+  
   const handleAuthClick = () => {
       onGetStarted();
       setIsMenuOpen(false);
-  }
+  };
 
   const getModalTitle = (modalKey: string): string => {
       switch (modalKey) {
@@ -350,7 +350,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                     {navLinks.map(link => (
                         <a key={link.name} href={link.href} className="text-slate-300 hover:text-amber-400 transition-colors font-medium">{link.name}</a>
                     ))}
-                    <button onClick={onGetStarted} className="px-5 py-2 bg-amber-500/10 border border-amber-400 text-amber-400 font-semibold rounded-lg hover:bg-amber-400 hover:text-slate-900 transition-all">Login</button>
+                    <button onClick={handleAuthClick} className="px-5 py-2 bg-amber-500/10 border border-amber-400 text-amber-400 font-semibold rounded-lg hover:bg-amber-400 hover:text-slate-900 transition-all">Login</button>
                 </div>
                 <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-slate-300 hover:text-amber-400 z-50">
                     {isMenuOpen ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
@@ -420,7 +420,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
               </div>
               <div className="animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
                 <button
-                  onClick={onGetStarted}
+                  onClick={handleAuthClick}
                   className="mt-10 px-8 py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 font-bold rounded-full shadow-lg text-lg transition-all transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/40"
                 >
                   Get Started Now

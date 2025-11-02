@@ -9,6 +9,7 @@ interface InviteViewProps {
   referralEarnings: number;
   onSimulateReferral: (level: 1 | 2) => void;
   username: string;
+  uid: string;
 }
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode }> = ({ title, value, icon }) => (
@@ -23,8 +24,8 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.Re
   </div>
 );
 
-const InviteView: React.FC<InviteViewProps> = ({ referrals, referralEarnings, onSimulateReferral, username }) => {
-  const referralLink = `https://earn-halalofficial.vercel.app/ref/${username}`;
+const InviteView: React.FC<InviteViewProps> = ({ referrals, referralEarnings, onSimulateReferral, username, uid }) => {
+  const referralLink = `https://earn-halalofficial.vercel.app/ref/${uid}`;
   const [isCopied, setIsCopied] = useState(false);
 
   const copyToClipboard = () => {

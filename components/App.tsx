@@ -136,21 +136,8 @@ const App: React.FC = () => {
     const [notificationPermission, setNotificationPermission] = useState(Notification.permission);
     const [showNotificationBanner, setShowNotificationBanner] = useState(Notification.permission === 'default');
 
-    // --- MOCK DATA, GLOBAL TASKS & REFERRAL ROUTING ---
+    // --- MOCK DATA, GLOBAL TASKS ---
     useEffect(() => {
-        // Handle referral links on initial load
-        const path = window.location.pathname;
-        const match = path.match(/^\/ref\/([^/]+)/);
-        if (match && match[1]) {
-            const referrerUsername = match[1];
-            console.log(`Referrer found: ${referrerUsername}`);
-            localStorage.setItem('referrerUsername', referrerUsername);
-            // Clean the URL to avoid re-triggering on refresh
-            window.history.replaceState({}, document.title, '/');
-            // Ensure landing page is shown
-            setShowLanding(true);
-        }
-
         const initialUserTasks = localStorage.getItem('globalUserTasks');
         if (!initialUserTasks) {
             const mockTasks = Array.from({ length: 8 }, (_, i) => generateMockTask(i + 1));
@@ -165,6 +152,19 @@ const App: React.FC = () => {
             { id: 'job2', title: 'Virtual Assistant', description: 'Provide administrative assistance remotely.', type: 'Full-time', salary: '30,000 Rs/month', isPremium: true },
             { id: 'job3', title: 'Social Media Manager', description: 'Manage and grow our social media presence.', type: 'Contract', salary: '25,000 Rs/month', isPremium: true },
         ]);
+    }, []);
+
+    // --- REFERRAL LINK HANDLER ---
+    useEffect(() => {
+        const path = window.location.pathname;
+        const match = path.match(/^\/ref\/([^/]+)/);
+        if (match && match[1]) {
+            const referrerUID = match[1];
+            // Basic validation for UID format could be added here
+            localStorage.setItem('earnhalal_referrer_uid', referrerUID);
+            // Clean the URL to prevent re-triggering on refresh and remove referral code from address bar
+            window.history.replaceState({}, document.title, '/');
+        }
     }, []);
 
     // --- FIREBASE AUTH & DATA SYNC ---
@@ -241,6 +241,7 @@ const App: React.FC = () => {
                 unsubscribeCallbacks.current.push(unsubApplications);
 
             } else {
+                const isReferralPath = /^\/ref\/[^/]+/.test(window.location.pathname);
                 setAuthUser(null);
                 setUserProfile(null);
                 setBalance(0);
@@ -310,7 +311,11 @@ const App: React.FC = () => {
         }
     };
 
-    const handleSignup = async ({ username, email, phone, password }: any) => {
+    const handleGetStarted = () => {
+        setShowLanding(false);
+    };
+
+    const handleSignup = async ({ username, email, phone, password }: {username: string, email: string, phone: string, password: string}) => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
@@ -332,27 +337,6 @@ const App: React.FC = () => {
                     walletPin: null,
                 };
     
-                // --- Referral Logic: Tag user with referrer info ---
-                const referrerUsername = localStorage.getItem('referrerUsername');
-                if (referrerUsername) {
-                    const usersRef = collection(db, 'users');
-                    const referrerUsernameLower = referrerUsername.toLowerCase();
-                    const q = query(usersRef, where("username_lowercase", "==", referrerUsernameLower));
-                    const querySnapshot = await getDocs(q);
-    
-                    if (!querySnapshot.empty) {
-                        const referrerDoc = querySnapshot.docs[0];
-                        userDocData.referredBy = { 
-                            uid: referrerDoc.id, 
-                            username: referrerDoc.data().username 
-                        };
-                        console.log(`New user was referred by ${referrerUsername} (${referrerDoc.id})`);
-                    } else {
-                        console.warn(`Referrer username "${referrerUsername}" not found.`);
-                    }
-                    localStorage.removeItem('referrerUsername');
-                }
-                
                 const userDocRef = doc(db, 'users', user.uid);
                 await setDoc(userDocRef, userDocData);
             }
@@ -398,20 +382,21 @@ const App: React.FC = () => {
                             if (userDocSnap.exists() && userDocSnap.data()?.paymentStatus === 'PENDING_VERIFICATION') {
                                 const userData = userDocSnap.data() as UserProfile;
     
-                                // --- Referral Logic: Create referral doc on payment verification ---
-                                if (userData.referredBy?.uid && userData.referredBy?.username) {
+                                // --- New Referral Logic: Use localStorage ---
+                                const referrerUID = localStorage.getItem('earnhalal_referrer_uid');
+                                if (referrerUID) {
                                     const referralsColRef = collection(db, 'referrals');
                                     await addDoc(referralsColRef, {
-                                        referrerId: userData.referredBy.uid,
-                                        referrerUsername: userData.referredBy.username,
+                                        referrerId: referrerUID,
                                         referredId: userId,
                                         referredUsername: userData.username,
                                         status: 'pending_bonus', // Admin needs to approve
-                                        bonusAmount: 20, // Level 1 bonus
+                                        bonusAmount: 50,
                                         isReferredUserPaid: true,
                                         createdAt: serverTimestamp(),
                                     });
-                                    console.log(`Referral record created for referrer ${userData.referredBy.username}`);
+                                    // Clean up after use
+                                    localStorage.removeItem('earnhalal_referrer_uid');
                                 }
                                 // --- End of Referral Logic ---
     
@@ -729,7 +714,7 @@ const App: React.FC = () => {
     }
     
     if (showLanding && !authUser) {
-        return <LandingView onGetStarted={() => setShowLanding(false)} />;
+        return <LandingView onGetStarted={handleGetStarted} />;
     }
 
     if (!authUser) {
@@ -781,7 +766,7 @@ const App: React.FC = () => {
                                 case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
                                 case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
                                 case 'TASK_HISTORY': return <TaskHistoryView userTasks={userTasks} />;
-                                case 'INVITE': return <InviteView referrals={{level1: userProfile.referralCount, level2: 0}} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} />;
+                                case 'INVITE': return <InviteView referrals={{level1: userProfile.referralCount, level2: 0}} referralEarnings={referralEarnings} onSimulateReferral={handleSimulateReferral} username={userProfile.username} uid={userProfile.uid} />;
                                 case 'PROFILE_SETTINGS': return <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} />;
                                 case 'HOW_IT_WORKS': return <HowItWorksView />;
                                 case 'ABOUT_US': return <AboutUsView />;

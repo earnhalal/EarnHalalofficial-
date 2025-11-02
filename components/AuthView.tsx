@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UserIcon, EmailIcon, PhoneIcon, LockIcon } from './icons';
+import React, { useState, useEffect } from 'react';
+import { UserIcon, EmailIcon, PhoneIcon, LockIcon, InviteIcon } from './icons';
 
 interface AuthViewProps {
     onSignup: (data: {username: string, email: string, phone: string, password: string}) => void;
@@ -35,6 +35,15 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const viewParam = params.get('view');
+
+        if (viewParam === 'signup') {
+            setIsLogin(false);
+        }
+    }, []);
+
     const toggleForm = () => {
         setIsLogin(!isLogin);
         setError('');
@@ -43,6 +52,9 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
         setPhone('');
         setPassword('');
         setFormKey(prev => prev + 1);
+        // Clean URL when user manually toggles
+        const newUrl = window.location.pathname; // Keep path, remove query params
+        window.history.pushState({ path: newUrl }, '', newUrl);
     };
     
     const handleSignupSubmit = (e: React.FormEvent) => {
@@ -131,13 +143,15 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin }) => {
                     {error && <p className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded-md">{error}</p>}
                     
                     {!isLogin && (
-                        <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+                        <>
+                            <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
+                            <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
+                            <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
+                        </>
                     )}
                     
-                    <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
-
-                    {!isLogin && (
-                        <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
+                    {isLogin && (
+                        <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
                     )}
                     
                     <AuthInput icon={<LockIcon {...iconProps} />} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
