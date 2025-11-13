@@ -19,10 +19,14 @@ import LandingView from './LandingView';
 import NotificationBanner from './NotificationBanner';
 import DepositView from './DepositView';
 import SpinWheelView from './SpinWheelView';
+import PlayAndEarnView from './PlayAndEarnView';
 import PinLockView from './PinLockView';
 import AIAgentChatbot from './AIAgentChatbot';
 import WelcomeModal from './WelcomeModal';
 import MyApplicationsView from './MyApplicationsView';
+import AviatorGame from './games/AviatorGame';
+import GameLobbyView from './games/GameLobbyView';
+import { TrophyIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application } from '../types';
 import { TransactionType, TaskType } from '../types';
@@ -659,6 +663,27 @@ const App: React.FC = () => {
         }
     };
     
+    const handleGameWin = async (amount: number, gameName: string) => {
+        if (!userProfile) return;
+        try {
+            await updateBalance(userProfile.uid, amount);
+            await addTransaction(userProfile.uid, TransactionType.GAME_WIN, `Prize from ${gameName}`, amount);
+        } catch (error) {
+            console.error("Error processing game win:", error);
+        }
+    };
+    
+    const handleGameLoss = async (amount: number, gameName: string) => {
+        if (!userProfile) return;
+        try {
+            await updateBalance(userProfile.uid, -amount);
+            await addTransaction(userProfile.uid, TransactionType.GAME_LOSS, `Bet on ${gameName}`, -amount);
+        } catch (error) {
+            console.error("Error processing game loss:", error);
+            try { await updateBalance(userProfile.uid, amount); } catch (e) {}
+        }
+    };
+
     const handlePinSet = async (newPin: string) => {
         if (!userProfile) return;
         try {
@@ -743,6 +768,7 @@ const App: React.FC = () => {
                                 case 'DASHBOARD': return <DashboardView balance={balance} tasksCompleted={tasksCompletedCount} referrals={userProfile.referralCount} setActiveView={handleSetActiveView} transactions={transactions} onSimulateNewTask={()=>{}} />;
                                 case 'EARN': return <EarnView tasks={availableTasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile.completedTaskIds} />;
                                 case 'SPIN_WHEEL': return <SpinWheelView onWin={handleSpinWin} balance={balance} onBuySpin={handleBuySpin} />;
+                                case 'PLAY_AND_EARN': return <PlayAndEarnView setActiveView={handleSetActiveView} />;
                                 case 'WALLET': return <WalletView balance={balance} pendingRewards={pendingRewards} transactions={transactions} onWithdraw={handleWithdraw} username={userProfile.username} savedDetails={userProfile.savedWithdrawalDetails} hasPin={!!userProfile.walletPin} onSetupPin={() => setShowPinModal('set')} />;
                                 case 'DEPOSIT': return <DepositView onDeposit={handleDeposit} />;
                                 case 'CREATE_TASK': return <CreateTaskView balance={balance} onCreateTask={handleCreateTask} />;
@@ -756,6 +782,9 @@ const App: React.FC = () => {
                                 case 'TERMS_CONDITIONS': return <TermsAndConditionsView />;
                                 case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} applications={applications} />;
                                 case 'MY_APPLICATIONS': return <MyApplicationsView applications={applications} />;
+                                case 'AVIATOR_GAME': return <AviatorGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
+                                case 'LUDO_GAME': return <GameLobbyView title="Ludo Star" icon={<TrophyIcon className="w-12 h-12"/>} />;
+                                case 'LOTTERY_GAME': return <GameLobbyView title="Daily Lottery" icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>} />;
                                 default: return <div>Not Found</div>;
                             }
                         })()}

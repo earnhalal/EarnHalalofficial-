@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
-  InfoIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon,
+  InfoIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon, GameControllerIcon,
   PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon
 } from './icons';
 import type { View } from '../types';
@@ -38,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-6 h-6" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-6 h-6" /> },
+    { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-6 h-6" /> },
     { view: 'WALLET', label: 'Wallet', icon: <WalletIcon className="w-6 h-6" /> },
     { view: 'DEPOSIT', label: 'Deposit', icon: <PlusCircleIcon className="w-6 h-6" /> },
     { view: 'INVITE', label: 'Invite Friends', icon: <InviteIcon className="w-6 h-6" /> },

@@ -4,6 +4,7 @@ export type View =
   | 'DASHBOARD'
   | 'EARN'
   | 'SPIN_WHEEL'
+  | 'PLAY_AND_EARN'
   | 'WALLET'
   | 'DEPOSIT'
   | 'CREATE_TASK'
@@ -16,7 +17,10 @@ export type View =
   | 'JOBS'
   | 'MY_APPLICATIONS'
   | 'PRIVACY_POLICY'
-  | 'TERMS_CONDITIONS';
+  | 'TERMS_CONDITIONS'
+  | 'AVIATOR_GAME'
+  | 'LUDO_GAME'
+  | 'LOTTERY_GAME';
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -28,6 +32,8 @@ export enum TransactionType {
   JOINING_FEE = 'Joining Fee',
   JOB_SUBSCRIPTION = 'Job Subscription',
   SPIN_PURCHASE = 'Spin Purchase',
+  GAME_WIN = 'Game Win',
+  GAME_LOSS = 'Game Loss',
 }
 
 export interface WithdrawalDetails {

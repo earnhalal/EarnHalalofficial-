@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { EarnIcon, WalletIcon, CreateTaskIcon, BriefcaseIcon, GiftIcon, InviteIcon, ChartBarIcon } from './icons';
+import { EarnIcon, WalletIcon, CreateTaskIcon, BriefcaseIcon, GiftIcon, InviteIcon, ChartBarIcon, GameControllerIcon } from './icons';
 import type { View, Transaction } from '../types';
 import { TransactionType } from '../types';
 
@@ -138,9 +138,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
 
       <div className="bg-slate-800/50 backdrop-blur-md border border-white/10 p-6 rounded-2xl shadow-lg animate-fade-in-up" style={{ animationDelay: '300ms' }}>
         <h2 className="text-xl font-bold text-slate-100 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
            <ActionButton title="Start Earning" icon={<EarnIcon className="w-8 h-8" />} onClick={() => setActiveView('EARN')} />
            <ActionButton title="Spin & Win" icon={<GiftIcon className="w-8 h-8" />} onClick={() => setActiveView('SPIN_WHEEL')} />
+           <ActionButton title="Play & Earn" icon={<GameControllerIcon className="w-8 h-8" />} onClick={() => setActiveView('PLAY_AND_EARN')} />
            <ActionButton title="Invite Friends" icon={<InviteIcon className="w-8 h-8" />} onClick={() => setActiveView('INVITE')} />
            <ActionButton title="Apply for Jobs" icon={<BriefcaseIcon className="w-8 h-8" />} onClick={() => setActiveView('JOBS')} />
            <ActionButton title="Go to Wallet" icon={<WalletIcon className="w-8 h-8" />} onClick={() => setActiveView('WALLET')} />

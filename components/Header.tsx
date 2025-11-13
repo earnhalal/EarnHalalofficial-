@@ -17,6 +17,7 @@ const viewTitles: Record<View, string> = {
   DASHBOARD: 'Dashboard',
   EARN: 'Earn Rewards',
   SPIN_WHEEL: 'Spin & Win',
+  PLAY_AND_EARN: 'Play & Earn',
   WALLET: 'My Wallet',
   DEPOSIT: 'Deposit Funds',
   CREATE_TASK: 'Create a New Task',
@@ -30,6 +31,9 @@ const viewTitles: Record<View, string> = {
   MY_APPLICATIONS: 'My Job Applications',
   PRIVACY_POLICY: 'Privacy Policy',
   TERMS_CONDITIONS: 'Terms & Conditions',
+  AVIATOR_GAME: 'Aviator',
+  LUDO_GAME: 'Ludo Star',
+  LOTTERY_GAME: 'Daily Lottery',
 };
 
 const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSidebarOpen, setIsSidebarOpen, canGoBack, onBack, setActiveView }) => {
