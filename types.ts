@@ -20,7 +20,9 @@ export type View =
   | 'TERMS_CONDITIONS'
   | 'AVIATOR_GAME'
   | 'LUDO_GAME'
-  | 'LOTTERY_GAME';
+  | 'LOTTERY_GAME'
+  | 'COIN_FLIP_GAME'
+  | 'MINES_GAME';
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -34,6 +36,7 @@ export enum TransactionType {
   SPIN_PURCHASE = 'Spin Purchase',
   GAME_WIN = 'Game Win',
   GAME_LOSS = 'Game Loss',
+  BET_CANCELLED = 'Bet Cancelled',
 }
 
 export interface WithdrawalDetails {

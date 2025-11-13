@@ -11,6 +11,7 @@ interface LudoGameProps {
 const LudoGame: React.FC<LudoGameProps> = ({ balance, onWin, onLoss }) => {
     const [betAmount, setBetAmount] = useState<number>(25);
     const [gameState, setGameState] = useState<'betting' | 'playing' | 'result'>('betting');
+    const [gameMessage, setGameMessage] = useState('Select a bet to start');
     const [result, setResult] = useState<{ type: 'win' | 'loss'; amount: number } | null>(null);
 
     const betOptions = [25, 50, 100, 200];
@@ -24,38 +25,45 @@ const LudoGame: React.FC<LudoGameProps> = ({ balance, onWin, onLoss }) => {
         setGameState('playing');
         setResult(null);
 
-        // Simulate game
+        // Simulate game with timed messages
+        const didWin = Math.random() > 0.55; // Slightly harder to win
+
+        setTimeout(() => setGameMessage("Finding an opponent..."), 500);
+        setTimeout(() => setGameMessage("Opponent found! Match is starting."), 2500);
+        setTimeout(() => setGameMessage("Your opponent is making a move..."), 4500);
+        setTimeout(() => setGameMessage("It's your turn! Rolling the dice..."), 6500);
+        setTimeout(() => setGameMessage(didWin ? "You captured an opponent's piece! Great move!" : "Oh no! Your opponent captured your piece!"), 8500);
         setTimeout(() => {
-            const didWin = Math.random() > 0.55; // Slightly harder to win
             if (didWin) {
-                const winAmount = betAmount * 1.8; // Standard Ludo win is not quite double
+                const winAmount = betAmount * 1.8;
                 onWin(winAmount, 'Ludo Star');
                 setResult({ type: 'win', amount: winAmount });
             } else {
                 setResult({ type: 'loss', amount: betAmount });
             }
             setGameState('result');
-        }, 4000);
+        }, 10500);
     };
 
     const handlePlayAgain = () => {
         setGameState('betting');
         setResult(null);
+        setGameMessage('Select a bet to start');
     };
     
     const GameScreen = () => {
         if (gameState === 'playing') {
              return (
-                 <div className="flex flex-col items-center justify-center h-full">
-                     <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-400 mb-4"></div>
-                     <h3 className="text-2xl font-bold text-white">Match in Progress...</h3>
-                     <p className="text-slate-300">Rolling the dice!</p>
+                 <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                     <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-green-400 mb-4"></div>
+                     <h3 className="text-xl font-bold text-white">Match in Progress</h3>
+                     <p className="text-slate-300 mt-2">{gameMessage}</p>
                  </div>
              )
         }
          if (gameState === 'result' && result) {
              return (
-                 <div className="flex flex-col items-center justify-center h-full text-center">
+                 <div className="flex flex-col items-center justify-center h-full text-center p-4">
                      {result.type === 'win' ? (
                          <>
                              <TrophyIcon className="w-20 h-20 text-amber-400 mb-4"/>
@@ -66,7 +74,7 @@ const LudoGame: React.FC<LudoGameProps> = ({ balance, onWin, onLoss }) => {
                          </>
                      ) : (
                           <>
-                             <div className="w-20 h-20 text-red-500 mb-4">...</div>
+                             <div className="w-20 h-20 text-red-500 mb-4 flex items-center justify-center text-5xl font-bold">:(</div>
                              <h3 className="text-4xl font-extrabold text-red-500">You Lost</h3>
                              <p className="text-xl font-semibold text-white mt-2">
                                  Better luck next time!
@@ -79,7 +87,12 @@ const LudoGame: React.FC<LudoGameProps> = ({ balance, onWin, onLoss }) => {
                  </div>
              )
         }
-        return <div className="flex items-center justify-center h-full"><TrophyIcon className="w-32 h-32 text-green-500/10" /></div>
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                <TrophyIcon className="w-24 h-24 text-green-500/20" />
+                <p className="text-slate-400 mt-4">{gameMessage}</p>
+            </div>
+        );
     }
 
     return (

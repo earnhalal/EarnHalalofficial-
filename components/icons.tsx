@@ -255,7 +255,7 @@ export const ChartBarIcon: React.FC<IconProps> = (props) => (
 
 export const GameControllerIcon: React.FC<IconProps> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.217-.284.49-.54.793-.762a3.75 3.75 0 014.243 0 3.75 3.75 0 010 5.304 3.75 3.75 0 01-4.243 0c-.303-.222-.576-.478-.793-.762A1.125 1.125 0 0114.25 6.087zM8.625 6.087c0-.355-.186-.676-.401-.959-.217-.284-.49-.54-.793-.762a3.75 3.75 0 00-4.243 0 3.75 3.75 0 000 5.304 3.75 3.75 0 004.243 0c.303-.222.576-.478.793-.762A1.125 1.125 0 008.625 6.087zM14.25 17.913c0 .355.186.676.401.959.217.284.49.54.793-.762a3.75 3.75 0 014.243 0 3.75 3.75 0 010-5.304 3.75 3.75 0 01-4.243 0c-.303-.222-.576-.478-.793-.762A1.125 1.125 0 0114.25 17.913zM8.625 17.913c0 .355-.186-.676-.401-.959-.217-.284-.49-.54-.793-.762a3.75 3.75 0 00-4.243 0 3.75 3.75 0 000 5.304 3.75 3.75 0 004.243 0c.303-.222.576-.478.793-.762A1.125 1.125 0 008.625 17.913z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 6.087c0-.355.186-.676.401-.959.217-.284.49-.54.793-.762a3.75 3.75 0 014.243 0 3.75 3.75 0 010 5.304 3.75 3.75 0 01-4.243 0c-.303-.222-.576-.478-.793-.762A1.125 1.125 0 0114.25 6.087zM8.625 6.087c0-.355-.186-.676-.401-.959-.217-.284-.49-.54-.793-.762a3.75 3.75 0 00-4.243 0 3.75 3.75 0 000 5.304 3.75 3.75 0 004.243 0c.303-.222.576-.478.793-.762A1.125 1.125 0 008.625 6.087zM14.25 17.913c0 .355.186.676.401.959.217-.284.49.54.793-.762a3.75 3.75 0 014.243 0 3.75 3.75 0 010-5.304 3.75 3.75 0 01-4.243 0c-.303-.222-.576-.478-.793-.762A1.125 1.125 0 0114.25 17.913zM8.625 17.913c0 .355-.186-.676-.401-.959-.217-.284-.49-.54-.793-.762a3.75 3.75 0 00-4.243 0 3.75 3.75 0 000 5.304 3.75 3.75 0 004.243 0c.303-.222.576-.478.793-.762A1.125 1.125 0 008.625 17.913z" />
   </svg>
 );
 
@@ -269,5 +269,17 @@ export const TagIcon: React.FC<IconProps> = (props) => (
 export const ArrowUpCircleIcon: React.FC<IconProps> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m15 11.25-3-3m0 0-3 3m3-3v7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+);
+
+export const CoinIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M14.25 7.756a4.5 4.5 0 1 0 0 8.488M7.5 10.5h5.25m-5.25 3h5.25M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+    </svg>
+);
+
+export const BombIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
     </svg>
 );

@@ -1,7 +1,7 @@
 // components/PlayAndEarnView.tsx
 import React from 'react';
 import type { View } from '../types';
-import { TrophyIcon } from './icons';
+import { TrophyIcon, CoinIcon, BombIcon } from './icons';
 
 interface GameCardProps {
     title: string;
@@ -44,6 +44,22 @@ interface PlayAndEarnViewProps {
 const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
     const games = [
         {
+            title: 'Aviator',
+            description: 'Cash out before the plane flies away. How long can you wait?',
+            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 3.125L18 12m-12 0h12" /></svg>,
+            gradient: 'bg-gradient-to-br from-red-500 to-red-700',
+            isComingSoon: false,
+            view: 'AVIATOR_GAME' as View,
+        },
+        {
+            title: 'Mines',
+            description: 'Uncover gems and avoid the mines. The higher the risk, the bigger the reward!',
+            icon: <BombIcon className="w-10 h-10" />,
+            gradient: 'bg-gradient-to-br from-slate-400 to-slate-600',
+            view: 'MINES_GAME' as View,
+            isComingSoon: false,
+        },
+        {
             title: 'Ludo Star',
             description: 'Challenge players and win big in the classic board game.',
             icon: <TrophyIcon className="w-10 h-10" />,
@@ -52,12 +68,12 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             isComingSoon: false,
         },
         {
-            title: 'Aviator',
-            description: 'Cash out before the plane flies away. How long can you wait?',
-            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 3.125L18 12m-12 0h12" /></svg>,
-            gradient: 'bg-gradient-to-br from-sky-400 to-sky-600',
+            title: 'Coin Flip',
+            description: 'A simple 50/50 chance. Choose Heads or Tails to double your bet.',
+            icon: <CoinIcon className="w-10 h-10" />,
+            gradient: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
+            view: 'COIN_FLIP_GAME' as View,
             isComingSoon: false,
-            view: 'AVIATOR_GAME' as View,
         },
         {
             title: 'Daily Lottery',

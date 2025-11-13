@@ -27,6 +27,8 @@ import MyApplicationsView from './MyApplicationsView';
 import AviatorGame from './games/AviatorGame';
 import LudoGame from './games/LudoGame';
 import LotteryGame from './games/LotteryGame';
+import CoinFlipGame from './games/CoinFlipGame';
+import MinesGame from './games/MinesGame';
 import GameLobbyView from './games/GameLobbyView';
 import { TrophyIcon } from './icons';
 import WhatsNewModal from './WhatsNewModal';
@@ -696,6 +698,20 @@ const App: React.FC = () => {
         }
     };
 
+    const handleCancelBet = async (amount: number, gameName: string) => {
+        if (!userProfile) return;
+        try {
+            // Re-add the bet amount to balance
+            await updateBalance(userProfile.uid, amount);
+            // Add a transaction for the cancellation
+            await addTransaction(userProfile.uid, TransactionType.BET_CANCELLED, `Bet cancelled on ${gameName}`, amount);
+        } catch (error) {
+            console.error("Error processing bet cancellation:", error);
+            // If refund fails, attempt to deduct the money again to prevent exploit
+            try { await updateBalance(userProfile.uid, -amount); } catch (e) {}
+        }
+    };
+
     const handlePinSet = async (newPin: string) => {
         if (!userProfile) return;
         try {
@@ -800,9 +816,11 @@ const App: React.FC = () => {
                                 case 'TERMS_CONDITIONS': return <TermsAndConditionsView />;
                                 case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} applications={applications} />;
                                 case 'MY_APPLICATIONS': return <MyApplicationsView applications={applications} />;
-                                case 'AVIATOR_GAME': return <AviatorGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
+                                case 'AVIATOR_GAME': return <AviatorGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} onCancelBet={handleCancelBet} />;
                                 case 'LUDO_GAME': return <LudoGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
                                 case 'LOTTERY_GAME': return <LotteryGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
+                                case 'COIN_FLIP_GAME': return <CoinFlipGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
+                                case 'MINES_GAME': return <MinesGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
                                 default: return <div>Not Found</div>;
                             }
                         })()}

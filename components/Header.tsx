@@ -34,6 +34,8 @@ const viewTitles: Record<View, string> = {
   AVIATOR_GAME: 'Aviator',
   LUDO_GAME: 'Ludo Star',
   LOTTERY_GAME: 'Daily Lottery',
+  COIN_FLIP_GAME: 'Coin Flip',
+  MINES_GAME: 'Mines',
 };
 
 const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSidebarOpen, setIsSidebarOpen, canGoBack, onBack, setActiveView }) => {
