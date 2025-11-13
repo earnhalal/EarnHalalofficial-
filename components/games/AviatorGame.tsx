@@ -1,8 +1,19 @@
 // components/games/AviatorGame.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-type GameState = 'waiting' | 'betting' | 'flying' | 'crashed';
+// Game state can be more descriptive
+type GameState = 'waiting' | 'flying' | 'crashed';
 
+// Mock data for other players
+interface PlayerBet {
+    user: string;
+    bet: number;
+    cashedOutAt: number | null;
+}
+
+const generateRandomUser = () => `***${Math.floor(Math.random() * 90) + 10}`;
+
+// Game Component
 interface AviatorGameProps {
     balance: number;
     onWin: (amount: number, gameName: string) => void;
@@ -10,154 +21,308 @@ interface AviatorGameProps {
 }
 
 const AviatorGame: React.FC<AviatorGameProps> = ({ balance, onWin, onLoss }) => {
+    // State
     const [gameState, setGameState] = useState<GameState>('waiting');
-    const [betAmount, setBetAmount] = useState('10');
+    const [betAmount, setBetAmount] = useState<number>(10);
     const [multiplier, setMultiplier] = useState(1.00);
     const [hasCashedOut, setHasCashedOut] = useState(false);
-    const [canBet, setCanBet] = useState(true);
-    const [statusMessage, setStatusMessage] = useState('Place your bet for the next round.');
-    const [winnings, setWinnings] = useState(0);
+    const [hasPlacedBet, setHasPlacedBet] = useState(false);
+    const [countdown, setCountdown] = useState(5);
+    const [multiplierHistory, setMultiplierHistory] = useState<number[]>([]);
+    const [currentBets, setCurrentBets] = useState<PlayerBet[]>([]);
 
-    const multiplierRef = useRef(1.00);
-    // FIX: Changed NodeJS.Timeout to number, as setInterval in the browser returns a number.
+    // Refs
     const gameLoopRef = useRef<number | null>(null);
+    const countdownRef = useRef<number | null>(null);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+    const flyingSoundRef = useRef<{ osc: OscillatorNode, gain: GainNode } | null>(null);
 
-    // Cleanup on unmount
+    // Sound Generation
+    const initAudio = useCallback(() => {
+        if (!audioCtxRef.current) {
+            try {
+                audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser");
+            }
+        }
+    }, []);
+
+    const playSound = useCallback((type: 'fly' | 'crash' | 'cashout' | 'tick') => {
+        initAudio();
+        const ctx = audioCtxRef.current;
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+
+        if (type === 'fly') {
+            if (flyingSoundRef.current) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(100, now);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(0.05, now + 0.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            flyingSoundRef.current = { osc, gain };
+        } else if (type === 'crash') {
+            if (flyingSoundRef.current) {
+                flyingSoundRef.current.gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
+                flyingSoundRef.current.osc.stop(now + 0.2);
+                flyingSoundRef.current = null;
+            }
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'noise';
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(now + 0.5);
+        } else if (type === 'cashout') {
+             const osc = ctx.createOscillator();
+             const gain = ctx.createGain();
+             osc.type = 'sine';
+             osc.frequency.setValueAtTime(523.25, now);
+             osc.frequency.linearRampToValueAtTime(1046.50, now + 0.1);
+             gain.gain.setValueAtTime(0.2, now);
+             gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
+             osc.connect(gain);
+             gain.connect(ctx.destination);
+             osc.start();
+             osc.stop(now + 0.2);
+        } else if (type === 'tick') {
+            const osc = ctx.createOscillator();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, now);
+            osc.connect(ctx.destination);
+            osc.start();
+            osc.stop(now + 0.05);
+        }
+    }, [initAudio]);
+    
+    // Game Cycle Logic
+    const startNewRound = useCallback(() => {
+        setGameState('waiting');
+        setHasPlacedBet(false);
+        setHasCashedOut(false);
+        setMultiplier(1.00);
+        setCountdown(5);
+        
+        // Generate mock bets for this round
+        const newBets: PlayerBet[] = Array.from({ length: Math.floor(Math.random() * 5) + 3 }).map(() => ({
+            user: generateRandomUser(),
+            bet: Math.floor(Math.random() * 500) + 20,
+            cashedOutAt: null
+        }));
+        setCurrentBets(newBets);
+
+        if (countdownRef.current) clearInterval(countdownRef.current);
+        countdownRef.current = window.setInterval(() => {
+            setCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(countdownRef.current!);
+                    fly();
+                    return 0;
+                }
+                playSound('tick');
+                return prev - 1;
+            });
+        }, 1000);
+    }, [playSound]);
+
+    const fly = useCallback(() => {
+        setGameState('flying');
+        playSound('fly');
+        const crashMultiplier = 1.0 + Math.random() * (Math.random() < 0.1 ? 20 : 7);
+
+        gameLoopRef.current = window.setInterval(() => {
+            setMultiplier(prevMultiplier => {
+                const newMultiplier = prevMultiplier + 0.01 + (prevMultiplier * 0.01);
+
+                if (flyingSoundRef.current) {
+                    const newFreq = 100 + Math.log2(newMultiplier) * 50;
+                    if(audioCtxRef.current) {
+                       flyingSoundRef.current.osc.frequency.linearRampToValueAtTime(newFreq, audioCtxRef.current!.currentTime + 0.1);
+                    }
+                }
+                
+                // Simulate other players cashing out
+                setCurrentBets(prevBets => prevBets.map(b => {
+                    if (!b.cashedOutAt && Math.random() < 0.01) { // small chance to cash out each tick
+                        return { ...b, cashedOutAt: newMultiplier };
+                    }
+                    return b;
+                }));
+
+                if (newMultiplier >= crashMultiplier) {
+                    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+                    crash(crashMultiplier);
+                }
+                return newMultiplier;
+            });
+        }, 100);
+    }, [playSound]);
+
+    const crash = useCallback((finalMultiplier: number) => {
+        playSound('crash');
+        setGameState('crashed');
+        setMultiplier(finalMultiplier);
+        setMultiplierHistory(prev => [finalMultiplier, ...prev].slice(0, 10));
+        if (hasPlacedBet && !hasCashedOut) {
+            // Bet was lost, already deducted when placed
+        }
+        setTimeout(startNewRound, 4000);
+    }, [hasPlacedBet, hasCashedOut, playSound, startNewRound]);
+
+
     useEffect(() => {
+        startNewRound();
         return () => {
             if (gameLoopRef.current) clearInterval(gameLoopRef.current);
+            if (countdownRef.current) clearInterval(countdownRef.current);
+             if (flyingSoundRef.current && audioCtxRef.current) {
+                const now = audioCtxRef.current.currentTime;
+                flyingSoundRef.current.gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.2);
+                flyingSoundRef.current.osc.stop(now + 0.2);
+                flyingSoundRef.current = null;
+            }
         };
-    }, []);
+    }, [startNewRound]);
 
-    const startGameCycle = () => {
-        setGameState('betting');
-        setStatusMessage('Next round starting soon...');
-        setWinnings(0);
-
-        // Betting phase (5 seconds)
-        setTimeout(() => {
-            setGameState('flying');
-            setStatusMessage('Flying...');
-            multiplierRef.current = 1.00;
-            
-            const crashMultiplier = 1.0 + Math.random() * (Math.random() < 0.1 ? 20 : 5); // Random crash point, with a small chance of a big win
-
-            // Flying phase
-            gameLoopRef.current = setInterval(() => {
-                multiplierRef.current += 0.01 + (multiplierRef.current * 0.01);
-                setMultiplier(multiplierRef.current);
-
-                if (multiplierRef.current >= crashMultiplier) {
-                    if (gameLoopRef.current) clearInterval(gameLoopRef.current);
-                    setGameState('crashed');
-                    setStatusMessage(`Crashed @ ${crashMultiplier.toFixed(2)}x`);
-                    setCanBet(true);
-                    setTimeout(startGameCycle, 5000); // Wait 5s before next round
-                }
-            }, 100);
-        }, 5000);
+    // Handlers
+    const handleBetAmountChange = (amount: number) => {
+        if (amount <= 0) setBetAmount(1);
+        else setBetAmount(amount);
     };
-    
-    // Start the first game cycle
-    useEffect(() => {
-        startGameCycle();
-    }, []);
 
-    const handleBet = () => {
-        const bet = parseFloat(betAmount);
-        if (isNaN(bet) || bet <= 0) {
-            alert('Please enter a valid bet amount.');
+    const handlePlaceBet = () => {
+        if (betAmount > balance) {
+            alert("Insufficient balance.");
             return;
         }
-        if (bet > balance) {
-            alert('Insufficient balance.');
-            return;
-        }
-
-        onLoss(bet, 'Aviator');
-        setCanBet(false);
-        setHasCashedOut(false);
-        setStatusMessage('Bet placed! Waiting for next round...');
+        onLoss(betAmount, 'Aviator');
+        setHasPlacedBet(true);
     };
 
     const handleCashOut = () => {
         if (gameState !== 'flying' || hasCashedOut) return;
         
-        const currentWinnings = parseFloat(betAmount) * multiplier;
+        playSound('cashout');
+        const currentWinnings = betAmount * multiplier;
         onWin(currentWinnings, 'Aviator');
         setHasCashedOut(true);
-        setWinnings(currentWinnings);
-        setStatusMessage(`You cashed out at ${multiplier.toFixed(2)}x!`);
+        setCurrentBets(prev => [...prev, {user: "You", bet: betAmount, cashedOutAt: multiplier}]);
+    };
+    
+    // UI Render
+    const renderGameState = () => {
+        const planeProgress = gameState === 'flying' ? Math.min(100, Math.log(multiplier) * 20) : 0;
+        const planeStyle = {
+            bottom: `${planeProgress * 0.8}%`,
+            left: `${planeProgress}%`,
+            transform: `rotate(-15deg) scale(${1 + planeProgress / 200})`
+        };
+
+        switch (gameState) {
+            case 'waiting':
+                return (
+                    <div className="flex flex-col items-center justify-center text-center">
+                        <div className="relative text-red-500 w-16 h-16 mb-4">
+                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 absolute animate-spin" style={{animationDuration: '1s'}}><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.182-3.182m0-4.991v4.99" /></svg>
+                        </div>
+                        <h2 className="text-xl font-bold">Waiting for next round...</h2>
+                        <p className="text-4xl font-extrabold">{countdown}s</p>
+                    </div>
+                );
+            case 'flying':
+                return (
+                    <>
+                        <h2 className="text-7xl font-extrabold text-white drop-shadow-lg transition-colors duration-300">{multiplier.toFixed(2)}x</h2>
+                        <div className="absolute transition-all duration-100 ease-linear" style={planeStyle}>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-20 h-20 text-red-500 drop-shadow-lg">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 3.125L18 12m-12 0h12" />
+                            </svg>
+                        </div>
+                    </>
+                );
+            case 'crashed':
+                return <h2 className="text-7xl font-extrabold text-red-500 drop-shadow-lg animate-pulse">Crashed @ {multiplier.toFixed(2)}x</h2>;
+        }
+    };
+    
+    const BetButton = () => {
+        if(hasPlacedBet) {
+             return (
+                 <button onClick={handleCashOut} disabled={gameState !== 'flying' || hasCashedOut} className="w-full p-4 bg-amber-500 text-slate-900 rounded-lg text-xl font-bold hover:bg-amber-600 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
+                     {hasCashedOut ? `Cashed Out!` : `Cash Out ${(betAmount * multiplier).toFixed(2)}`}
+                </button>
+            )
+        }
+        
+        return (
+             <button onClick={handlePlaceBet} disabled={gameState !== 'waiting'} className="w-full p-4 bg-green-600 text-white rounded-lg text-xl font-bold hover:bg-green-700 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
+                Bet
+            </button>
+        )
     };
 
     return (
-        <div className="bg-slate-900 p-4 sm:p-6 rounded-2xl shadow-2xl max-w-3xl mx-auto border border-sky-500/20 text-white flex flex-col gap-6">
-            <style>{`
-                @keyframes takeoff {
-                    0% { transform: translate(-100%, 50%) scale(0.5) rotate(-5deg); opacity: 0; }
-                    20% { opacity: 1; }
-                    100% { transform: translate(50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-                }
-                .plane-takeoff { animation: takeoff 1s ease-out forwards; }
-                @keyframes fly-away {
-                    0% { transform: translate(50%, -50%) scale(1); opacity: 1; }
-                    100% { transform: translate(150%, -100%) scale(1.2); opacity: 0; }
-                }
-                .plane-crashed { animation: fly-away 0.5s ease-in forwards; }
-            `}</style>
-            
+        <div className="bg-[#0f172a] p-2 sm:p-4 rounded-2xl shadow-2xl max-w-4xl mx-auto border border-sky-500/20 text-white flex flex-col gap-4">
             {/* Game Screen */}
-            <div className="relative w-full aspect-[16/9] bg-gradient-to-b from-sky-900 to-slate-900 rounded-lg overflow-hidden border border-slate-700 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900/10 to-transparent"></div>
-                
-                {gameState === 'crashed' ? (
-                     <h2 className="text-6xl font-extrabold text-red-500 animate-pulse drop-shadow-lg">{multiplier.toFixed(2)}x</h2>
-                ) : (
-                     <h2 className="text-7xl font-extrabold text-white drop-shadow-lg transition-colors duration-300">{multiplier.toFixed(2)}x</h2>
-                )}
-
-                {gameState === 'flying' && (
-                    <div className="absolute w-full h-full plane-takeoff">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-red-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 3.125L18 12m-12 0h12" />
-                        </svg>
-                    </div>
-                )}
-                 {gameState === 'crashed' && (
-                    <div className="absolute w-full h-full plane-crashed">
-                        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl">✈️ flew away!</span>
-                    </div>
-                )}
+            <div className="relative w-full aspect-[16/9] bg-gradient-to-b from-sky-900/50 via-[#0f172a] to-[#0f172a] rounded-lg overflow-hidden border border-slate-700 flex items-center justify-center">
+                <div className="absolute top-2 left-2 flex flex-wrap gap-2">
+                    {multiplierHistory.map((m, i) => (
+                        <span key={i} className={`bg-slate-800/80 text-sm font-bold px-3 py-1 rounded-md ${m < 2 ? 'text-sky-400' : 'text-purple-400'}`}>{m.toFixed(2)}x</span>
+                    ))}
+                </div>
+                {renderGameState()}
             </div>
 
-            {/* Status & Control Panel */}
-            <div className="bg-slate-800/50 p-4 rounded-lg text-center">
-                 <p className="font-semibold text-lg min-h-[28px]">{statusMessage}</p>
-                 {winnings > 0 && <p className="text-green-400 font-bold">You won {winnings.toFixed(2)} Rs!</p>}
-            </div>
-
+            {/* Control Panel */}
             <div className="bg-slate-800/50 p-4 rounded-lg flex flex-col sm:flex-row items-center gap-4">
                 <div className="flex-1 w-full">
-                     <label htmlFor="betAmount" className="text-sm font-semibold text-slate-400">Bet Amount (Rs)</label>
-                    <input
-                        id="betAmount"
-                        type="number"
-                        value={betAmount}
-                        onChange={(e) => setBetAmount(e.target.value)}
-                        disabled={!canBet}
-                        className="w-full p-3 mt-1 bg-slate-700 border-2 border-slate-600 rounded-lg text-white text-xl font-bold focus:border-sky-500 focus:ring-sky-500 disabled:bg-slate-800 disabled:cursor-not-allowed"
-                    />
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => handleBetAmountChange(betAmount - 10)} disabled={hasPlacedBet} className="px-4 py-2 bg-slate-700 rounded-md font-bold text-2xl">-</button>
+                        <input
+                            type="number"
+                            value={betAmount}
+                            onChange={(e) => handleBetAmountChange(parseInt(e.target.value, 10))}
+                            disabled={hasPlacedBet}
+                            className="w-full p-3 text-center bg-slate-700 border-2 border-slate-600 rounded-lg text-white text-xl font-bold focus:border-sky-500 focus:ring-sky-500 disabled:bg-slate-800 disabled:cursor-not-allowed"
+                        />
+                         <button onClick={() => handleBetAmountChange(betAmount + 10)} disabled={hasPlacedBet} className="px-4 py-2 bg-slate-700 rounded-md font-bold text-2xl">+</button>
+                    </div>
+                     <div className="flex justify-center gap-2 mt-2">
+                        {[20, 50, 100, 500].map(val => (
+                            <button key={val} onClick={() => handleBetAmountChange(val)} disabled={hasPlacedBet} className="px-3 py-1 bg-slate-600/70 text-sm rounded-md hover:bg-slate-600">{val}</button>
+                        ))}
+                    </div>
                 </div>
-                <div className="flex-1 w-full sm:self-end">
-                    {canBet ? (
-                        <button onClick={handleBet} className="w-full p-4 bg-green-600 text-white rounded-lg text-xl font-bold hover:bg-green-700 transition-colors disabled:bg-green-800 disabled:cursor-not-allowed">
-                            Place Bet
-                        </button>
-                    ) : (
-                         <button onClick={handleCashOut} disabled={gameState !== 'flying' || hasCashedOut} className="w-full p-4 bg-amber-500 text-slate-900 rounded-lg text-xl font-bold hover:bg-amber-600 transition-colors disabled:bg-slate-600 disabled:cursor-not-allowed">
-                             {hasCashedOut ? `Cashed Out!` : `Cash Out @ ${multiplier.toFixed(2)}x`}
-                        </button>
-                    )}
+                <div className="flex-1 w-full sm:max-w-xs">
+                   <BetButton />
+                </div>
+            </div>
+            
+            {/* Current Bets */}
+            <div className="bg-slate-800/50 p-4 rounded-lg">
+                <h3 className="font-bold mb-2">All Bets ({currentBets.length})</h3>
+                <div className="max-h-32 overflow-y-auto space-y-1 pr-2">
+                    {currentBets.sort((a,b) => b.bet - a.bet).map((bet, i) => (
+                        <div key={i} className="grid grid-cols-3 gap-2 text-sm p-2 bg-slate-700/50 rounded-md">
+                            <span className="truncate">{bet.user}</span>
+                            <span className="font-bold text-slate-300 text-right">{bet.bet.toFixed(2)} Rs</span>
+                            {bet.cashedOutAt ? (
+                                <span className="font-bold text-green-400 text-right">{bet.cashedOutAt.toFixed(2)}x</span>
+                            ): (
+                                <span className="text-slate-400 text-right">In-game</span>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

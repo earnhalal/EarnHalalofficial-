@@ -25,8 +25,11 @@ import AIAgentChatbot from './AIAgentChatbot';
 import WelcomeModal from './WelcomeModal';
 import MyApplicationsView from './MyApplicationsView';
 import AviatorGame from './games/AviatorGame';
+import LudoGame from './games/LudoGame';
+import LotteryGame from './games/LotteryGame';
 import GameLobbyView from './games/GameLobbyView';
 import { TrophyIcon } from './icons';
+import WhatsNewModal from './WhatsNewModal';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application } from '../types';
 import { TransactionType, TaskType } from '../types';
@@ -112,6 +115,8 @@ const playBalanceSound = () => {
     }
 };
 
+const APP_VERSION = "1.2.0";
+
 const App: React.FC = () => {
     // App state
     const [view, setView] = useState<View>('DASHBOARD');
@@ -132,6 +137,7 @@ const App: React.FC = () => {
     const [applications, setApplications] = useState<Application[]>([]);
     const [pendingBonuses, setPendingBonuses] = useState(0);
     const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+    const [showWhatsNew, setShowWhatsNew] = useState(false);
     const unsubscribeCallbacks = useRef<(() => void)[]>([]);
 
     // Security State
@@ -158,6 +164,12 @@ const App: React.FC = () => {
             { id: 'job2', title: 'Virtual Assistant', description: 'Provide administrative assistance remotely.', type: 'Full-time', salary: '30,000 Rs/month', isPremium: true },
             { id: 'job3', title: 'Social Media Manager', description: 'Manage and grow our social media presence.', type: 'Contract', salary: '25,000 Rs/month', isPremium: true },
         ]);
+        
+        // Check for app updates to show the modal
+        const lastSeenVersion = localStorage.getItem('appVersion');
+        if (lastSeenVersion !== APP_VERSION) {
+            setShowWhatsNew(true);
+        }
     }, []);
 
     // --- REFERRAL LINK HANDLER ---
@@ -707,6 +719,11 @@ const App: React.FC = () => {
             alert("An error occurred. Please try again.");
         }
     };
+
+    const handleCloseWhatsNew = () => {
+        setShowWhatsNew(false);
+        localStorage.setItem('appVersion', APP_VERSION);
+    };
     
     // Derived state
     userProfileRef.current = userProfile;
@@ -742,6 +759,7 @@ const App: React.FC = () => {
     return (
         <div className="bg-[#0a192f] text-slate-300 min-h-screen font-sans flex">
             {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+            {showWhatsNew && <WhatsNewModal onClose={handleCloseWhatsNew} />}
             {showPinModal && (
                 <PinLockView 
                     mode={showPinModal}
@@ -783,8 +801,8 @@ const App: React.FC = () => {
                                 case 'JOBS': return <JobsView userProfile={userProfile} balance={balance} jobs={jobs} onSubscribe={handleSubscribeToJob} onApply={handleApplyForJob} applications={applications} />;
                                 case 'MY_APPLICATIONS': return <MyApplicationsView applications={applications} />;
                                 case 'AVIATOR_GAME': return <AviatorGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
-                                case 'LUDO_GAME': return <GameLobbyView title="Ludo Star" icon={<TrophyIcon className="w-12 h-12"/>} />;
-                                case 'LOTTERY_GAME': return <GameLobbyView title="Daily Lottery" icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>} />;
+                                case 'LUDO_GAME': return <LudoGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
+                                case 'LOTTERY_GAME': return <LotteryGame balance={balance} onWin={handleGameWin} onLoss={handleGameLoss} />;
                                 default: return <div>Not Found</div>;
                             }
                         })()}
