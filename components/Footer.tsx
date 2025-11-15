@@ -1,23 +1,58 @@
 import React from 'react';
 import type { View } from '../types';
+import { HomeIcon, EarnIcon, WalletIcon, SettingsIcon } from './icons';
 
-interface FooterProps {
+interface BottomNavProps {
+    activeView: View;
     setActiveView: (view: View) => void;
 }
 
-const Footer: React.FC<FooterProps> = ({ setActiveView }) => {
+const NavItem: React.FC<{
+    icon: React.ReactNode;
+    label: string;
+    isActive: boolean;
+    onClick: () => void;
+}> = ({ icon, label, isActive, onClick }) => (
+    <button onClick={onClick} className={`flex flex-col items-center justify-center gap-1 w-full transition-colors ${isActive ? 'text-emerald-600' : 'text-gray-500 hover:text-emerald-500'}`}>
+        {icon}
+        <span className="text-xs font-medium">{label}</span>
+    </button>
+);
+
+
+const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
+    
+    const navItems: { view: View; label: string; icon: React.ReactNode }[] = [
+        { view: 'DASHBOARD', label: 'Home', icon: <HomeIcon className="w-6 h-6" /> },
+        { view: 'EARN', label: 'Tasks', icon: <EarnIcon className="w-6 h-6" /> },
+        { view: 'WALLET', label: 'Wallet', icon: <WalletIcon className="w-6 h-6" /> },
+        { view: 'PROFILE_SETTINGS', label: 'Settings', icon: <SettingsIcon className="w-6 h-6" /> },
+    ];
+    
+    // A simple way to determine active state for grouped views
+    const isViewActive = (view: View) => {
+        if (view === 'DASHBOARD') return activeView === 'DASHBOARD';
+        if (view === 'EARN') return ['EARN', 'TASK_HISTORY', 'CREATE_TASK', 'PLAY_AND_EARN'].includes(activeView);
+        if (view === 'WALLET') return ['WALLET', 'DEPOSIT'].includes(activeView);
+        if (view === 'PROFILE_SETTINGS') return ['PROFILE_SETTINGS', 'INVITE'].includes(activeView);
+        return false;
+    };
+
     return (
-        <footer className="bg-white p-6 mt-auto text-center text-sm text-gray-500 border-t border-gray-200">
-            <div className="flex justify-center flex-wrap gap-x-6 gap-y-2">
-                 <button onClick={() => setActiveView('HOW_IT_WORKS')} className="hover:text-primary-600 transition-colors font-semibold">How It Works</button>
-                 <button onClick={() => setActiveView('ABOUT_US')} className="hover:text-primary-600 transition-colors font-semibold">About Us</button>
-                 <button onClick={() => setActiveView('CONTACT_US')} className="hover:text-primary-600 transition-colors font-semibold">Contact</button>
-                 <button onClick={() => setActiveView('TERMS_CONDITIONS')} className="hover:text-primary-600 transition-colors font-semibold">Terms</button>
-                 <button onClick={() => setActiveView('PRIVACY_POLICY')} className="hover:text-primary-600 transition-colors font-semibold">Privacy</button>
+        <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30 md:hidden">
+            <div className="flex justify-around items-center h-16 px-2">
+                {navItems.map(item => (
+                    <NavItem 
+                        key={item.view}
+                        icon={item.icon}
+                        label={item.label}
+                        isActive={isViewActive(item.view)}
+                        onClick={() => setActiveView(item.view)}
+                    />
+                ))}
             </div>
-            <p className="mt-4">&copy; {new Date().getFullYear()} Earn Halal. All Rights Reserved.</p>
         </footer>
     );
 };
 
-export default Footer;
+export default BottomNav;

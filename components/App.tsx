@@ -11,7 +11,7 @@ import InviteView from './InviteView';
 import ProfileSettingsView from './ProfileSettingsView';
 import { HowItWorksView, AboutUsView, ContactUsView, PrivacyPolicyView, TermsAndConditionsView } from './InfoViews';
 import JobsView from './JobsView';
-import Footer from './Footer';
+import BottomNav from './Footer';
 import AuthView from './AuthView';
 import PaymentView from './PaymentView';
 import PendingVerificationView from './PendingVerificationView';
@@ -99,20 +99,20 @@ const UpdatesView: React.FC<UpdatesViewProps> = ({ updates, seenIds, onMarkAsRea
     const unreadCount = updates.filter(u => !seenIds.includes(u.id)).length;
 
     return (
-        <div className="bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg max-w-4xl mx-auto text-white">
-            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg max-w-4xl mx-auto text-gray-800">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-4">
                 <h2 className="text-3xl font-bold">Inbox</h2>
                 {unreadCount > 0 && (
                     <button
                         onClick={onMarkAllAsRead}
-                        className="text-sm font-semibold text-primary-400 hover:text-primary-300"
+                        className="text-sm font-semibold text-emerald-600 hover:text-emerald-700"
                     >
                         Mark all as read
                     </button>
                 )}
             </div>
             {updates.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">No updates yet.</p>
+                <p className="text-center text-gray-500 py-8">No updates yet.</p>
             ) : (
                 <div className="space-y-4">
                     {updates.map(update => {
@@ -122,19 +122,19 @@ const UpdatesView: React.FC<UpdatesViewProps> = ({ updates, seenIds, onMarkAsRea
                                 key={update.id}
                                 onClick={() => onMarkAsRead(update.id)}
                                 className={`p-4 rounded-lg cursor-pointer transition-colors duration-200 ${
-                                    isUnread ? 'bg-gray-700 hover:bg-gray-600/70 border-l-4 border-primary-500' : 'bg-gray-800/50 hover:bg-gray-700/50'
+                                    isUnread ? 'bg-emerald-50 hover:bg-emerald-100 border-l-4 border-emerald-500' : 'bg-gray-50 hover:bg-gray-100'
                                 }`}
                             >
                                 <div className="flex items-start gap-4">
-                                    <div className={`mt-1 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-600 ${update.color}`}>
-                                        {React.cloneElement(update.icon, { className: "w-5 h-5 text-white" })}
+                                    <div className={`mt-1 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 ${update.color}`}>
+                                        {React.cloneElement(update.icon, { className: "w-5 h-5" })}
                                     </div>
                                     <div className="flex-grow">
                                         <div className="flex justify-between items-baseline">
-                                            <h3 className={`font-bold text-lg ${isUnread ? 'text-white' : 'text-gray-300'}`}>{update.title}</h3>
+                                            <h3 className={`font-bold text-lg ${isUnread ? 'text-gray-900' : 'text-gray-700'}`}>{update.title}</h3>
                                             <p className="text-xs text-gray-500 flex-shrink-0 ml-4">{update.date}</p>
                                         </div>
-                                        <p className={`text-sm mt-1 ${isUnread ? 'text-gray-300' : 'text-gray-400'}`}>{update.description}</p>
+                                        <p className={`text-sm mt-1 ${isUnread ? 'text-gray-700' : 'text-gray-500'}`}>{update.description}</p>
                                     </div>
                                 </div>
                             </div>
@@ -160,12 +160,10 @@ const App: React.FC = () => {
   const [socialGroups, setSocialGroups] = useState<SocialGroup[]>([]);
   const [userSocialGroups, setUserSocialGroups] = useState<SocialGroup[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [viewStack, setViewStack] = useState<View[]>(['DASHBOARD']);
   
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   
-  const [initialAuthView, setInitialAuthView] = useState<'login' | 'signup'>('signup');
   const [authAction, setAuthAction] = useState<'login' | 'signup' | null>(null);
   
   const [showPinLock, setShowPinLock] = useState(false);
@@ -277,7 +275,6 @@ const App: React.FC = () => {
         setJobs([]);
         setApplications([]);
         setActiveViewInternal('DASHBOARD');
-        setViewStack(['DASHBOARD']);
         setIsLoading(false);
         setAuthAction(null);
       }
@@ -348,67 +345,16 @@ const App: React.FC = () => {
   }, [user, userProfile]);
 
   const handleAuthNavigation = useCallback((view: 'login' | 'signup') => {
-      setInitialAuthView(view);
       setAuthAction(view);
   }, []);
-
-  // Effect to manage visibility of the static landing page
-  useEffect(() => {
-    const staticPage = document.getElementById('static-landing-page');
-    if (!staticPage) return;
-
-    const shouldShowReactContent = (user && userProfile) || !!authAction;
-
-    if (shouldShowReactContent) {
-      staticPage.style.display = 'none';
-    } else {
-      staticPage.style.display = 'block';
-    }
-  }, [user, userProfile, authAction]);
-
-  // Effect to attach listeners to the static landing page buttons
-  useEffect(() => {
-    if (!user && !authAction) {
-      const loginButtons = document.querySelectorAll('a[href="#login"]');
-      const signupButtons = document.querySelectorAll('a[href="#signup"], a[href="#signup-form"]');
-
-      const handleLoginClick = (e: Event) => {
-        e.preventDefault();
-        handleAuthNavigation('login');
-      };
-
-      const handleSignupClick = (e: Event) => {
-        e.preventDefault();
-        handleAuthNavigation('signup');
-      };
-
-      loginButtons.forEach(btn => btn.addEventListener('click', handleLoginClick));
-      signupButtons.forEach(btn => btn.addEventListener('click', handleSignupClick));
-
-      return () => {
-        loginButtons.forEach(btn => btn.removeEventListener('click', handleLoginClick));
-        signupButtons.forEach(btn => btn.removeEventListener('click', handleSignupClick));
-      };
-    }
-  }, [user, authAction, handleAuthNavigation]);
 
   // --- Handlers ---
   const setActiveView = (view: View) => {
     if (view === activeView) return;
     setActiveViewInternal(view);
-    setViewStack(prev => [...prev, view]);
     setIsSidebarOpen(false);
   };
 
-  const goBack = () => {
-    if (viewStack.length > 1) {
-      const newStack = [...viewStack];
-      newStack.pop();
-      setActiveViewInternal(newStack[newStack.length - 1]);
-      setViewStack(newStack);
-    }
-  };
-  
   const handleSignup = async (data: {username: string, email: string, phone: string, password: string, referrer?: string}) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
@@ -448,6 +394,7 @@ const App: React.FC = () => {
   const handleLogin = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      setAuthAction(null);
     } catch (error: any) {
       alert(`Login failed: ${error.message}`);
     }
@@ -795,7 +742,7 @@ const App: React.FC = () => {
   // --- Render Logic ---
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
-      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} />,
+      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
@@ -819,7 +766,7 @@ const App: React.FC = () => {
       SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
       UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={handleMarkUpdateAsRead} onMarkAllAsRead={handleMarkAllUpdatesAsRead} />,
     };
-    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} />;
+    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />;
   };
 
   if (isLoading) {
@@ -827,11 +774,10 @@ const App: React.FC = () => {
   }
   
   if (!user || !userProfile) {
-      if (authAction) {
-          return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={initialAuthView} />;
-      }
-      // Return null to allow the static index.html to be the landing page
-      return null;
+    if (authAction) {
+        return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />;
+    }
+    return <LandingView onGetStarted={handleAuthNavigation} />;
   }
 
   if (userProfile.paymentStatus === 'UNPAID') {
@@ -843,25 +789,19 @@ const App: React.FC = () => {
   }
 
   const mainContent = (
-      <div className="flex bg-gray-900 min-h-screen font-sans">
-          <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} />
-          {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-20 lg:hidden"></div>}
-          <div className="flex-1 flex flex-col lg:ml-72">
+      <div className="flex flex-col md:flex-row bg-gradient-to-b from-green-50/50 to-white min-h-screen font-sans">
+          <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden"></div>}
+          <div className="flex-1 flex flex-col w-full">
               <Header
-                  activeView={activeView}
-                  balance={userProfile.balance}
                   username={userProfile.username}
-                  isSidebarOpen={isSidebarOpen}
                   setIsSidebarOpen={setIsSidebarOpen}
-                  canGoBack={viewStack.length > 1}
-                  onBack={goBack}
                   setActiveView={setActiveView}
-                  unreadUpdatesCount={unreadUpdatesCount}
               />
-              <main className="flex-grow p-4 sm:p-6">
+              <main className="flex-grow pb-20 md:pb-6">
                   {renderContent()}
               </main>
-              <Footer setActiveView={setActiveView} />
+              <BottomNav activeView={activeView} setActiveView={setActiveView} />
           </div>
           {showChatbot && <AIAgentChatbot />}
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={handlePinCorrect} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}

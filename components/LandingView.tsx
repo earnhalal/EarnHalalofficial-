@@ -1,256 +1,190 @@
 // components/LandingView.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-    UserIcon, CheckCircleIcon, WalletIcon, MenuIcon, CloseIcon, 
-    JazzCashIcon, EasyPaisaIcon, NayaPayIcon, SadaPayIcon,
-    WhatsAppIcon, FacebookIcon, TwitterIcon, SparklesIcon,
-    LockIcon, ClipboardListIcon
+    MenuIcon, CloseIcon, WalletIcon, CheckCircleIcon, HomeIcon, BankIcon, 
+    FacebookIcon, InstagramIcon, YoutubeIcon, LockIcon, MailIcon, PhoneIcon,
+    DocumentTextIcon, DocumentArrowUpIcon, InfoIcon, SparklesIcon
 } from './icons';
-import { InfoModal, renderModalContent } from './LandingInfoViews';
+
+// This is a global declaration to prevent TypeScript errors for the particles.js library.
+declare global {
+  interface Window {
+        particlesJS: any;
+  }
+}
 
 interface LandingViewProps {
   onGetStarted: (view: 'login' | 'signup') => void;
 }
 
-const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; children: React.ReactNode }> = ({ icon, title, children }) => (
-    <div className="bg-white/5 p-6 rounded-xl border border-white/10 text-center backdrop-blur-sm shadow-lg hover:bg-white/10 transition-all transform hover:-translate-y-1">
-        <div className="inline-block bg-primary-500/20 text-primary-300 p-4 rounded-full mb-4">{icon}</div>
-        <h3 className="text-xl font-bold text-white">{title}</h3>
-        <p className="text-sm text-gray-400 mt-2">{children}</p>
-    </div>
-);
-
-const FooterLink: React.FC<{ children: React.ReactNode; onClick: () => void }> = ({ children, onClick }) => (
-    <li>
-        <button onClick={onClick} className="text-gray-400 hover:text-primary-300 transition-colors duration-200">{children}</button>
-    </li>
-);
-
 const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeInfoModal, setActiveInfoModal] = useState<string | null>(null);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  const handleAuthClick = (view: 'login' | 'signup') => {
-      onGetStarted(view);
-      setIsMenuOpen(false);
-  };
-  
-  const handleModalClick = (modalKey: string) => {
-    setActiveInfoModal(modalKey);
-    setIsMenuOpen(false);
-  };
-
-  const getModalTitle = (modalKey: string): string => {
-      const titles: Record<string, string> = {
-          'how-it-works': 'How It Works', 'about': 'About Us', 'support': 'Support & Contact',
-          'privacy': 'Privacy Policy', 'terms': 'Terms & Conditions', 'withdrawal': 'Withdrawal Details',
-          'deposit': 'Deposit Information', 'refund': 'Refund Policy', 'disclaimer': 'Disclaimer',
-      };
-      return titles[modalKey] || 'Information';
-  }
-
-  const Highlight: React.FC<{children: React.ReactNode}> = ({ children }) => <span className="text-accent-400 font-semibold">{children}</span>;
-
-  const partnerNames = ["TaskMedia", "AdGem", "ClickFlow", "Tap2Earn", "ViewPoint", "Rewardify"];
+  useEffect(() => {
+    if (window.particlesJS) {
+      window.particlesJS('particles-js', {
+        particles: {
+          number: { value: 40 },
+          color: { value: '#10b981' },
+          shape: { type: 'circle' },
+          opacity: { value: 0.3 },
+          size: { value: 4 },
+          move: { enable: true, speed: 1 }
+        },
+        interactivity: { events: { onhover: { enable: true, mode: 'repulse' } } }
+      });
+    }
+  }, []);
 
   return (
     <>
       <style>{`
-        @keyframes scroll-x {
-          from { transform: translateX(0); }
-          to { transform: translateX(-100%); }
+        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+        .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); }
+        .cta-btn {
+          background: linear-gradient(135deg, #10b981, #059669);
+          transition: all 0.3s ease;
+          box-shadow: 0 8px 20px rgba(16,185,129,0.3);
         }
-        .animate-scroll-x {
-          animation: scroll-x 40s linear infinite;
-        }
-        @keyframes pulse-button {
-          0%, 100% {
-              transform: scale(1);
-              box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
-          }
-          70% {
-              transform: scale(1.05);
-              box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
-          }
-        }
-        .animate-pulse-button {
-            animation: pulse-button 2.5s infinite;
-        }
+        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(16,185,129,0.4); }
+        .stat-card { animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .nav-link { transition: color 0.3s; }
+        .nav-link:hover { color: #10b981; }
+        .mobile-menu { transition: transform 0.3s ease; }
+        .mobile-menu.open { transform: translateX(0); }
+        .link-card { transition: all 0.3s ease; backdrop-filter: blur(10px); }
+        .link-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(16,185,129,0.2); }
+        .social-float { animation: float 4s ease-in-out infinite; }
+        .gradient-text { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
       `}</style>
-      <div className="relative min-h-screen w-full bg-gray-900 text-gray-200 font-sans isolate overflow-x-hidden">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top,_rgba(245,158,11,0.1)_0%,_transparent_30%)]"></div>
-        
-        <header className="absolute top-0 z-40 w-full">
-            <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-                <a href="#" className="text-2xl font-heading font-bold text-white transition-all hover:text-primary-300">Earn Halal</a>
-                <div className="hidden md:flex items-center space-x-2">
-                    <button onClick={() => handleAuthClick('login')} className="px-5 py-2 text-gray-300 font-semibold rounded-lg hover:bg-white/10 transition-all">Login</button>
-                    <button onClick={() => handleAuthClick('signup')} className="px-5 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all shadow-md shadow-primary-500/20">Sign Up</button>
-                </div>
-                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden text-gray-200 hover:text-primary-300 z-50">
-                    {isMenuOpen ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
-                </button>
+
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 text-gray-800 overflow-x-hidden">
+        <div id="particles-js"></div>
+
+        <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="#" className="flex items-center gap-2">
+              <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">EH</div>
+              <span className="font-bold text-lg text-emerald-600">Earn Halal</span>
+            </a>
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+              <a href="#features" className="nav-link text-gray-700">Features</a>
+              <a href="#how" className="nav-link text-gray-700">How It Works</a>
+              <a href="#payouts" className="nav-link text-gray-700">Payouts</a>
+              <a href="#reviews" className="nav-link text-gray-700">Reviews</a>
             </nav>
+            <div className="hidden md:flex items-center gap-3">
+              <button onClick={() => onGetStarted('login')} className="px-5 py-2 text-emerald-600 font-medium border border-emerald-600 rounded-full hover:bg-emerald-50 transition">Login</button>
+              <button onClick={() => onGetStarted('signup')} className="px-5 py-2 bg-emerald-600 text-white font-medium rounded-full cta-btn">Sign Up Free</button>
+            </div>
+            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2">
+                {mobileMenu ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+            </button>
+          </div>
         </header>
         
-        {isMenuOpen && (
-             <div className="fixed top-0 left-0 w-full h-full bg-gray-900 z-40 flex flex-col">
-                <div className="container mx-auto px-6 py-4 flex justify-between items-center border-b border-gray-700">
-                    <span className="text-2xl font-heading font-bold text-white">Menu</span>
-                     <button onClick={() => setIsMenuOpen(false)} className="text-gray-200 hover:text-primary-300 z-50">
-                        <CloseIcon className="w-7 h-7" />
-                    </button>
+        {mobileMenu && (
+             <div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-6" style={{ transform: mobileMenu ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.3s ease-in-out'}}>
+              <nav className="space-y-6 text-lg font-medium">
+                <a href="#features" onClick={() => setMobileMenu(false)} className="block">Features</a>
+                <a href="#how" onClick={() => setMobileMenu(false)} className="block">How It Works</a>
+                <a href="#payouts" onClick={() => setMobileMenu(false)} className="block">Payouts</a>
+                <a href="#reviews" onClick={() => setMobileMenu(false)} className="block">Reviews</a>
+                <div className="pt-6 space-y-3">
+                  <button onClick={() => { onGetStarted('login'); setMobileMenu(false); }} className="block w-full text-center py-3 border border-emerald-600 text-emerald-600 rounded-full">Login</button>
+                  <button onClick={() => { onGetStarted('signup'); setMobileMenu(false); }} className="block w-full text-center py-3 bg-emerald-600 text-white rounded-full">Sign Up Free</button>
                 </div>
-                <div className="flex-grow p-6 flex flex-col justify-center items-center">
-                     <div className="space-y-4 w-full max-w-xs">
-                         <button onClick={() => handleAuthClick('signup')} className="w-full px-5 py-3 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all text-lg">Create Free Account</button>
-                         <button onClick={() => handleAuthClick('login')} className="w-full px-5 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-600 transition-all text-lg">Login</button>
-                    </div>
-                </div>
+              </nav>
             </div>
         )}
 
-        <main className="relative z-10">
-          <section className="relative pt-32 pb-16 md:pt-40 md:pb-24">
-            <div className="container mx-auto px-6 text-center">
-                <div className="max-w-4xl mx-auto">
-                    <h1 className="text-4xl md:text-6xl font-heading font-extrabold leading-tight text-white animate-fade-in-up">
-                        Earning Made Simple,
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-accent-400 block md:inline"> The Halal Way</span>
-                    </h1>
-                    <p className="mt-6 text-lg md:text-xl text-gray-400 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                        Join thousands of Pakistanis earning daily rewards by completing simple online tasks. <Highlight>Secure, transparent, and trusted.</Highlight>
-                    </p>
-                    <div className="animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                        <button
-                            onClick={() => handleAuthClick('signup')}
-                            className="mt-10 px-8 py-4 bg-primary-500 text-white font-bold rounded-full text-lg transition-all transform hover:scale-105 animate-pulse-button"
-                        >
-                            Get Started Now
-                        </button>
-                    </div>
-                </div>
-            </div>
-          </section>
-
-          <section className="py-20 bg-gray-900/50">
-              <div className="container mx-auto px-6">
-                 <div className="text-center max-w-3xl mx-auto mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white">Why Choose Earn Halal?</h2>
-                    <p className="mt-4 text-lg text-gray-400">A platform built on trust, transparency, and ethical principles.</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-                    <FeatureCard icon={<SparklesIcon className="w-8 h-8"/>} title="Instant Rewards">Your balance is updated the <Highlight>moment you complete a task</Highlight>.</FeatureCard>
-                    <FeatureCard icon={<LockIcon className="w-8 h-8"/>} title="Secure Payouts">Withdraw safely using <Highlight>trusted local payment methods</Highlight>.</FeatureCard>
-                    <FeatureCard icon={<CheckCircleIcon className="w-8 h-8"/>} title="Halal & Ethical">All tasks are vetted to ensure they <Highlight>align with ethical principles</Highlight>.</FeatureCard>
-                    <FeatureCard icon={<ClipboardListIcon className="w-8 h-8"/>} title="Diverse Tasks">From social media to website visits, there's <Highlight>always a task for you</Highlight>.</FeatureCard>
-                </div>
-              </div>
-          </section>
-
-          <section className="py-20">
-            <div className="container mx-auto px-6">
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-white">How It Works</h2>
-                    <p className="mt-4 text-lg text-gray-400">Start earning in just 3 simple steps. It's fast, easy, and secure.</p>
-                </div>
-                <div className="relative max-w-4xl mx-auto">
-                    <div className="absolute left-1/2 top-8 bottom-8 w-1 bg-gray-800 hidden md:block" />
-                    <div className="space-y-12 md:space-y-0">
-                         {[{icon:<UserIcon className="w-8 h-8"/>, title:"1. Sign Up for Free", desc:<>Create your account in under a minute. After a <Highlight>quick verification</Highlight>, you're ready to start earning.</>},
-                         {icon:<CheckCircleIcon className="w-8 h-8"/>, title:"2. Complete Simple Tasks", desc:<>Browse tasks like watching videos or liking pages. Complete them and see your balance grow <Highlight>instantly</Highlight>.</>},
-                         {icon:<WalletIcon className="w-8 h-8"/>, title:"3. Get Paid Quickly", desc:<>Withdraw your earnings directly to your <Highlight>local bank or mobile wallet</Highlight>. Fast, secure, and hassle-free.</>}].map((item, index) => (
-                             <div key={index} className={`flex flex-col md:flex-row items-center gap-8 ${index === 1 ? 'md:flex-row-reverse' : ''}`}>
-                                <div className="md:w-1/2 text-center md:text-left">
-                                    <div className={`inline-block bg-primary-500/20 text-primary-300 p-4 rounded-full mb-4 ring-8 ring-gray-900`}>{item.icon}</div>
-                                    <h3 className="text-2xl font-bold text-white">{item.title}</h3>
-                                    <p className="text-gray-400 mt-2">{item.desc}</p>
-                                </div>
-                                <div className="hidden md:block w-8 h-8 rounded-full bg-primary-500 ring-8 ring-gray-900 z-10"/>
-                                <div className="md:w-1/2" />
-                            </div>
-                         ))}
-                    </div>
-                </div>
-            </div>
-          </section>
-
-           <section className="py-20 bg-gray-900/50">
-              <div className="container mx-auto px-6">
-                 <h2 className="text-center text-3xl font-bold text-white mb-4">Our Trusted Partners</h2>
-                 <p className="text-center text-lg text-gray-400 mb-12">We collaborate with leading platforms to bring you a variety of earning opportunities.</p>
-                 <div className="relative w-full max-w-4xl mx-auto overflow-hidden">
-                    <div className="flex w-max animate-scroll-x">
-                        {[...partnerNames, ...partnerNames].map((name, index) => (
-                            <span key={index} className="text-2xl font-semibold text-gray-400 transition-colors hover:text-white font-heading mx-6 sm:mx-8 flex-shrink-0">{name}</span>
-                        ))}
-                    </div>
-                     <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-gray-900/50 to-transparent"></div>
-                     <div className="absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-gray-900/50 to-transparent"></div>
-                 </div>
-              </div>
-          </section>
-
-        </main>
-
-        <footer className="bg-gray-900/70 border-t border-gray-800">
-            <div className="container mx-auto px-6 py-12 text-center">
-                 <h3 className="text-3xl font-heading font-bold text-white mb-4">Ready to Start Earning?</h3>
-                 <p className="text-gray-400 max-w-md mx-auto mb-6">Join Earn Halal today and take the first step towards your online earning journey.</p>
-                 <button
-                    onClick={() => handleAuthClick('signup')}
-                    className="px-8 py-4 bg-primary-500 text-white font-bold rounded-full shadow-lg shadow-primary-500/20 text-lg transition-all transform hover:scale-105"
-                 >
-                    Create Your Free Account
+        <main>
+            <section className="pt-24 pb-12 px-6 text-center">
+              <div className="max-w-3xl mx-auto">
+                <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                  Earning Made <span className="text-emerald-600">Simple</span>,<br/>
+                  The <span className="text-emerald-600">Halal</span> Way
+                </h1>
+                <p className="text-lg text-gray-600 mb-8">
+                  Join thousands of Pakistanis earning daily rewards by completing simple online tasks. Secure, transparent, and 100% halal.
+                </p>
+                <button onClick={() => onGetStarted('signup')} className="inline-block cta-btn text-white font-bold py-4 px-8 rounded-full text-lg">
+                  Get Started Now – Free!
                 </button>
-            </div>
-            <div className="border-t border-gray-800 py-10">
-                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
-                     <div>
-                        <h4 className="font-bold text-white text-lg mb-4">Earn Halal</h4>
-                        <p className="text-gray-400">A trusted platform for ethical online earnings in Pakistan.</p>
-                         <div className="flex space-x-4 mt-4">
-                            <a href="#" className="text-gray-400 hover:text-green-500"><WhatsAppIcon className="w-6 h-6"/></a>
-                            <a href="#" className="text-gray-400 hover:text-blue-500"><FacebookIcon className="w-6 h-6"/></a>
-                            <a href="#" className="text-gray-400 hover:text-sky-400"><TwitterIcon className="w-6 h-6"/></a>
-                        </div>
-                    </div>
-                    <div>
-                        <h5 className="font-semibold text-gray-200 mb-4">Company</h5>
-                        <ul className="space-y-2">
-                            <FooterLink onClick={() => handleModalClick('about')}>About Us</FooterLink>
-                            <FooterLink onClick={() => handleModalClick('support')}>Contact Support</FooterLink>
-                        </ul>
-                    </div>
-                    <div>
-                        <h5 className="font-semibold text-gray-200 mb-4">Legal</h5>
-                        <ul className="space-y-2">
-                            <FooterLink onClick={() => handleModalClick('terms')}>Terms & Conditions</FooterLink>
-                            <FooterLink onClick={() => handleModalClick('privacy')}>Privacy Policy</FooterLink>
-                            <FooterLink onClick={() => handleModalClick('refund')}>Refund Policy</FooterLink>
-                             <FooterLink onClick={() => handleModalClick('disclaimer')}>Disclaimer</FooterLink>
-                        </ul>
-                    </div>
-                     <div>
-                        <h5 className="font-semibold text-gray-200 mb-4">Information</h5>
-                        <ul className="space-y-2">
-                            <FooterLink onClick={() => handleModalClick('how-it-works')}>How It Works</FooterLink>
-                            <FooterLink onClick={() => handleModalClick('withdrawal')}>Withdrawal Info</FooterLink>
-                            <FooterLink onClick={() => handleModalClick('deposit')}>Deposit Info</FooterLink>
-                        </ul>
-                    </div>
+                <p className="text-sm text-gray-500 mt-3">No credit card required. Start in 1 minute.</p>
+              </div>
+            </section>
+
+            <section className="px-6 py-10">
+                <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 text-center">
+                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-emerald-600">$1.5M+</p><p className="text-sm text-gray-600">Total Paid</p></div>
+                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-emerald-600">75K+</p><p className="text-sm text-gray-600">Active Users</p></div>
+                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-emerald-600">4.9</p><p className="text-sm text-gray-600">Rating</p></div>
                 </div>
-                 <div className="container mx-auto px-6 pt-8 mt-8 border-t border-gray-800 text-center text-sm text-gray-500">
-                    <p>&copy; {new Date().getFullYear()} Earn Halal. All Rights Reserved.</p>
+            </section>
+
+            <section id="features" className="px-6 py-12">
+                <h2 className="text-3xl font-bold text-center mb-10">Why Choose Earn Halal?</h2>
+                <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
+                    <div className="glass p-6 rounded-2xl text-center"><WalletIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Instant Rewards</h3><p className="text-sm text-gray-600">Balance updates instantly after task.</p></div>
+                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Secure Payouts</h3><p className="text-sm text-gray-600">JazzCash, EasyPaisa, Bank.</p></div>
+                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">100% Halal</h3><p className="text-sm text-gray-600">Tasks vetted by scholars.</p></div>
+                    <div className="glass p-6 rounded-2xl text-center"><HomeIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Diverse Tasks</h3><p className="text-sm text-gray-600">Surveys, videos, referrals.</p></div>
+                </div>
+            </section>
+            
+            <section id="how" className="px-6 py-12 bg-emerald-50">
+                <h2 className="text-3xl font-bold text-center mb-10">How It Works</h2>
+                <div className="max-w-4xl mx-auto space-y-8">
+                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">1</div><div><h3 className="font-bold text-lg">Sign Up Free</h3><p className="text-gray-600">Create account in 1 minute. No card needed.</p></div></div>
+                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">2</div><div><h3 className="font-bold text-lg">Complete Tasks</h3><p className="text-gray-600">Watch videos, answer surveys, grow balance.</p></div></div>
+                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">3</div><div><h3 className="font-bold text-lg">Get Paid</h3><p className="text-gray-600">Withdraw to JazzCash instantly.</p></div></div>
+                </div>
+            </section>
+
+            <section id="payouts" className="px-6 py-12">
+                <h2 className="text-3xl font-bold text-center mb-10">Trusted Payouts</h2>
+                <div className="flex flex-wrap justify-center items-center gap-8">
+                    <div className="text-center"><img src="https://upload.wikimedia.org/wikipedia/commons/5/55/JazzCash_Logo.png" alt="JazzCash" className="h-12 mx-auto mb-2" /><p className="text-sm font-medium">Instant via JazzCash</p></div>
+                    <div className="text-center"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/EasyPaisa_Logo.png" alt="EasyPaisa" className="h-12 mx-auto mb-2" /><p className="text-sm font-medium">EasyPaisa Supported</p></div>
+                    <div className="text-center"><BankIcon className="w-12 h-12 text-emerald-600 mx-auto mb-2" /><p className="text-sm font-medium">Bank Transfer</p></div>
+                </div>
+            </section>
+            
+            <section id="reviews" className="px-6 py-12 bg-gray-50">
+              <h2 className="text-3xl font-bold text-center mb-10">User Reviews</h2>
+              <div className="max-w-2xl mx-auto space-y-6">
+                <div className="glass p-6 rounded-2xl"><p className="italic mb-3">"Best halal earning app in Pakistan! Withdrew Rs.5000 in 2 days."</p><p className="text-emerald-600 font-medium">— Ahmed, Lahore</p></div>
+                <div className="glass p-6 rounded-2xl"><p className="italic mb-3">"Easy tasks and instant payouts. 100% trusted!"</p><p className="text-emerald-600 font-medium">— Fatima, Karachi</p></div>
+              </div>
+            </section>
+            
+            <section id="signup" className="px-6 py-16 text-center bg-emerald-600 text-white">
+                <h2 className="text-4xl font-bold mb-4">Start Earning Today!</h2>
+                <p className="text-lg mb-8 max-w-xl mx-auto">Join 75,000+ users earning daily. No risk, no fees.</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                    <button onClick={() => onGetStarted('login')} className="py-3 px-6 border-2 border-white text-white rounded-full font-medium hover:bg-white hover:text-emerald-600 transition">Login</button>
+                    <button onClick={() => onGetStarted('signup')} className="py-3 px-6 bg-white text-emerald-600 rounded-full font-bold hover:bg-gray-100 transition">Sign Up Free</button>
+                </div>
+            </section>
+        </main>
+        
+        <footer className="bg-gradient-to-t from-emerald-600 to-emerald-700 text-white relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10" style={{background: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E') repeat"}}></div>
+            <div className="relative max-w-7xl mx-auto px-6 py-16">
+                 {/* Footer content goes here, mirroring the HTML structure */}
+                <div className="border-t border-white/20 pt-6 flex flex-col md:flex-row justify-between items-center text-xs opacity-80 mt-12">
+                    <p>© 2025 <span className="gradient-text font-bold">Earn Halal</span>. All rights reserved. Made with love in Pakistan.</p>
+                    <div className="flex gap-6 mt-4 md:mt-0">
+                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-gold" /> 100% Halal</span>
+                        <span className="flex items-center gap-1"><LockIcon className="w-4 h-4 text-gold" /> SSL Secured</span>
+                        <span className="flex items-center gap-1"><InfoIcon className="w-4 h-4 text-gold" /> 24/7 Support</span>
+                    </div>
                 </div>
             </div>
         </footer>
       </div>
-      {activeInfoModal && (
-          <InfoModal title={getModalTitle(activeInfoModal)} onClose={() => setActiveInfoModal(null)}>
-              {renderModalContent(activeInfoModal)}
-          </InfoModal>
-      )}
     </>
   );
 };

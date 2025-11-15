@@ -14,21 +14,21 @@ interface GameCardProps {
 
 const GameCard: React.FC<GameCardProps> = ({ title, description, icon, isComingSoon = false, gradient, onClick }) => {
     return (
-        <div className="relative group bg-slate-800/50 backdrop-blur-md border border-white/10 rounded-2xl p-6 text-center overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-amber-400/30">
+        <div className="relative group bg-white border border-gray-200 rounded-2xl p-6 text-center overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-emerald-300">
             {isComingSoon && (
-                <div className="absolute top-3 right-3 bg-amber-500 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                <div className="absolute top-3 right-3 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md">
                     Coming Soon
                 </div>
             )}
             <div className={`w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-3xl shadow-lg text-white ${gradient}`}>
                 {icon}
             </div>
-            <h3 className="text-2xl font-bold text-slate-100 mb-2">{title}</h3>
-            <p className="text-slate-400 text-sm mb-6 h-10">{description}</p>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">{title}</h3>
+            <p className="text-gray-500 text-sm mb-6 h-10">{description}</p>
             <button
                 onClick={onClick}
                 disabled={isComingSoon}
-                className="w-full py-3 font-semibold rounded-lg bg-amber-500/10 border border-amber-400 text-amber-400 transition-all duration-300 group-hover:bg-amber-400 group-hover:text-slate-900 disabled:bg-slate-700/50 disabled:text-slate-500 disabled:border-slate-600 disabled:cursor-not-allowed"
+                className="w-full py-3 font-semibold rounded-lg bg-emerald-500/10 border border-emerald-400 text-emerald-600 transition-all duration-300 group-hover:bg-emerald-500 group-hover:text-white disabled:bg-gray-200 disabled:text-gray-400 disabled:border-gray-300 disabled:cursor-not-allowed"
             >
                 {isComingSoon ? 'Unavailable' : 'Play Now'}
             </button>
@@ -47,7 +47,7 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             title: 'Mines',
             description: 'Uncover gems and avoid the mines. The higher the risk, the bigger the reward!',
             icon: <BombIcon className="w-10 h-10" />,
-            gradient: 'bg-gradient-to-br from-slate-400 to-slate-600',
+            gradient: 'bg-gradient-to-br from-gray-500 to-gray-700',
             view: 'MINES_GAME' as View,
             isComingSoon: true,
         },
@@ -78,10 +78,10 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
     ];
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 p-4">
             <div className="text-center">
-                <h2 className="text-3xl md:text-4xl font-extrabold text-slate-100 mb-3">Play & Earn</h2>
-                <p className="max-w-2xl mx-auto text-slate-300">
+                <h2 className="text-3xl md:text-4xl font-extrabold text-gray-800 mb-3">Play & Earn</h2>
+                <p className="max-w-2xl mx-auto text-gray-600">
                     Test your skills and luck in our collection of games. Place bets and win big rewards!
                 </p>
             </div>

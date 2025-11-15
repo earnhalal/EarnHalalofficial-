@@ -76,37 +76,37 @@ const SubmissionModal: React.FC<{
 
     return (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-up">
+            <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-up">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-white">Share a Group</h2>
-                    <button onClick={handleClose} className="text-gray-400 hover:text-white">
+                    <h2 className="text-xl font-bold text-gray-900">Share a Group</h2>
+                    <button onClick={handleClose} className="text-gray-500 hover:text-gray-800">
                         <CloseIcon className="w-6 h-6" />
                     </button>
                 </div>
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="url" className="block text-sm font-medium text-gray-300">Group Link</label>
-                        <input type="url" id="url" value={url} onChange={(e) => setUrl(e.target.value)} onBlur={handleUrlBlur} className="mt-1 block w-full p-3 border border-gray-600 rounded-md bg-gray-700 text-white" placeholder="https://chat.whatsapp.com/..." />
+                        <label htmlFor="url" className="block text-sm font-medium text-gray-700">Group Link</label>
+                        <input type="url" id="url" value={url} onChange={(e) => setUrl(e.target.value)} onBlur={handleUrlBlur} className="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-900" placeholder="https://chat.whatsapp.com/..." />
                     </div>
                     <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-300">Title</label>
+                        <label htmlFor="title" className="block text-sm font-medium text-gray-700">Title</label>
                         <div className="relative">
-                           <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full p-3 border border-gray-600 rounded-md bg-gray-700 text-white" placeholder="e.g., Best Study Group" />
-                           {isFetching && <div className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin rounded-full border-2 border-t-primary-400 border-gray-500"></div>}
+                           <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-900" placeholder="e.g., Best Study Group" />
+                           {isFetching && <div className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin rounded-full border-2 border-t-emerald-600 border-gray-300"></div>}
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-300">Description (Optional)</label>
-                        <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 block w-full p-3 border border-gray-600 rounded-md bg-gray-700 text-white" placeholder="A short description of the group's purpose."></textarea>
+                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+                        <textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-900" placeholder="A short description of the group's purpose."></textarea>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Category</label>
-                        <select value={category} onChange={(e) => setCategory(e.target.value as SocialGroup['category'])} className="mt-1 block w-full p-3 border border-gray-600 rounded-md bg-gray-700 text-white">
+                        <label className="block text-sm font-medium text-gray-700">Category</label>
+                        <select value={category} onChange={(e) => setCategory(e.target.value as SocialGroup['category'])} className="mt-1 block w-full p-3 border border-gray-300 rounded-md bg-gray-50 text-gray-900">
                             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                         </select>
                     </div>
-                    {error && <p className="text-red-400 text-sm text-center bg-red-900/50 p-2 rounded-md">{error}</p>}
-                    <button onClick={handleSubmit} className="w-full bg-primary-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-primary-700">Submit for Review</button>
+                    {error && <p className="text-red-600 text-sm text-center bg-red-100 p-2 rounded-md">{error}</p>}
+                    <button onClick={handleSubmit} className="w-full bg-emerald-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-emerald-700">Submit for Review</button>
                 </div>
             </div>
         </div>
@@ -122,34 +122,34 @@ const GroupCard: React.FC<{ group: SocialGroup }> = ({ group }) => {
     }, [group.url]);
 
     return (
-        <div className="bg-gray-800 p-4 rounded-xl shadow-md flex items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 overflow-hidden">
-                <div className="p-3 bg-gray-700 rounded-full text-primary-400 flex-shrink-0">{getIcon}</div>
+                <div className="p-3 bg-gray-100 rounded-full text-emerald-600 flex-shrink-0">{getIcon}</div>
                 <div className="overflow-hidden">
-                    <p className="font-bold text-white truncate" title={group.title}>{group.title}</p>
-                    <span className="text-xs font-semibold px-2 py-0.5 bg-gray-700 text-gray-300 rounded-full">{group.category}</span>
+                    <p className="font-bold text-gray-800 truncate" title={group.title}>{group.title}</p>
+                    <span className="text-xs font-semibold px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full">{group.category}</span>
                 </div>
             </div>
-            <a href={group.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-primary-700 whitespace-nowrap">Join</a>
+            <a href={group.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg text-sm hover:bg-emerald-700 whitespace-nowrap">Join</a>
         </div>
     );
 };
 
 const MySubmissionCard: React.FC<{ group: SocialGroup }> = ({ group }) => {
     const statusConfig = {
-        pending: { text: 'Pending', color: 'bg-yellow-500/20 text-yellow-300' },
-        approved: { text: 'Approved', color: 'bg-green-500/20 text-green-300' },
-        rejected: { text: 'Rejected', color: 'bg-red-500/20 text-red-400' },
+        pending: { text: 'Pending', color: 'bg-yellow-100 text-yellow-800' },
+        approved: { text: 'Approved', color: 'bg-green-100 text-green-800' },
+        rejected: { text: 'Rejected', color: 'bg-red-100 text-red-700' },
     };
     const { text, color } = statusConfig[group.status];
     const date = group.submittedAt?.toDate ? group.submittedAt.toDate() : null;
 
     return (
-        <div className="bg-gray-800 p-4 rounded-xl shadow-md">
+        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
             <div className="flex justify-between items-center">
                 <div className="overflow-hidden">
-                    <p className="font-semibold text-white truncate" title={group.title}>{group.title}</p>
-                    <p className="text-xs text-gray-400">{date ? date.toLocaleDateString() : 'N/A'}</p>
+                    <p className="font-semibold text-gray-800 truncate" title={group.title}>{group.title}</p>
+                    <p className="text-xs text-gray-500">{date ? date.toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <span className={`px-3 py-1 text-xs font-bold rounded-full ${color} whitespace-nowrap`}>{text}</span>
             </div>
@@ -158,7 +158,7 @@ const MySubmissionCard: React.FC<{ group: SocialGroup }> = ({ group }) => {
 };
 
 const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => void }> = ({ label, isActive, onClick }) => (
-    <button onClick={onClick} className={`px-6 py-2 rounded-full font-semibold transition-colors ${isActive ? 'bg-primary-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}>
+    <button onClick={onClick} className={`px-6 py-2 rounded-full font-semibold transition-colors ${isActive ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
         {label}
     </button>
 );
@@ -167,41 +167,20 @@ const TabButton: React.FC<{ label: string; isActive: boolean; onClick: () => voi
 const SocialGroupsView: React.FC<SocialGroupsViewProps> = ({ allGroups, myGroups, onSubmitGroup }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'mine'>('all');
-    /**
-     * --- Conceptual Backend Logic for Link Processing ---
-     * 
-     * When a user submits a link, a backend function (e.g., a Firebase Cloud Function) should be triggered.
-     * This is crucial because client-side fetching is blocked by CORS policy for most websites.
-     * 
-     * 1.  **Trigger:** Firestore `onCreate` trigger on the `social_groups` collection for new documents with `status: 'pending'`.
-     * 2.  **Validation:** The backend performs another, more robust validation on the URL to ensure it's from an allowed domain and format.
-     * 3.  **Scraping:**
-     *     - Use a headless browser library like Puppeteer or Playwright.
-     *     - Navigate to the submitted URL.
-     *     - Wait for the page to load and extract Open Graph (OG) meta tags:
-     *       - `og:title` -> for the group name.
-     *       - `og:description` -> for the group description.
-     *       - `og:image` -> for the group profile photo/icon URL.
-     *     - Handle cases where tags are missing or the page fails to load.
-     * 4.  **Update Firestore:**
-     *     - Update the 'pending' document with the scraped data.
-     *     - The `title` provided by the user can be overwritten by the `og:title` for accuracy, or kept as a fallback.
-     *     - Store the `og:image` URL in the `imageUrl` field.
-     * 5.  **Admin Panel:** The admin panel now displays the pending request with the fetched title, description, and image, making the review process much easier and more informed.
-     */
+    
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto p-4">
             <SubmissionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSubmit={onSubmitGroup} />
             <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
-                <h2 className="text-3xl font-bold text-white">Social Groups</h2>
-                <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-primary-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-primary-700 transition-colors">
+                <h2 className="text-3xl font-bold text-gray-800">Social Groups</h2>
+                <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-emerald-700 transition-colors">
                     <PlusCircleIcon className="w-6 h-6" />
                     <span>Share a Group</span>
                 </button>
             </div>
-            <p className="text-gray-400 mb-6 text-center sm:text-left">Browse groups shared by the community or submit your own. All submissions are reviewed by our team.</p>
+            <p className="text-gray-500 mb-6 text-center sm:text-left">Browse groups shared by the community or submit your own. All submissions are reviewed by our team.</p>
 
-            <div className="flex justify-center sm:justify-start gap-2 p-1.5 bg-gray-800 rounded-full mb-6 w-full sm:w-auto">
+            <div className="flex justify-center sm:justify-start gap-2 p-1.5 bg-gray-100 rounded-full mb-6 w-full sm:w-auto">
                 <TabButton label="All Groups" isActive={activeTab === 'all'} onClick={() => setActiveTab('all')} />
                 <TabButton label="My Submissions" isActive={activeTab === 'mine'} onClick={() => setActiveTab('mine')} />
             </div>
