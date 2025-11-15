@@ -3,11 +3,11 @@ import { FingerprintIcon } from './icons';
 
 // This is a global declaration to prevent TypeScript errors for the Lottie Player and particles.js library.
 declare global {
-  // FIX: Added a declaration for the 'lottie-player' custom element to resolve TypeScript errors.
-  // The global fix in types.ts was not being applied to this file.
+  // FIX: The global JSX intrinsic elements declaration from types.ts was not being applied to this file.
+  // This redeclaration with an index signature ensures custom elements like 'lottie-player' are recognized.
   namespace JSX {
     interface IntrinsicElements {
-      'lottie-player': any;
+      [elemName: string]: any;
     }
   }
   interface Window {
