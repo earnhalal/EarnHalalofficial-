@@ -204,7 +204,7 @@ const BetPanel: React.FC<{
                 <input
                     type="number"
                     value={betState.amount}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBetAmountChange(Number(e.target.value))}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleBetAmountChange(parseFloat(e.target.value))}
                     disabled={isBettingDisabled}
                     className="w-full p-3 font-mono text-center bg-gray-700/70 border-2 border-gray-600 rounded-xl text-white text-xl font-bold focus:border-primary-500 focus:ring-primary-500 transition-all disabled:bg-gray-800 disabled:cursor-not-allowed"
                 />
