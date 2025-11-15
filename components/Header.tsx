@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveVi
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
       {isBannerVisible && (
         <div className="bg-emerald-500 text-white text-sm font-medium p-2 text-center relative">
-          <span>🔔 Ahmed just earned <strong>₹750</strong> from Spin & Win! <button onClick={() => setActiveView('SPIN_WHEEL')} className="font-bold underline hover:text-emerald-200">Play Now</button></span>
+          <span>🔔 Ahmed just earned <strong>Rs 750</strong> from Spin & Win! <button onClick={() => setActiveView('SPIN_WHEEL')} className="font-bold underline hover:text-emerald-200">Play Now</button></span>
           <button onClick={() => setIsBannerVisible(false)} className="absolute top-1/2 right-3 -translate-y-1/2 text-white/70 hover:text-white">&times;</button>
         </div>
       )}

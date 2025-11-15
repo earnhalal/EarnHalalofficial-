@@ -25,7 +25,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
         <img src="https://firebasestorage.googleapis.com/v0/b/earnapp-f8d27.appspot.com/o/assets%2Fmeditating-man.png?alt=media&token=a8c54625-7839-4171-a477-f2759e6c0c2e" alt="Illustration" className="absolute right-0 bottom-0 h-40 opacity-20" />
         <div className="relative z-10">
           <p className="font-semibold text-emerald-200">Current Balance</p>
-          <p className="text-4xl font-bold my-2">₹{balance.toFixed(2)}</p>
+          <p className="text-4xl font-bold my-2">Rs {balance.toFixed(2)}</p>
           <div className="mt-4 flex gap-4">
             <button onClick={() => setActiveView('DEPOSIT')} className="flex-1 bg-white/20 hover:bg-white/30 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2">
               <span className="text-xl">+</span> Deposit
