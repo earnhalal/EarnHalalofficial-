@@ -1,5 +1,15 @@
 // types.ts
 
+// FIX: Add a global declaration for JSX.IntrinsicElements to allow any element.
+// This is a workaround for a project configuration issue where TypeScript isn't recognizing standard JSX elements.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      [elemName: string]: any;
+    }
+  }
+}
+
 export type View =
   | 'DASHBOARD'
   | 'EARN'

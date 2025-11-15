@@ -279,6 +279,7 @@ const App: React.FC = () => {
         setActiveViewInternal('DASHBOARD');
         setViewStack(['DASHBOARD']);
         setIsLoading(false);
+        setAuthAction(null);
       }
     });
 
@@ -339,12 +340,57 @@ const App: React.FC = () => {
     }
   }, []);
   
-  // Set loading to false once profile is loaded
+  // Set loading to false once profile is loaded or user is confirmed logged out
   useEffect(() => {
-    if(user && userProfile) {
+    if ((user && userProfile) || !user) {
       setIsLoading(false);
     }
   }, [user, userProfile]);
+
+  const handleAuthNavigation = useCallback((view: 'login' | 'signup') => {
+      setInitialAuthView(view);
+      setAuthAction(view);
+  }, []);
+
+  // Effect to manage visibility of the static landing page
+  useEffect(() => {
+    const staticPage = document.getElementById('static-landing-page');
+    if (!staticPage) return;
+
+    const shouldShowReactContent = (user && userProfile) || !!authAction;
+
+    if (shouldShowReactContent) {
+      staticPage.style.display = 'none';
+    } else {
+      staticPage.style.display = 'block';
+    }
+  }, [user, userProfile, authAction]);
+
+  // Effect to attach listeners to the static landing page buttons
+  useEffect(() => {
+    if (!user && !authAction) {
+      const loginButtons = document.querySelectorAll('a[href="#login"]');
+      const signupButtons = document.querySelectorAll('a[href="#signup"], a[href="#signup-form"]');
+
+      const handleLoginClick = (e: Event) => {
+        e.preventDefault();
+        handleAuthNavigation('login');
+      };
+
+      const handleSignupClick = (e: Event) => {
+        e.preventDefault();
+        handleAuthNavigation('signup');
+      };
+
+      loginButtons.forEach(btn => btn.addEventListener('click', handleLoginClick));
+      signupButtons.forEach(btn => btn.addEventListener('click', handleSignupClick));
+
+      return () => {
+        loginButtons.forEach(btn => btn.removeEventListener('click', handleLoginClick));
+        signupButtons.forEach(btn => btn.removeEventListener('click', handleSignupClick));
+      };
+    }
+  }, [user, authAction, handleAuthNavigation]);
 
   // --- Handlers ---
   const setActiveView = (view: View) => {
@@ -361,11 +407,6 @@ const App: React.FC = () => {
       setActiveViewInternal(newStack[newStack.length - 1]);
       setViewStack(newStack);
     }
-  };
-
-  const handleAuthNavigation = (view: 'login' | 'signup') => {
-      setInitialAuthView(view);
-      setAuthAction(view);
   };
   
   const handleSignup = async (data: {username: string, email: string, phone: string, password: string, referrer?: string}) => {
@@ -789,7 +830,8 @@ const App: React.FC = () => {
       if (authAction) {
           return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={initialAuthView} />;
       }
-      return <LandingView onGetStarted={handleAuthNavigation} />;
+      // Return null to allow the static index.html to be the landing page
+      return null;
   }
 
   if (userProfile.paymentStatus === 'UNPAID') {

@@ -1,110 +1,396 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Earn Halal</title>
-  
-  <!-- Google AdSense Site Verification / Account Meta -->
-  <meta name="google-adsense-account" content="ca-pub-9056218549588930">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Earn Halal – Pakistan's #1 Halal Earning Platform</title>
+  <meta name="description" content="Earn daily by completing simple tasks. 100% Halal. Instant payouts via JazzCash & EasyPaisa."/>
+  <meta name="theme-color" content="#10b981"/>
 
-  <!-- AdSense Loader Script -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9056218549588930"
-       crossorigin="anonymous"></script>
+  <!-- Tailwind CSS + DaisyUI -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { emerald: { 500: '#10b981', 600: '#059669' }, gold: '#fbbf24' },
+          fontFamily: { 
+            sans: ['Inter', 'sans-serif'],
+            heading: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
 
-  <script type="importmap">
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
+
+  <!-- Alpine.js (for landing page) -->
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+  <!-- Lottie Player -->
+  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+    .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); }
+    .cta-btn {
+      background: linear-gradient(135deg, #10b981, #059669);
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 20px rgba(16,185,129,0.3);
+    }
+    .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(16,185,129,0.4); }
+    .stat-card { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .nav-link { transition: color 0.3s; }
+    .nav-link:hover { color: #10b981; }
+    .mobile-menu { transition: transform 0.3s ease; }
+    .mobile-menu.open { transform: translateX(0); }
+    .link-card { transition: all 0.3s ease; backdrop-filter: blur(10px); }
+    .link-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(16,185,129,0.2); }
+    .social-float { animation: float 4s ease-in-out infinite; }
+    .gradient-text { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  </style>
+<script type="importmap">
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0",
-    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
-    "firebase/auth": "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
-    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js",
-    "firebase/": "https://aistudiocdn.com/firebase@^12.5.0/"
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.1"
   }
 }
 </script>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Chakra+Petch:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
 
+<body class="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 text-gray-800 overflow-x-hidden">
+
+  <div id="static-landing-page" x-data="{ mobileMenu: false }" x-init="initParticles()">
+    <!-- Particles Background -->
+    <div id="particles-js"></div>
+
+    <!-- COMPACT HEADER -->
+    <header class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2">
+          <div class="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            EH
+          </div>
+          <span class="font-bold text-lg text-emerald-600">Earn Halal</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center gap-6 text-sm font-medium">
+          <a href="#features" class="nav-link text-gray-700">Features</a>
+          <a href="#how" class="nav-link text-gray-700">How It Works</a>
+          <a href="#payouts" class="nav-link text-gray-700">Payouts</a>
+          <a href="#reviews" class="nav-link text-gray-700">Reviews</a>
+        </nav>
+
+        <!-- Desktop Buttons -->
+        <div class="hidden md:flex items-center gap-3">
+          <a href="#login" class="px-5 py-2 text-emerald-600 font-medium border border-emerald-600 rounded-full hover:bg-emerald-50 transition">
+            Login
+          </a>
+          <a href="#signup" class="px-5 py-2 bg-emerald-600 text-white font-medium rounded-full cta-btn">
+            Sign Up Free
+          </a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button @click="mobileMenu = !mobileMenu" class="md:hidden p-2">
+          <i class="ti ti-menu-2 text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div x-show="mobileMenu" @click.away="mobileMenu = false" 
+          class="md:hidden fixed inset-0 bg-white z-40 pt-16 px-6" 
+          :class="mobileMenu ? 'translate-x-0' : '-translate-x-full'">
+        <nav class="space-y-6 text-lg font-medium">
+          <a href="#features" @click="mobileMenu=false" class="block">Features</a>
+          <a href="#how" @click="mobileMenu=false" class="block">How It Works</a>
+          <a href="#payouts" @click="mobileMenu=false" class="block">Payouts</a>
+          <a href="#reviews" @click="mobileMenu=false" class="block">Reviews</a>
+          <div class="pt-6 space-y-3">
+            <a href="#login" @click="mobileMenu=false" class="block w-full text-center py-3 border border-emerald-600 text-emerald-600 rounded-full">
+              Login
+            </a>
+            <a href="#signup" @click="mobileMenu=false" class="block w-full text-center py-3 bg-emerald-600 text-white rounded-full">
+              Sign Up Free
+            </a>
+          </div>
+        </nav>
+      </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="pt-24 pb-12 px-6 text-center">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+          Earning Made <span class="text-emerald-600">Simple</span>,<br>
+          The <span class="text-emerald-600">Halal</span> Way
+        </h1>
+        <p class="text-lg text-gray-600 mb-8">
+          Join thousands of Pakistanis earning daily rewards by completing simple online tasks. 
+          Secure, transparent, and 100% halal.
+        </p>
+        <a href="#signup" class="inline-block cta-btn text-white font-bold py-4 px-8 rounded-full text-lg">
+          Get Started Now – Free!
+        </a>
+        <p class="text-sm text-gray-500 mt-3">No credit card required. Start in 1 minute.</p>
+      </div>
+    </section>
+
+    <!-- LIVE STATS -->
+    <section class="px-6 py-10">
+      <div class="max-w-5xl mx-auto grid grid-cols-3 gap-4 text-center">
+        <div class="stat-card glass p-5 rounded-2xl">
+          <p class="text-3xl font-bold text-emerald-600">$1.5M+</p>
+          <p class="text-sm text-gray-600">Total Paid</p>
+        </div>
+        <div class="stat-card glass p-5 rounded-2xl">
+          <p class="text-3xl font-bold text-emerald-600">75K+</p>
+          <p class="text-sm text-gray-600">Active Users</p>
+        </div>
+        <div class="stat-card glass p-5 rounded-2xl">
+          <p class="text-3xl font-bold text-emerald-600">4.9</p>
+          <p class="text-sm text-gray-600">Rating</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features" class="px-6 py-12">
+      <h2 class="text-3xl font-bold text-center mb-10">Why Choose Earn Halal?</h2>
+      <div class="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
+        <div class="glass p-6 rounded-2xl text-center">
+          <i class="ti ti-wallet text-4xl text-emerald-600 mb-3"></i>
+          <h3 class="font-bold mb-2">Instant Rewards</h3>
+          <p class="text-sm text-gray-600">Balance updates instantly after task.</p>
+        </div>
+        <div class="glass p-6 rounded-2xl text-center">
+          <i class="ti ti-shield-check text-4xl text-emerald-600 mb-3"></i>
+          <h3 class="font-bold mb-2">Secure Payouts</h3>
+          <p class="text-sm text-gray-600">JazzCash, EasyPaisa, Bank.</p>
+        </div>
+        <div class="glass p-6 rounded-2xl text-center">
+          <i class="ti ti-checks text-4xl text-emerald-600 mb-3"></i>
+          <h3 class="font-bold mb-2">100% Halal</h3>
+          <p class="text-sm text-gray-600">Tasks vetted by scholars.</p>
+        </div>
+        <div class="glass p-6 rounded-2xl text-center">
+          <i class="ti ti-apps text-4xl text-emerald-600 mb-3"></i>
+          <h3 class="font-bold mb-2">Diverse Tasks</h3>
+          <p class="text-sm text-gray-600">Surveys, videos, referrals.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="px-6 py-12 bg-emerald-50">
+      <h2 class="text-3xl font-bold text-center mb-10">How It Works</h2>
+      <div class="max-w-4xl mx-auto space-y-8">
+        <div class="flex items-center gap-6">
+          <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl">1</div>
+          <div>
+            <h3 class="font-bold text-lg">Sign Up Free</h3>
+            <p class="text-gray-600">Create account in 1 minute. No card needed.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl">2</div>
+          <div>
+            <h3 class="font-bold text-lg">Complete Tasks</h3>
+            <p class="text-gray-600">Watch videos, answer surveys, grow balance.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="w-12 h-12 bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold text-xl">3</div>
+          <div>
+            <h3 class="font-bold text-lg">Get Paid</h3>
+            <p class="text-gray-600">Withdraw to JazzCash instantly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAYOUTS -->
+    <section id="payouts" class="px-6 py-12">
+      <h2 class="text-3xl font-bold text-center mb-10">Trusted Payouts</h2>
+      <div class="flex flex-wrap justify-center gap-8">
+        <div class="text-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/55/JazzCash_Logo.png" alt="JazzCash" class="h-12 mx-auto mb-2">
+          <p class="text-sm font-medium">Instant via JazzCash</p>
+        </div>
+        <div class="text-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/EasyPaisa_Logo.png" alt="EasyPaisa" class="h-12 mx-auto mb-2">
+          <p class="text-sm font-medium">EasyPaisa Supported</p>
+        </div>
+        <div class="text-center">
+          <i class="ti ti-building-bank text-5xl text-emerald-600 mb-2"></i>
+          <p class="text-sm font-medium">Bank Transfer</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWS -->
+    <section id="reviews" class="px-6 py-12 bg-gray-50">
+      <h2 class="text-3xl font-bold text-center mb-10">User Reviews</h2>
+      <div class="max-w-2xl mx-auto space-y-6">
+        <div class="glass p-6 rounded-2xl">
+          <p class="italic mb-3">"Best halal earning app in Pakistan! Withdrew Rs.5000 in 2 days."</p>
+          <p class="text-emerald-600 font-medium">— Ahmed, Lahore</p>
+        </div>
+        <div class="glass p-6 rounded-2xl">
+          <p class="italic mb-3">"Easy tasks and instant payouts. 100% trusted!"</p>
+          <p class="text-emerald-600 font-medium">— Fatima, Karachi</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section id="signup" class="px-6 py-16 text-center bg-emerald-600 text-white">
+      <h2 class="text-4xl font-bold mb-4">Start Earning Today!</h2>
+      <p class="text-lg mb-8 max-w-xl mx-auto">Join 75,000+ users earning daily. No risk, no fees.</p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+        <a href="#login" class="py-3 px-6 border-2 border-white text-white rounded-full font-medium hover:bg-white hover:text-emerald-600 transition">
+          Login
+        </a>
+        <a href="#signup-form" class="py-3 px-6 bg-white text-emerald-600 rounded-full font-bold hover:bg-gray-100 transition">
+          Sign Up Free
+        </a>
+      </div>
+    </section>
+
+    <!-- ULTIMATE FOOTER -->
+    <footer class="bg-gradient-to-t from-emerald-600 to-emerald-700 text-white relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10">
+        <div class="absolute inset-0" style="background: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E') repeat;"></div>
+      </div>
+
+      <div class="relative max-w-7xl mx-auto px-6 py-16">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+
+          <!-- Brand + CTA -->
+          <div class="md:col-span-1">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-emerald-600 font-bold text-xl shadow-lg">
+                EH
+              </div>
+              <div>
+                <h3 class="text-2xl font-bold">Earn Halal</h3>
+                <p class="text-xs opacity-80">Pakistan's #1 Platform</p>
+              </div>
+            </div>
+            <p class="text-sm mb-6 opacity-90">Join 75,000+ users earning daily with 100% halal tasks.</p>
+            <a href="#signup" class="inline-block bg-white text-emerald-600 font-bold py-3 px-6 rounded-full text-sm shadow-lg hover:shadow-xl transition">
+              Start Earning Now
+            </a>
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h4 class="font-bold text-lg mb-5 flex items-center gap-2">
+              <i class="ti ti-rocket text-gold"></i> Quick Links
+            </h4>
+            <div class="grid grid-cols-2 gap-3">
+              <a href="#" class="link-card bg-white/10 p-4 rounded-xl text-center hover:bg-white/20">
+                <i class="ti ti-home text-xl mb-1 block"></i>
+                <span class="text-xs font-medium">Home</span>
+              </a>
+              <a href="#" class="link-card bg-white/10 p-4 rounded-xl text-center hover:bg-white/20">
+                <i class="ti ti-wallet text-xl mb-1 block"></i>
+                <span class="text-xs font-medium">Payouts</span>
+              </a>
+              <a href="#" class="link-card bg-white/10 p-4 rounded-xl text-center hover:bg-white/20">
+                <i class="ti ti-shield-check text-xl mb-1 block"></i>
+                <span class="text-xs font-medium">Halal Cert</span>
+              </a>
+              <a href="#" class="link-card bg-white/10 p-4 rounded-xl text-center hover:bg-white/20">
+                <i class="ti ti-headphones text-xl mb-1 block"></i>
+                <span class="text-xs font-medium">Support</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Legal & Payments -->
+          <div>
+            <h4 class="font-bold text-lg mb-5 flex items-center gap-2">
+              <i class="ti ti-scale text-gold"></i> Legal
+            </h4>
+            <ul class="space-y-3 text-sm">
+              <li><a href="#" class="hover:text-gold transition flex items-center gap-2"><i class="ti ti-file-text text-xs"></i> Privacy Policy</a></li>
+              <li><a href="#" class="hover:text-gold transition flex items-center gap-2"><i class="ti ti-file-text text-xs"></i> Terms & Conditions</a></li>
+              <li><a href="#" class="hover:text-gold transition flex items-center gap-2"><i class="ti ti-cookie text-xs"></i> Cookie Policy</a></li>
+              <li><a href="#" class="hover:text-gold transition flex items-center gap-2"><i class="ti ti-download text-xs"></i> Withdrawal Guide</a></li>
+            </ul>
+          </div>
+
+          <!-- Contact & Social -->
+          <div>
+            <h4 class="font-bold text-lg mb-5 flex items-center gap-2">
+              <i class="ti ti-message-circle text-gold"></i> Get in Touch
+            </h4>
+            <div class="space-y-3 text-sm">
+              <p class="flex items-center gap-2"><i class="ti ti-mail"></i> support@earnhalal.pk</p>
+              <p class="flex items-center gap-2"><i class="ti ti-phone"></i> +92 300 1234567</p>
+              <p class="flex items-center gap-2"><i class="ti ti-map-pin"></i> Lahore, Pakistan</p>
+            </div>
+            <div class="flex gap-4 mt-6">
+              <a href="#" class="social-float w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white hover:text-emerald-600 transition">
+                <i class="ti ti-brand-facebook"></i>
+              </a>
+              <a href="#" class="social-float w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white hover:text-emerald-600 transition" style="animation-delay: 0.2s">
+                <i class="ti ti-brand-instagram"></i>
+              </a>
+              <a href="#" class="social-float w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white hover:text-emerald-600 transition" style="animation-delay: 0.4s">
+                <i class="ti ti-brand-youtube"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="border-t border-white/20 pt-6 flex flex-col md:flex-row justify-between items-center text-xs opacity-80">
+          <p>© 2025 <span class="gradient-text font-bold">Earn Halal</span>. All rights reserved. Made with love in Pakistan.</p>
+          <div class="flex gap-6 mt-4 md:mt-0">
+            <span class="flex items-center gap-1"><i class="ti ti-shield-check text-gold"></i> 100% Halal</span>
+            <span class="flex items-center gap-1"><i class="ti ti-lock text-gold"></i> SSL Secured</span>
+            <span class="flex items-center gap-1"><i class="ti ti-clock text-gold"></i>  gummy 24/7 Support</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+  
+  <div id="root"></div>
+
+  <!-- Particles Script -->
   <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Inter', 'sans-serif'],
-            heading: ['Poppins', 'sans-serif'],
-            numeric: ['Chakra Petch', 'sans-serif'],
-          },
-          colors: {
-            primary: { // Emerald Green
-              '50': '#ecfdf5', '100': '#d1fae5', '200': '#a7f3d0', '300': '#6ee7b7', '400': '#34d399', '500': '#10b981', '600': '#059669', '700': '#047857', '800': '#065f46', '900': '#064e3b'
-            },
-            accent: { // Gold/Orange-Yellow
-              '50': '#fffbeb', '100': '#fef3c7', '200': '#fde68a', '300': '#fcd34d', '400': '#fbbf24', '500': '#f5960b', '600': '#d97706', '700': '#b45309', '800': '#92400e', '900': '#78350f'
-            },
-            gray: {
-              '50': '#F8F9FA', '100': '#F1F3F5', '200': '#E9ECEF', '300': '#DEE2E6', '400': '#CED4DA', '500': '#ADB5BD', '600': '#868E96', '700': '#495057', '800': '#343A40', '900': '#212529'
-            }
-          },
-          boxShadow: {
-            'subtle': '0 4px 12px rgba(0, 0, 0, 0.05)',
-            'subtle-md': '0 8px 16px rgba(0, 0, 0, 0.05)',
-            'subtle-lg': '0 12px 24px rgba(0, 0, 0, 0.07)',
-          },
-        }
-      }
+    function initParticles() {
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 40 },
+          color: { value: '#10b981' },
+          shape: { type: 'circle' },
+          opacity: { value: 0.3 },
+          size: { value: 4 },
+          move: { enable: true, speed: 1 }
+        },
+        interactivity: { events: { onhover: { enable: true, mode: 'repulse' } } }
+      });
     }
   </script>
-  <style>
-    body {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      background-color: #F1F3F5; /* gray-100 */
-    }
-    .ease-out-circ {
-      transition-timing-function: cubic-bezier(0, 0.55, 0.45, 1);
-    }
-     @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fade-in-up {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-      animation: fade-in 0.35s ease-out forwards;
-    }
-    .animate-fade-in-up {
-      animation: fade-in-up 0.5s ease-out forwards;
-    }
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-        width: 8px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #374151; /* gray-700 */
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #6b7280; /* gray-500 */
-        border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #9ca3af; /* gray-400 */
-    }
-
-  </style>
-</head>
-<body class="text-gray-800">
-  <div id="root"></div>
-  <!-- Your app’s entry file -->
-  <script type="module" src="/index.tsx"></script>
 </body>
 </html>
