@@ -44,13 +44,11 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
   const prevBalanceRef = useRef(balance);
 
   useEffect(() => {
-    // Only animate if the balance has increased
     if (balance > prevBalanceRef.current) {
       setAnimateBalance(true);
       const timer = setTimeout(() => {
         setAnimateBalance(false);
-      }, 700); // Duration of the animation
-      
+      }, 700);
       return () => clearTimeout(timer);
     }
     prevBalanceRef.current = balance;
@@ -58,36 +56,36 @@ const Header: React.FC<HeaderProps> = ({ activeView, balance, username, isSideba
 
 
   return (
-    <header className="bg-[#0a192f]/80 backdrop-blur-md p-4 shadow-sm sticky top-0 z-20 border-b border-amber-400/10">
+    <header className="bg-white/80 backdrop-blur-md p-4 sm:p-5 sticky top-0 z-20 border-b border-gray-200">
       <style>{`
-        @keyframes balance-pop {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.25); color: #fbbF24; } /* amber-400 */
-          100% { transform: scale(1); }
+        @keyframes balance-pop-glow {
+          0% { transform: scale(1); text-shadow: none; }
+          50% { transform: scale(1.15); text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); color: #b45309; }
+          100% { transform: scale(1); text-shadow: none; }
         }
         .balance-increase {
-          animation: balance-pop 0.7s ease-in-out;
+          animation: balance-pop-glow 0.7s ease-in-out;
         }
       `}</style>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-300">
-                {isSidebarOpen ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden text-gray-700">
+                {isSidebarOpen ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
             </button>
             {canGoBack && (
-              <button onClick={onBack} className="text-slate-300 hover:text-amber-400">
-                <ArrowLeftIcon className="w-6 h-6" />
+              <button onClick={onBack} className="text-gray-600 hover:text-primary-600 transition-colors">
+                <ArrowLeftIcon className="w-7 h-7" />
               </button>
             )}
-            <h1 className="text-2xl font-bold text-slate-100">{title}</h1>
+            <h1 className="text-3xl font-heading font-semibold text-gray-900">{title}</h1>
         </div>
-        <button onClick={() => setActiveView('PROFILE_SETTINGS')} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 transition-colors group">
+        <button onClick={() => setActiveView('PROFILE_SETTINGS')} className="flex items-center space-x-4 p-2 rounded-xl hover:bg-gray-100 transition-colors group">
             <div className="text-right">
-                <p className="font-semibold text-slate-100 group-hover:text-amber-300 transition-colors">{username}</p>
-                <p className={`text-sm text-amber-400 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
+                <p className="font-semibold text-gray-800 group-hover:text-accent-700 transition-colors text-lg">{username}</p>
+                <p className={`text-base font-numeric text-accent-600 font-bold ${animateBalance ? 'balance-increase' : ''}`}>{balance.toFixed(2)} Rs</p>
             </div>
-             <div className="p-2 bg-slate-700/50 rounded-full group-hover:bg-amber-500/10 transition-colors">
-                <UserIcon className="w-6 h-6 text-slate-300 group-hover:text-amber-300 transition-colors"/>
+             <div className="p-3 bg-gray-200 rounded-full group-hover:bg-accent-100 transition-colors border border-transparent group-hover:border-accent-300">
+                <UserIcon className="w-7 h-7 text-gray-600 group-hover:text-accent-700 transition-colors"/>
             </div>
         </button>
       </div>

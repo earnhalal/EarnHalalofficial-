@@ -66,7 +66,7 @@ const PinLockView: React.FC<PinLockViewProps> = ({ mode, onClose, onPinCorrect, 
         <div
           key={i}
           className={`w-4 h-4 rounded-full transition-colors ${
-            i < length ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'
+            i < length ? 'bg-primary-500' : 'bg-gray-600'
           } ${error ? '!bg-red-500' : ''}`}
         ></div>
       ))}
@@ -81,10 +81,10 @@ const PinLockView: React.FC<PinLockViewProps> = ({ mode, onClose, onPinCorrect, 
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm">
-        <div className="p-6 text-center border-b dark:border-gray-700 relative">
-          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">{title}</h2>
-          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">&times;</button>
+      <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="p-6 text-center border-b border-gray-700 relative">
+          <h2 className="text-xl font-bold text-gray-100">{title}</h2>
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-200 text-2xl">&times;</button>
         </div>
         
         <div className="p-8">
@@ -94,15 +94,15 @@ const PinLockView: React.FC<PinLockViewProps> = ({ mode, onClose, onPinCorrect, 
 
           <div className="grid grid-cols-3 gap-4 mt-6">
             {[...Array(9)].map((_, i) => (
-              <button key={i+1} onClick={() => handleKeyPress(String(i+1))} className="p-4 rounded-full text-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+              <button key={i+1} onClick={() => handleKeyPress(String(i+1))} className="p-4 rounded-full text-2xl font-semibold text-gray-200 bg-gray-700 hover:bg-gray-600 transition-colors">
                 {i + 1}
               </button>
             ))}
              <div />
-             <button onClick={() => handleKeyPress('0')} className="p-4 rounded-full text-2xl font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+             <button onClick={() => handleKeyPress('0')} className="p-4 rounded-full text-2xl font-semibold text-gray-200 bg-gray-700 hover:bg-gray-600 transition-colors">
                 0
               </button>
-             <button onClick={() => handleKeyPress('backspace')} className="p-4 rounded-full text-lg font-semibold text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+             <button onClick={() => handleKeyPress('backspace')} className="p-4 rounded-full text-lg font-semibold text-gray-200 bg-gray-700 hover:bg-gray-600 transition-colors">
                 &larr;
               </button>
           </div>

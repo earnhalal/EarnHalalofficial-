@@ -198,7 +198,7 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
         }, 5000); // Animation duration
     };
     
-    const segmentColors = ['#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b']; // primary-700, amber-500, accent-600
+    const segmentColors = ['#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b', '#db2777', '#6d28d9', '#f59e0b']; // Using violet, amber, and pink for variety
 
     return (
       <div className="flex flex-col items-center justify-center p-4 text-center">
@@ -220,18 +220,18 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
                 100% { transform: scale(1); }
             }
         `}</style>
-        <h2 className="text-4xl font-extrabold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
-            <SparklesIcon className="w-8 h-8 text-amber-400" />
+        <h2 className="text-4xl font-extrabold text-gray-100 mb-2 flex items-center gap-2">
+            <SparklesIcon className="w-8 h-8 text-accent-400" />
             Spin the Wheel of Fortune!
-            <SparklesIcon className="w-8 h-8 text-amber-400" />
+            <SparklesIcon className="w-8 h-8 text-accent-400" />
         </h2>
-        <p className="text-slate-600 dark:text-slate-300 mb-8 max-w-md">
+        <p className="text-gray-300 mb-8 max-w-md">
           {hasUsedDailySpin ? 'Your free spin is used for today. Buy a spin for bigger prizes!' : 'Try your luck once a day for a guaranteed free prize!'}
         </p>
         
         <div className="relative w-full max-w-sm aspect-square mb-8">
             <div 
-                className="absolute w-full h-full rounded-full border-4 border-white dark:border-slate-600 shadow-2xl transition-transform duration-[5000ms] ease-out-circ bg-slate-200 dark:bg-slate-700 overflow-hidden"
+                className="absolute w-full h-full rounded-full border-4 border-gray-600 shadow-2xl transition-transform duration-[5000ms] ease-out-circ bg-gray-700 overflow-hidden"
                 style={{ transform: `rotate(${rotation}deg)` }}
             >
                 {wheelSegments.map((segment, index) => {
@@ -263,11 +263,11 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
             </div>
             {/* Pointer */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4" style={{filter: 'drop-shadow(0 4px 3px rgba(0,0,0,0.4))'}}>
-                <div className="w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-amber-400"></div>
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-amber-200 rounded-full"></div>
+                <div className="w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-accent-400"></div>
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-4 bg-accent-200 rounded-full"></div>
             </div>
              {/* Center Hub */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-slate-100 to-slate-300 dark:from-slate-700 dark:to-slate-800 rounded-full border-8 border-white dark:border-slate-600 z-10 flex items-center justify-center font-bold text-primary-600 shadow-inner">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full border-8 border-gray-600 z-10 flex items-center justify-center font-bold text-primary-600 shadow-inner">
                 SPIN
             </div>
         </div>
@@ -276,14 +276,14 @@ const SpinWheelView: React.FC<SpinWheelViewProps> = ({ onWin, balance, onBuySpin
             <button
                 onClick={() => handleSpin(true)}
                 disabled={isSpinning || hasUsedDailySpin}
-                className="flex-1 px-8 py-4 bg-gradient-to-br from-amber-400 to-amber-500 text-white font-bold text-xl rounded-full hover:from-amber-500 hover:to-amber-600 transition-all transform hover:scale-105 shadow-lg disabled:bg-slate-400 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed disabled:scale-100"
+                className="flex-1 px-8 py-4 bg-gradient-to-br from-accent-400 to-accent-500 text-white font-bold text-xl rounded-full hover:from-accent-500 hover:to-accent-600 transition-all transform hover:scale-105 shadow-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed disabled:scale-100"
             >
                 Free Spin
             </button>
             <button
                 onClick={() => handleSpin(false)}
                 disabled={isSpinning || balance < 5}
-                className="flex-1 px-8 py-4 bg-gradient-to-br from-accent-500 to-primary-600 text-white font-bold text-xl rounded-full hover:from-accent-600 hover:to-primary-700 transition-all transform hover:scale-105 shadow-lg disabled:bg-slate-400 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed disabled:scale-100"
+                className="flex-1 px-8 py-4 bg-gradient-to-br from-pink-500 to-primary-600 text-white font-bold text-xl rounded-full hover:from-pink-600 hover:to-primary-700 transition-all transform hover:scale-105 shadow-lg disabled:bg-gray-500 disabled:from-gray-500 disabled:to-gray-600 disabled:cursor-not-allowed disabled:scale-100"
             >
                 Buy Spin (5 Rs)
             </button>

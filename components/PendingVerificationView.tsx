@@ -40,7 +40,7 @@ const Confetti: React.FC = () => (
                     top: `${Math.random() * -50}%`,
                     animationDelay: `${Math.random() * 5}s`,
                     animationDuration: `${Math.random() * 3 + 4}s`,
-                    backgroundColor: ['#a78bfa', '#f472b6', '#fbbf24'][i % 3]
+                    backgroundColor: ['#6ee7b7', '#fcd34d', '#a7f3d0'][i % 3] // primary & accent shades
                 }}
             />
         ))}
@@ -82,9 +82,8 @@ const PendingVerificationView: React.FC = () => {
     const { title, message, progress } = stageConfig[stage];
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-4 text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-900/30 via-slate-900 to-accent-900/30 animate-background-pan z-0"></div>
-            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] max-w-lg max-h-lg bg-primary-500/20 rounded-full blur-3xl transition-all duration-[3000ms] ease-in-out animate-pulse-slow ${stage === 'verifying' ? 'scale-125 bg-accent-500/20' : ''} ${stage === 'success' ? 'scale-150 bg-green-500/20' : ''}`}></div>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4 text-center relative overflow-hidden">
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[50vw] h-[50vw] max-w-lg max-h-lg bg-primary-500/10 rounded-full blur-3xl transition-all duration-[3000ms] ease-in-out animate-pulse-slow ${stage === 'verifying' ? 'scale-125 bg-accent-500/10' : ''} ${stage === 'success' ? 'scale-150 bg-green-500/10' : ''}`}></div>
             
             <style>{`
                 @keyframes float-up { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -118,20 +117,20 @@ const PendingVerificationView: React.FC = () => {
                 }
             `}</style>
             
-            <div className="relative z-10 p-8 bg-slate-800/50 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl w-full max-w-md animate-fade-in-up overflow-hidden">
+            <div className="relative z-10 p-8 bg-white/50 backdrop-blur-md border border-gray-200 rounded-2xl shadow-subtle-lg w-full max-w-md animate-fade-in-up overflow-hidden">
                 {stage === 'success' && <Confetti />}
 
                 <div className="relative z-10">
                     <StageIcon stage={stage} />
                     
-                    <h2 className="text-3xl font-bold text-slate-100 mb-4 transition-all duration-300">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4 transition-all duration-300">
                        {title}
                     </h2>
-                    <p className="text-slate-300 min-h-[40px]">
+                    <p className="text-gray-600 min-h-[40px]">
                         {message}
                     </p>
 
-                    <div className="w-full bg-slate-700 rounded-full h-3 mt-8 overflow-hidden relative">
+                    <div className="w-full bg-gray-200 rounded-full h-3 mt-8 overflow-hidden relative">
                         <div 
                            className={`bg-gradient-to-r from-accent-500 to-primary-500 h-3 rounded-full transition-all ease-linear ${stage === 'submitting' ? 'duration-[4000ms]' : ''} ${stage === 'verifying' ? 'duration-[4000ms]' : ''} ${stage === 'success' ? 'duration-[2000ms]' : ''}`}
                            style={{ width: `${progress}%` }}

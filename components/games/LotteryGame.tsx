@@ -18,29 +18,8 @@ const LotteryGame: React.FC<LotteryGameProps> = ({ balance, onWin, onLoss }) => 
     const [lastResult, setLastResult] = useState<string | null>(null);
     const [timeLeft, setTimeLeft] = useState(3600); // 1 hour draw cycle
 
-    const getInitialState = () => {
-        const savedState = localStorage.getItem('lotteryGameState');
-        if (savedState) {
-            const { tickets, drawnNumbers, result, expiry } = JSON.parse(savedState);
-            if (new Date().getTime() < expiry) {
-                setUserTickets(tickets || []);
-                setWinningNumbers(drawnNumbers || []);
-                setLastResult(result || null);
-                return;
-            }
-        }
-        // If expired or no state, start fresh
-        handleDraw(true); // Initial draw without checking winnings
-    };
-
-    const saveState = (tickets: number[][], drawnNumbers: number[], result: string | null) => {
-        // FIX: Replaced `new Date().getTime()` with `Date.now()` and fixed arithmetic operation for clarity and to address potential type issues.
-        const expiry = Date.now() + 3600 * 1000;
-        localStorage.setItem('lotteryGameState', JSON.stringify({ tickets, drawnNumbers, result, expiry }));
-    };
-
     useEffect(() => {
-        getInitialState();
+        handleDraw(true); // Initial draw on component mount
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
@@ -73,11 +52,9 @@ const LotteryGame: React.FC<LotteryGameProps> = ({ balance, onWin, onLoss }) => 
             return;
         }
         onLoss(TICKET_PRICE, "Daily Lottery");
-        // FIX: Added explicit types to sort callback parameters to resolve potential type inference errors.
         const newTickets = [...userTickets, Array.from(selectedNumbers).sort((a: number, b: number) => a - b)];
         setUserTickets(newTickets);
         setSelectedNumbers(new Set());
-        saveState(newTickets, winningNumbers, lastResult);
     };
 
     const handleDraw = (isInitial = false) => {
@@ -85,7 +62,6 @@ const LotteryGame: React.FC<LotteryGameProps> = ({ balance, onWin, onLoss }) => 
         while (drawnNumbers.size < NUMBERS_TO_PICK) {
             drawnNumbers.add(Math.floor(Math.random() * TOTAL_NUMBERS) + 1);
         }
-        // FIX: Added explicit types to sort callback parameters to resolve potential type inference errors.
         const winningNumbersArray = Array.from(drawnNumbers).sort((a: number, b: number) => a - b);
         setWinningNumbers(winningNumbersArray);
 
@@ -113,8 +89,7 @@ const LotteryGame: React.FC<LotteryGameProps> = ({ balance, onWin, onLoss }) => 
         }
        
         setLastResult(finalMessage);
-        setUserTickets([]);
-        saveState([], winningNumbersArray, finalMessage);
+        setUserTickets([]); // Reset tickets for new round
     };
 
     const formatTime = (seconds: number) => `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
@@ -151,7 +126,6 @@ const LotteryGame: React.FC<LotteryGameProps> = ({ balance, onWin, onLoss }) => 
                     <div className="mt-6">
                         <div className="bg-slate-900/50 p-3 rounded-lg min-h-[56px] flex items-center justify-center gap-2">
                             <span className="text-slate-400 mr-2">Your picks:</span>
-                            {/* FIX: Added explicit types to sort callback parameters to resolve potential type inference errors. */}
                             {Array.from(selectedNumbers).sort((a: number, b: number) => a - b).map(num => (
                                 <span key={num} className="w-8 h-8 flex items-center justify-center bg-amber-500 text-white rounded-full font-bold">{num}</span>
                             ))}

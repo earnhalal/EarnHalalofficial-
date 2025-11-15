@@ -7,13 +7,15 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ setActiveView }) => {
     return (
-        <footer className="bg-transparent p-6 mt-auto text-center text-sm text-slate-400 border-t border-amber-400/10">
-            <p>&copy; {new Date().getFullYear()} Earn Halal. All Rights Reserved.</p>
-            <div className="flex justify-center space-x-4 mt-2">
-                <button onClick={() => setActiveView('TERMS_CONDITIONS')} className="hover:text-amber-400 transition-colors">Terms of Service</button>
-                <span>&bull;</span>
-                <button onClick={() => setActiveView('PRIVACY_POLICY')} className="hover:text-amber-400 transition-colors">Privacy Policy</button>
+        <footer className="bg-white p-6 mt-auto text-center text-sm text-gray-500 border-t border-gray-200">
+            <div className="flex justify-center flex-wrap gap-x-6 gap-y-2">
+                 <button onClick={() => setActiveView('HOW_IT_WORKS')} className="hover:text-primary-600 transition-colors font-semibold">How It Works</button>
+                 <button onClick={() => setActiveView('ABOUT_US')} className="hover:text-primary-600 transition-colors font-semibold">About Us</button>
+                 <button onClick={() => setActiveView('CONTACT_US')} className="hover:text-primary-600 transition-colors font-semibold">Contact</button>
+                 <button onClick={() => setActiveView('TERMS_CONDITIONS')} className="hover:text-primary-600 transition-colors font-semibold">Terms</button>
+                 <button onClick={() => setActiveView('PRIVACY_POLICY')} className="hover:text-primary-600 transition-colors font-semibold">Privacy</button>
             </div>
+            <p className="mt-4">&copy; {new Date().getFullYear()} Earn Halal. All Rights Reserved.</p>
         </footer>
     );
 };

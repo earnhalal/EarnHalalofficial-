@@ -90,18 +90,18 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
 
   if (isSuccess && submittedTask) {
     return (
-        <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md max-w-3xl mx-auto text-center animate-fade-in">
-            <CheckCircleIcon className="w-20 h-20 text-green-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Campaign Launched!</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-2 mb-6">
+        <div className="bg-white p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto text-center animate-fade-in">
+            <CheckCircleIcon className="w-20 h-20 text-primary-500 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold text-gray-900">Campaign Launched!</h2>
+            <p className="text-gray-600 mt-2 mb-6">
                 Your task "{submittedTask.title}" is now live for the community.
             </p>
-            <div className="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-lg text-left space-y-2 mb-8">
+            <div className="bg-gray-50 p-6 rounded-lg text-left space-y-2 mb-8 border border-gray-200">
                 <p><strong>Type:</strong> {submittedTask.type}</p>
-                <p><strong>URL:</strong> <a href={submittedTask.url} target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:underline break-all">{submittedTask.url}</a></p>
+                <p><strong>URL:</strong> <a href={submittedTask.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline break-all">{submittedTask.url}</a></p>
                 <p><strong>Quantity:</strong> {submittedTask.quantity} tasks</p>
                 <p><strong>Reward per Task:</strong> {submittedTask.reward.toFixed(2)} Rs</p>
-                <p><strong>Total Cost:</strong> <span className="font-bold text-red-500">{submittedTask.totalCost.toFixed(2)} Rs</span> (deducted)</p>
+                <p><strong>Total Cost:</strong> <span className="font-bold text-red-600">{submittedTask.totalCost.toFixed(2)} Rs</span> (deducted)</p>
             </div>
             <button 
                 onClick={handleCreateAnother}
@@ -114,26 +114,26 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-md max-w-3xl mx-auto">
+    <div className="bg-white p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto">
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Create a New Task Campaign</h2>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
+        <h2 className="text-3xl font-bold text-gray-900">Create a New Task Campaign</h2>
+        <p className="text-gray-600 mt-2">
           Promote your content by creating tasks for our community to complete.
         </p>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <fieldset disabled={isSubmitting}>
-            <div className="p-6 border rounded-lg dark:border-gray-700">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">1. Task Details</h3>
+            <div className="p-6 border rounded-lg border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">1. Task Details</h3>
                 <div className="space-y-4">
                     <div>
-                      <label htmlFor="taskType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Type</label>
+                      <label htmlFor="taskType" className="block text-sm font-medium text-gray-700">Task Type</label>
                       <select 
                         id="taskType" 
                         value={form.taskType} 
                         onChange={handleChange}
-                        className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600"
+                        className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50"
                       >
                         {Object.values(TaskType).map(type => (
                           <option key={type} value={type}>{type}</option>
@@ -141,39 +141,39 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Title</label>
-                      <input type="text" id="title" value={form.title} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., Visit my new blog post" required />
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-700">Task Title</label>
+                      <input type="text" id="title" value={form.title} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Visit my new blog post" required />
                     </div>
                      <div>
-                      <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Task URL</label>
-                      <input type="url" id="url" value={form.url} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600" placeholder="https://example.com/page" required />
+                      <label htmlFor="url" className="block text-sm font-medium text-gray-700">Task URL</label>
+                      <input type="url" id="url" value={form.url} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="https://example.com/page" required />
                     </div>
                      <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Short Description</label>
-                      <input type="text" id="description" value={form.description} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., Like the page and follow for updates" required />
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">Short Description</label>
+                      <input type="text" id="description" value={form.description} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Like the page and follow for updates" required />
                     </div>
                 </div>
             </div>
 
-            <div className="p-6 border rounded-lg dark:border-gray-700">
-                 <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">2. Budget</h3>
+            <div className="p-6 border rounded-lg border-gray-200">
+                 <h3 className="text-lg font-semibold text-gray-800 mb-4">2. Budget</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="reward" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Reward per Task (Rs)</label>
-                    <input type="number" id="reward" value={form.reward} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., 5" step="0.01" min="0.1" required />
+                    <label htmlFor="reward" className="block text-sm font-medium text-gray-700">Reward per Task (Rs)</label>
+                    <input type="number" id="reward" value={form.reward} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., 5" step="0.01" min="0.1" required />
                   </div>
                   <div>
-                    <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Number of Tasks</label>
-                    <input type="number" id="quantity" value={form.quantity} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., 100" min="1" required />
+                    <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Number of Tasks</label>
+                    <input type="number" id="quantity" value={form.quantity} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., 100" min="1" required />
                   </div>
                 </div>
             </div>
         </fieldset>
 
-        <div className="bg-primary-50 dark:bg-gray-700/50 p-6 rounded-lg text-center">
-            <p className="font-medium text-lg text-gray-700 dark:text-gray-200">Total Campaign Cost</p>
-            <p className="text-4xl font-bold text-primary-600 dark:text-primary-400 my-2">{totalCost.toFixed(2)} Rs</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Your current balance: {balance.toFixed(2)} Rs</p>
+        <div className="bg-gray-100 p-6 rounded-lg text-center border border-gray-200">
+            <p className="font-medium text-lg text-gray-700">Total Campaign Cost</p>
+            <p className="text-4xl font-bold font-numeric text-primary-600 my-2">{totalCost.toFixed(2)} Rs</p>
+            <p className="text-sm text-gray-500">Your current balance: {balance.toFixed(2)} Rs</p>
         </div>
 
         {error && (

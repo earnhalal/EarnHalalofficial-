@@ -21,15 +21,17 @@ const NavItem: React.FC<{
 }> = ({ icon, label, isActive, onClick, isSubItem = false }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group relative ${
+    className={`w-full flex items-center space-x-4 px-4 rounded-lg transition-all duration-200 group relative ${
+      isSubItem ? 'py-2' : 'py-3'
+    } ${
       isActive
-        ? 'bg-amber-500/10 text-amber-300'
-        : `text-slate-400 hover:text-amber-400 hover:bg-white/5 ${isSubItem ? 'py-2' : ''}`
+        ? 'bg-primary-100 text-primary-600'
+        : 'text-gray-600 hover:text-primary-600 hover:bg-gray-100'
     }`}
   >
-    {isActive && <div className="absolute left-0 top-0 h-full w-1 bg-amber-400 rounded-r-full"></div>}
-    {icon}
-    <span className="font-semibold">{label}</span>
+    {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-3/4 w-1 bg-primary-500 rounded-r-full"></div>}
+    <div className={`${isActive ? 'text-primary-500' : ''}`}>{icon}</div>
+    <span className="font-semibold text-base">{label}</span>
   </button>
 );
 
@@ -38,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-6 h-6" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-6 h-6" /> },
-    { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-6 h-6" /> },
+    // { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-6 h-6" /> },
     { view: 'WALLET', label: 'Wallet', icon: <WalletIcon className="w-6 h-6" /> },
     { view: 'DEPOSIT', label: 'Deposit', icon: <PlusCircleIcon className="w-6 h-6" /> },
     { view: 'INVITE', label: 'Invite Friends', icon: <InviteIcon className="w-6 h-6" /> },
@@ -69,22 +71,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
 
   return (
     <aside
-      className={`bg-slate-900/60 backdrop-blur-xl border-r border-amber-400/10 text-white w-64 fixed top-0 left-0 h-full shadow-2xl z-30 transform transition-transform duration-300 ease-in-out ${
+      className={`bg-white border-r border-gray-200 text-gray-800 w-72 fixed top-0 left-0 h-full shadow-lg z-30 transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } lg:translate-x-0 lg:w-64`}
+      } lg:translate-x-0 lg:w-72`}
     >
-      <div className="p-4 flex flex-col h-full">
-        <div className="flex items-center space-x-2 mb-10 px-2">
-           <svg className="w-10 h-10" viewBox="0 0 24 24" fill="url(#logo-gradient-sidebar)">
-            <defs>
-               <linearGradient id="logo-gradient-sidebar" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{stopColor: 'rgb(251 191 36)'}} />
-                  <stop offset="100%" style={{stopColor: 'rgb(245 158 11)'}} />
+      <div className="p-6 flex flex-col h-full">
+        <div className="flex items-center space-x-3 mb-10 px-2">
+           <svg className="w-12 h-12 text-primary-500" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logo-gradient-light" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor: '#10b981'}} />
+                  <stop offset="100%" style={{stopColor: '#059669'}} />
                 </linearGradient>
-            </defs>
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-          </svg>
-          <span className="text-2xl font-bold text-white">Earn Halal</span>
+              </defs>
+              <g fill="url(#logo-gradient-light)">
+                <path d="M40,20 Q50,10 60,20 L80,40 Q90,50 80,60 L60,80 Q50,90 40,80 L20,60 Q10,50 20,40 Z" transform="rotate(-15, 50, 50)"/>
+                <path d="M30,35 L70,35 L70,65 L30,65 Z" opacity="0.7" transform="rotate(15, 50, 50)"/>
+              </g>
+            </svg>
+          <span className="text-3xl font-heading font-semibold text-gray-900 tracking-wider">Earn Halal</span>
         </div>
         <nav className="flex-1 space-y-2">
           {mainViews.map(({ view, label, icon }) => (
@@ -108,18 +113,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
           <div>
             <button
               onClick={() => setIsMoreMenuOpen(!isMoreMenuOpen)}
-              className={`w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all duration-300 group text-slate-400 hover:text-amber-400 hover:bg-white/5 ${isMoreMenuActive ? 'bg-white/5 text-amber-300' : ''}`}
+              className={`w-full flex items-center justify-between space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group text-gray-600 hover:text-primary-600 hover:bg-gray-100 ${isMoreMenuActive ? 'bg-gray-100 text-primary-600' : ''}`}
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 <InfoIcon className="w-6 h-6" />
-                <span className="font-semibold">More</span>
+                <span className="font-semibold text-base">More</span>
               </div>
               <ChevronDownIcon className={`w-5 h-5 transition-transform duration-300 ${isMoreMenuOpen ? 'rotate-180' : ''}`} />
             </button>
             <div
               className={`overflow-hidden transition-all duration-300 ease-in-out ${isMoreMenuOpen ? 'max-h-96' : 'max-h-0'}`}
             >
-              <div className="pt-2 space-y-1 pl-4">
+              <div className="pt-2 space-y-1.5 pl-6">
                 {moreMenuItems.map(({ view, label, icon }) => (
                      <NavItem
                         key={view}

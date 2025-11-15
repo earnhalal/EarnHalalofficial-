@@ -2,9 +2,9 @@ import React from 'react';
 import { CheckCircleIcon } from './icons';
 
 const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-md mb-8 max-w-4xl mx-auto">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6 border-b pb-4 border-slate-200 dark:border-slate-700">{title}</h2>
-        <div className="space-y-4 text-slate-600 dark:text-slate-300 prose prose-lg dark:prose-invert max-w-none">
+    <div className="bg-white p-8 rounded-xl shadow-subtle-md mb-8 max-w-4xl mx-auto">
+        <h2 className="text-3xl font-bold text-gray-900 mb-6 border-b pb-4 border-gray-200">{title}</h2>
+        <div className="space-y-4 text-gray-700 prose prose-lg max-w-none">
             {children}
         </div>
     </div>
@@ -14,8 +14,8 @@ const InfoListItem: React.FC<{ title: string; children: React.ReactNode; }> = ({
      <li className="flex items-start gap-4">
         <CheckCircleIcon className="w-6 h-6 text-primary-500 mt-1 shrink-0" />
         <div>
-            <h4 className="font-bold text-lg text-slate-800 dark:text-slate-100">{title}</h4>
-            <p className="text-slate-600 dark:text-slate-300 mt-1">{children}</p>
+            <h4 className="font-bold text-lg text-gray-900">{title}</h4>
+            <p className="text-gray-600 mt-1">{children}</p>
         </div>
     </li>
 )
@@ -53,7 +53,7 @@ export const AboutUsView = () => (
 export const ContactUsView = () => (
     <InfoCard title="Contact Us">
         <p>If you have any questions, concerns, or feedback, please don't hesitate to reach out to our support team.</p>
-        <p><strong>Email:</strong> <a href="mailto:support@earnhalal.com" className="text-primary-500 hover:underline">support@earnhalal.com</a></p>
+        <p><strong>Email:</strong> <a href="mailto:support@earnhalal.com" className="text-primary-600 hover:underline">support@earnhalal.com</a></p>
         <p>Our support team is available 24/7 to assist you with any issues you may encounter. We strive to respond to all inquiries within 24 hours.</p>
     </InfoCard>
 );
