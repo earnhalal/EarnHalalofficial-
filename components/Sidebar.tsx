@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
   InfoIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon, GameControllerIcon,
-  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon
+  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon, UserGroupIcon, MailIcon
 } from './icons';
 import type { View } from '../types';
 
@@ -38,6 +38,7 @@ const NavItem: React.FC<{
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen }) => {
   const mainViews: { view: View; label: string; icon: React.ReactNode }[] = [
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
+    { view: 'UPDATES_INBOX', label: 'Inbox', icon: <MailIcon className="w-6 h-6" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-6 h-6" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-6 h-6" /> },
     // { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-6 h-6" /> },
@@ -47,6 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'CREATE_TASK', label: 'Create Task', icon: <CreateTaskIcon className="w-6 h-6" /> },
     { view: 'TASK_HISTORY', label: 'Task History', icon: <ClipboardListIcon className="w-6 h-6" /> },
     { view: 'JOBS', label: 'Jobs', icon: <BriefcaseIcon className="w-6 h-6" /> },
+    { view: 'SOCIAL_GROUPS', label: 'Social Groups', icon: <UserGroupIcon className="w-6 h-6" /> },
     { view: 'MY_APPLICATIONS', label: 'My Applications', icon: <DocumentCheckIcon className="w-6 h-6" /> },
   ];
   

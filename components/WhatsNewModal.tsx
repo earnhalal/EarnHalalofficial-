@@ -8,15 +8,6 @@ interface WhatsNewModalProps {
 
 const updates = [
     {
-        version: '1.2.0',
-        date: 'August 2024',
-        title: 'Immersive Aviator Game!',
-        description: 'The Aviator game has been completely revamped with thrilling sounds, new animations, and a live betting feel. Test your nerves and cash out!',
-        type: 'New Feature',
-        icon: <TagIcon className="w-5 h-5" />,
-        color: 'text-blue-400'
-    },
-    {
         version: '1.1.5',
         date: 'July 2024',
         title: 'Ludo & Lottery Games Live',

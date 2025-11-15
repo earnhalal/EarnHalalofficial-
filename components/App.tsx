@@ -24,23 +24,128 @@ import PinLockView from './PinLockView';
 import AIAgentChatbot from './AIAgentChatbot';
 import WelcomeModal from './WelcomeModal';
 import MyApplicationsView from './MyApplicationsView';
-import AviatorGame from './games/AviatorGame';
 import LudoGame from './games/LudoGame';
 import LotteryGame from './games/LotteryGame';
 import CoinFlipGame from './games/CoinFlipGame';
 import MinesGame from './games/MinesGame';
-import WhatsNewModal from './WhatsNewModal';
+import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
+import { TagIcon, ArrowUpCircleIcon, GameControllerIcon } from './icons';
 
 
-import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, PaymentStatus } from '../types';
+import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, PaymentStatus, SocialGroup } from '../types';
 import { TransactionType, TaskType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, where, writeBatch } from 'firebase/firestore';
 
-const LATEST_UPDATE_VERSION = '1.2.0';
+
+// --- New Data & Types ---
+export interface AppUpdate {
+    id: string;
+    version: string;
+    date: string;
+    title: string;
+    description: string;
+    type: 'New Feature' | 'Improvement' | 'Game Release';
+    // FIX: Using a more specific type for the icon element allows cloning with className without TypeScript errors.
+    icon: React.ReactElement<React.SVGProps<SVGSVGElement>>;
+    color: string;
+}
+
+const appUpdates: AppUpdate[] = [
+    {
+        id: 'v1.2.0-games',
+        version: '1.2.0',
+        date: 'July 26, 2024',
+        title: 'Coin Flip & Mines Games Live!',
+        description: 'Test your luck with Coin Flip or your strategy in Mines. Two new exciting games have been added to the Play & Earn section.',
+        type: 'Game Release',
+        icon: <GameControllerIcon className="w-5 h-5" />,
+        color: 'text-purple-400'
+    },
+    {
+        id: 'v1.1.5-ludo-lottery',
+        version: '1.1.5',
+        date: 'July 24, 2024',
+        title: 'Ludo & Lottery Games Arrived',
+        description: 'Challenge players in Ludo Star or try your luck in the Daily Lottery. More ways to Play & Earn are now available for everyone.',
+        type: 'Game Release',
+        icon: <TagIcon className="w-5 h-5" />,
+        color: 'text-blue-400'
+    },
+    {
+        id: 'v1.1.0-ai-chatbot',
+        version: '1.1.0',
+        date: 'July 22, 2024',
+        title: 'AI Support Chatbot',
+        description: `Meet our new AI Support Agent! Get instant answers to your questions about tasks, withdrawals, and more, 24/7. Just click the chat icon!`,
+        type: 'Improvement',
+        icon: <ArrowUpCircleIcon className="w-5 h-5" />,
+        color: 'text-green-400'
+    },
+];
+
+// --- New Component Definition ---
+interface UpdatesViewProps {
+    updates: AppUpdate[];
+    seenIds: string[];
+    onMarkAsRead: (id: string) => void;
+    onMarkAllAsRead: () => void;
+}
+
+const UpdatesView: React.FC<UpdatesViewProps> = ({ updates, seenIds, onMarkAsRead, onMarkAllAsRead }) => {
+    const unreadCount = updates.filter(u => !seenIds.includes(u.id)).length;
+
+    return (
+        <div className="bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-lg max-w-4xl mx-auto text-white">
+            <div className="flex justify-between items-center mb-6 border-b border-gray-700 pb-4">
+                <h2 className="text-3xl font-bold">Inbox</h2>
+                {unreadCount > 0 && (
+                    <button
+                        onClick={onMarkAllAsRead}
+                        className="text-sm font-semibold text-primary-400 hover:text-primary-300"
+                    >
+                        Mark all as read
+                    </button>
+                )}
+            </div>
+            {updates.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">No updates yet.</p>
+            ) : (
+                <div className="space-y-4">
+                    {updates.map(update => {
+                        const isUnread = !seenIds.includes(update.id);
+                        return (
+                            <div
+                                key={update.id}
+                                onClick={() => onMarkAsRead(update.id)}
+                                className={`p-4 rounded-lg cursor-pointer transition-colors duration-200 ${
+                                    isUnread ? 'bg-gray-700 hover:bg-gray-600/70 border-l-4 border-primary-500' : 'bg-gray-800/50 hover:bg-gray-700/50'
+                                }`}
+                            >
+                                <div className="flex items-start gap-4">
+                                    <div className={`mt-1 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-600 ${update.color}`}>
+                                        {React.cloneElement(update.icon, { className: "w-5 h-5 text-white" })}
+                                    </div>
+                                    <div className="flex-grow">
+                                        <div className="flex justify-between items-baseline">
+                                            <h3 className={`font-bold text-lg ${isUnread ? 'text-white' : 'text-gray-300'}`}>{update.title}</h3>
+                                            <p className="text-xs text-gray-500 flex-shrink-0 ml-4">{update.date}</p>
+                                        </div>
+                                        <p className={`text-sm mt-1 ${isUnread ? 'text-gray-300' : 'text-gray-400'}`}>{update.description}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,19 +157,23 @@ const App: React.FC = () => {
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [socialGroups, setSocialGroups] = useState<SocialGroup[]>([]);
+  const [userSocialGroups, setUserSocialGroups] = useState<SocialGroup[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [viewStack, setViewStack] = useState<View[]>(['DASHBOARD']);
   
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [showWhatsNewModal, setShowWhatsNewModal] = useState(false);
   
   const [initialAuthView, setInitialAuthView] = useState<'login' | 'signup'>('signup');
   const [authAction, setAuthAction] = useState<'login' | 'signup' | null>(null);
   
   const [showPinLock, setShowPinLock] = useState(false);
-  const [pinLockMode, setPinLockMode] = useState<'enter' | 'set'>('set');
+  const [pinLockMode, setPinLockMode] = useState<'set' | 'enter'>('set');
   const [pinAction, setPinAction] = useState<(() => void) | null>(null);
+  
+  const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
+  const [showChatbot, setShowChatbot] = useState(true);
 
 
   // --- Data Fetching & Auth ---
@@ -83,11 +192,6 @@ const App: React.FC = () => {
             
             if (profileData.paymentStatus === 'VERIFIED' && wasUnpaid) {
               setShowWelcomeModal(true);
-            }
-            
-            const lastVersion = localStorage.getItem('lastSeenVersion');
-            if (profileData.paymentStatus === 'VERIFIED' && lastVersion !== LATEST_UPDATE_VERSION) {
-                setShowWhatsNewModal(true);
             }
 
           } else {
@@ -147,11 +251,21 @@ const App: React.FC = () => {
             console.error("Error listening to applications:", error);
         });
 
+        // Fetch user's submitted groups
+        const userGroupsQuery = query(collection(db, 'social_groups'), where('submittedBy', '==', firebaseUser.uid), orderBy('submittedAt', 'desc'));
+        const unsubscribeUserGroups = onSnapshot(userGroupsQuery, (snapshot) => {
+            const groupsData: SocialGroup[] = [];
+            snapshot.forEach(doc => groupsData.push({ id: doc.id, ...doc.data() } as SocialGroup));
+            setUserSocialGroups(groupsData);
+        }, console.error);
+
+
         return () => {
           unsubscribeProfile();
           unsubscribeTransactions();
           unsubscribeUserTasks();
           unsubscribeApplications();
+          unsubscribeUserGroups();
         };
 
       } else {
@@ -186,6 +300,14 @@ const App: React.FC = () => {
     }, (error) => {
         console.error("Error fetching global jobs:", error);
     });
+
+    // Fetch all approved social groups
+    const groupsQuery = query(collection(db, 'social_groups'), where('status', '==', 'approved'), orderBy('submittedAt', 'desc'));
+    const unsubscribeGroups = onSnapshot(groupsQuery, (snapshot) => {
+        const groupsData: SocialGroup[] = [];
+        snapshot.forEach(doc => groupsData.push({ id: doc.id, ...doc.data() } as SocialGroup));
+        setSocialGroups(groupsData);
+    }, console.error);
     
     // Check notification permission
     if ('Notification' in window) {
@@ -196,8 +318,26 @@ const App: React.FC = () => {
       unsubscribe();
       unsubscribeTasks();
       unsubscribeJobs();
+      unsubscribeGroups();
     };
-  }, [userProfile?.paymentStatus]);
+  }, []);
+
+  // Effect for loading settings from localStorage
+  useEffect(() => {
+    try {
+      const seenIdsRaw = localStorage.getItem('seenUpdateIds');
+      setSeenUpdateIds(seenIdsRaw ? JSON.parse(seenIdsRaw) : []);
+
+      const showBotRaw = localStorage.getItem('showChatbot');
+      if (showBotRaw !== null) {
+        setShowChatbot(JSON.parse(showBotRaw));
+      }
+    } catch (error) {
+      console.error("Failed to load settings from localStorage", error);
+      localStorage.removeItem('seenUpdateIds');
+      localStorage.removeItem('showChatbot');
+    }
+  }, []);
   
   // Set loading to false once profile is loaded
   useEffect(() => {
@@ -576,48 +716,80 @@ const App: React.FC = () => {
     });
   };
 
+  const handleCreateSocialGroup = async (groupData: {url: string, title: string, description: string, category: SocialGroup['category']}) => {
+    if (!user) return;
+    
+    const newGroup: Omit<SocialGroup, 'id' | 'imageUrl'> = {
+        ...groupData,
+        submittedBy: user.uid,
+        submittedAt: serverTimestamp(),
+        status: 'pending'
+    };
+
+    await addDoc(collection(db, "social_groups"), newGroup);
+  };
+  
+  const unreadUpdatesCount = useMemo(() => {
+    return appUpdates.filter(u => !seenUpdateIds.includes(u.id)).length;
+  }, [seenUpdateIds]);
+
+  const handleMarkUpdateAsRead = (id: string) => {
+      if (seenUpdateIds.includes(id)) return;
+      const newSeenIds = [...seenUpdateIds, id];
+      setSeenUpdateIds(newSeenIds);
+      localStorage.setItem('seenUpdateIds', JSON.stringify(newSeenIds));
+  };
+
+  const handleMarkAllUpdatesAsRead = () => {
+      const allIds = appUpdates.map(u => u.id);
+      setSeenUpdateIds(allIds);
+      localStorage.setItem('seenUpdateIds', JSON.stringify(allIds));
+  };
+
+  const handleToggleChatbot = (isVisible: boolean) => {
+      setShowChatbot(isVisible);
+      localStorage.setItem('showChatbot', JSON.stringify(isVisible));
+  };
+
   // --- Render Logic ---
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
-      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} onSimulateNewTask={()=>{}} />,
+      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
-      INVITE: <InviteView username={userProfile?.username ?? ''} totalReferrals={userProfile?.referralCount ?? 0} pendingBonuses={0} referralEarnings={transactions.filter(t=>t.type === TransactionType.REFERRAL).reduce((acc, t) => acc + t.amount, 0)} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} />,
+      INVITE: <InviteView username={userProfile?.username ?? ''} totalReferrals={userProfile?.referralCount ?? 0} pendingBonuses={0} referralEarnings={transactions.filter(t => t.type === TransactionType.REFERRAL).reduce((sum, tx) => sum + tx.amount, 0)} />,
+      SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
+      PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
+      DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={handleToggleChatbot} />,
       HOW_IT_WORKS: <HowItWorksView />,
       ABOUT_US: <AboutUsView />,
       CONTACT_US: <ContactUsView />,
+      JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
+      MY_APPLICATIONS: <MyApplicationsView applications={applications} />,
       PRIVACY_POLICY: <PrivacyPolicyView />,
       TERMS_CONDITIONS: <TermsAndConditionsView />,
-      JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
-      DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      SPIN_WHEEL: <SpinWheelView balance={userProfile?.balance ?? 0} onWin={(amount) => handleGameWin(amount, "Spin Wheel")} onBuySpin={handleBuySpin} />,
-      PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
-      MY_APPLICATIONS: <MyApplicationsView applications={applications} />,
-      AVIATOR_GAME: <AviatorGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} onCancelBet={handleCancelBet}/>,
       LUDO_GAME: <LudoGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       LOTTERY_GAME: <LotteryGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       COIN_FLIP_GAME: <CoinFlipGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       MINES_GAME: <MinesGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
+      SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
+      UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={handleMarkUpdateAsRead} onMarkAllAsRead={handleMarkAllUpdatesAsRead} />,
     };
-    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} onSimulateNewTask={()=>{}} />;
+    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} transactions={transactions} />;
   };
 
   if (isLoading) {
     return <LoadingScreen />;
   }
   
-  if (!user) {
-    if (authAction) {
-      return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />;
-    }
-    return <LandingView onGetStarted={handleAuthNavigation} />;
-  }
-
-  if (!userProfile) {
-    return <LoadingScreen />;
+  if (!user || !userProfile) {
+      if (authAction) {
+          return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={initialAuthView} />;
+      }
+      return <LandingView onGetStarted={handleAuthNavigation} />;
   }
 
   if (userProfile.paymentStatus === 'UNPAID') {
@@ -628,43 +800,43 @@ const App: React.FC = () => {
     return <PendingVerificationView />;
   }
 
-  // User is logged in, paid, and verified
+  const mainContent = (
+      <div className="flex bg-gray-900 min-h-screen font-sans">
+          <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} />
+          {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-20 lg:hidden"></div>}
+          <div className="flex-1 flex flex-col lg:ml-72">
+              <Header
+                  activeView={activeView}
+                  balance={userProfile.balance}
+                  username={userProfile.username}
+                  isSidebarOpen={isSidebarOpen}
+                  setIsSidebarOpen={setIsSidebarOpen}
+                  canGoBack={viewStack.length > 1}
+                  onBack={goBack}
+                  setActiveView={setActiveView}
+                  unreadUpdatesCount={unreadUpdatesCount}
+              />
+              <main className="flex-grow p-4 sm:p-6">
+                  {renderContent()}
+              </main>
+              <Footer setActiveView={setActiveView} />
+          </div>
+          {showChatbot && <AIAgentChatbot />}
+          {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={handlePinCorrect} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
+      </div>
+  );
+  
   return (
-    <div className="flex min-h-screen bg-gray-900 text-gray-200">
-      {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
-      {showWhatsNewModal && <WhatsNewModal onClose={() => { setShowWhatsNewModal(false); localStorage.setItem('lastSeenVersion', LATEST_UPDATE_VERSION); }} />}
-      {showPinLock && userProfile && (
-        <PinLockView 
-            mode={pinLockMode} 
-            onClose={() => setShowPinLock(false)}
-            onPinCorrect={handlePinCorrect}
-            onPinSet={handleSetPin}
-            pinToVerify={userProfile.walletPin ?? undefined}
-            onSkip={() => setShowPinLock(false)}
+    <>
+      {notificationPermission === 'default' && (
+        <NotificationBanner
+          onRequestPermission={handleRequestPermission}
+          onDismiss={() => setNotificationPermission('dismissed')}
         />
       )}
-      <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-72' : 'lg:ml-0'}`}>
-        {notificationPermission === 'default' && (
-          <NotificationBanner onRequestPermission={handleRequestPermission} onDismiss={() => setNotificationPermission('dismissed')} />
-        )}
-        <Header 
-          activeView={activeView}
-          balance={userProfile.balance}
-          username={userProfile.username}
-          isSidebarOpen={isSidebarOpen}
-          setIsSidebarOpen={setIsSidebarOpen}
-          canGoBack={viewStack.length > 1}
-          onBack={goBack}
-          setActiveView={setActiveView}
-        />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          {renderContent()}
-        </main>
-        <Footer setActiveView={setActiveView}/>
-      </div>
-      <AIAgentChatbot />
-    </div>
+      {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+      {mainContent}
+    </>
   );
 };
 

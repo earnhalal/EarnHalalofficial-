@@ -48,7 +48,7 @@ const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({ task, onClo
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all">
+      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all">
         {submissionState === 'success' ? <SuccessView /> : (
             <>
                 <div className="text-center">
@@ -156,7 +156,7 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
         return (
             <div 
                 key={task.id} 
-                className="bg-white p-6 rounded-xl shadow-subtle transition-all duration-300 hover:shadow-subtle-md hover:-translate-y-1 animate-fade-in-up border border-gray-200"
+                className="bg-white p-4 sm:p-6 rounded-xl shadow-subtle transition-all duration-300 hover:shadow-subtle-md hover:-translate-y-1 animate-fade-in-up border border-gray-200"
                 style={{ animationDelay: `${index * 75}ms`}}
             >
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

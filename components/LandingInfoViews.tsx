@@ -10,15 +10,14 @@ interface InfoModalProps {
 }
 
 export const InfoModal: React.FC<InfoModalProps> = ({ title, onClose, children }) => (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div className="relative w-full max-w-2xl h-[80vh] bg-slate-800 border border-amber-400/20 rounded-2xl shadow-2xl flex flex-col text-white animate-fade-in-up">
-            <header className="flex items-center justify-between p-4 border-b border-amber-400/10 flex-shrink-0">
-                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-amber-400">{title}</h3>
-                <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-2xl">&times;</button>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
+        <div className="relative w-full max-w-2xl h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col text-gray-800 animate-fade-in-up">
+            <header className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
+                <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+                <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors text-2xl">&times;</button>
             </header>
             <div className="p-6 overflow-y-auto">
-                 {/* The prose classes are removed here to allow custom styling of imported components */}
-                <div className="text-slate-300 max-w-none">
+                 <div className="text-gray-700 max-w-none">
                     {children}
                 </div>
             </div>
@@ -29,15 +28,15 @@ export const InfoModal: React.FC<InfoModalProps> = ({ title, onClose, children }
 // Specific Info Content Components
 const InfoSection: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => (
     <div className="mb-8">
-        <h4 className="text-2xl font-bold text-amber-400 mb-4 pb-2 border-b border-amber-400/20">{title}</h4>
-        <div className="space-y-4 prose prose-lg prose-invert text-slate-300 max-w-none">{children}</div>
+        <h4 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">{title}</h4>
+        <div className="space-y-4 prose prose-lg text-gray-700 max-w-none">{children}</div>
     </div>
 );
 
 const PaymentMethod: React.FC<{ name: string; icon: React.ReactNode; }> = ({ name, icon }) => (
-    <div className="flex items-center gap-4 p-3 bg-white/5 rounded-lg border border-white/10">
-        <div className="w-10 h-10 text-amber-400 flex-shrink-0">{icon}</div>
-        <span className="font-semibold text-lg">{name}</span>
+    <div className="flex items-center gap-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
+        <div className="w-10 h-10 text-primary-600 flex-shrink-0">{icon}</div>
+        <span className="font-semibold text-lg text-gray-800">{name}</span>
     </div>
 );
 

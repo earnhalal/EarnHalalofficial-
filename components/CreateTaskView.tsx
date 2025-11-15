@@ -90,7 +90,7 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
 
   if (isSuccess && submittedTask) {
     return (
-        <div className="bg-white p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto text-center animate-fade-in">
+        <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto text-center animate-fade-in">
             <CheckCircleIcon className="w-20 h-20 text-primary-500 mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-gray-900">Campaign Launched!</h2>
             <p className="text-gray-600 mt-2 mb-6">
@@ -114,7 +114,7 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
   }
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto">
+    <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto">
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Create a New Task Campaign</h2>
         <p className="text-gray-600 mt-2">

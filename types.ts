@@ -18,11 +18,12 @@ export type View =
   | 'MY_APPLICATIONS'
   | 'PRIVACY_POLICY'
   | 'TERMS_CONDITIONS'
-  | 'AVIATOR_GAME'
   | 'LUDO_GAME'
   | 'LOTTERY_GAME'
   | 'COIN_FLIP_GAME'
-  | 'MINES_GAME';
+  | 'MINES_GAME'
+  | 'SOCIAL_GROUPS'
+  | 'UPDATES_INBOX';
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -128,4 +129,16 @@ export interface Application {
     jobTitle: string;
     date: any; // Firestore timestamp
     status: 'Submitted' | 'Under Review' | 'Rejected';
+}
+
+export interface SocialGroup {
+    id: string;
+    url: string;
+    category: 'Study' | 'Dating' | 'Gaming' | 'Movies' | 'News' | 'Funny' | 'Videos' | 'Sad Statuses' | 'Tech' | 'Prompts' | 'Other';
+    title: string;
+    description: string;
+    imageUrl?: string; // Auto-fetched by backend
+    submittedBy: string; // user uid
+    submittedAt: any; // Firestore timestamp
+    status: 'pending' | 'approved' | 'rejected';
 }

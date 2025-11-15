@@ -44,14 +44,6 @@ interface PlayAndEarnViewProps {
 const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
     const games = [
         {
-            title: 'Aviator',
-            description: 'Cash out before the plane flies away. How long can you wait?',
-            icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.125A59.769 59.769 0 0121.485 3.125L18 12m-12 0h12" /></svg>,
-            gradient: 'bg-gradient-to-br from-red-500 to-red-700',
-            isComingSoon: true,
-            view: 'AVIATOR_GAME' as View,
-        },
-        {
             title: 'Mines',
             description: 'Uncover gems and avoid the mines. The higher the risk, the bigger the reward!',
             icon: <BombIcon className="w-10 h-10" />,

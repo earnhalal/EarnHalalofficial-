@@ -18,7 +18,7 @@ const AuthInput: React.FC<{ icon: React.ReactNode, type: string, value: string, 
             value={value} 
             onChange={onChange}
             placeholder={placeholder}
-            className={`w-full py-3 pl-12 pr-4 text-gray-800 bg-gray-100 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-300 placeholder:text-gray-400 ${readOnly ? 'cursor-not-allowed bg-gray-200 text-gray-500' : ''}`} 
+            className={`w-full py-3 pl-12 pr-4 text-gray-800 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 focus:ring-0 transition-all duration-300 placeholder:text-gray-400 ${readOnly ? 'cursor-not-allowed bg-gray-200 text-gray-500' : ''}`} 
             required={required}
             autoComplete="new-password" // To prevent autofill issues
             readOnly={readOnly}
@@ -39,7 +39,7 @@ const PasswordInput: React.FC<{ value: string, onChange: (e: React.ChangeEvent<H
                 value={value} 
                 onChange={onChange}
                 placeholder={placeholder}
-                className="w-full py-3 pl-12 pr-12 text-gray-800 bg-gray-100 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/50 focus:border-primary-500 transition-all duration-300 placeholder:text-gray-400" 
+                className="w-full py-3 pl-12 pr-12 text-gray-800 bg-gray-50 border-2 border-gray-200 rounded-lg focus:bg-white focus:border-primary-500 focus:ring-0 transition-all duration-300 placeholder:text-gray-400" 
                 required
                 autoComplete="new-password"
             />
@@ -53,7 +53,6 @@ const PasswordInput: React.FC<{ value: string, onChange: (e: React.ChangeEvent<H
 
 const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) => {
     const [isLogin, setIsLogin] = useState(initialView === 'login');
-    const [formKey, setFormKey] = useState(1);
     
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
@@ -74,14 +73,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     const toggleForm = () => {
         setIsLogin(!isLogin);
         setError('');
-        setUsername('');
-        setEmail('');
-        setPhone('');
-        setPassword('');
-        setFormKey(prev => prev + 1);
-        // Clean URL when user manually toggles
-        const newUrl = window.location.pathname; // Keep path, remove query params
-        window.history.pushState({ path: newUrl }, '', newUrl);
+        // Do not clear fields, user might have just mistyped
     };
     
     const handleSignupSubmit = (e: React.FormEvent) => {
@@ -107,15 +99,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     const iconProps = { className: "w-5 h-5" };
 
     return (
-        <div className="min-h-screen lg:flex font-sans">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 font-sans">
              <style>{`
-                @keyframes form-fade-in {
-                    from { opacity: 0; transform: translateY(15px) scale(0.98); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-                .form-animate {
-                    animation: form-fade-in 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-                }
                 @keyframes gradient-animation {
                     0% { background-position: 0% 50%; }
                     50% { background-position: 100% 50%; }
@@ -126,93 +111,77 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                     animation: gradient-animation 15s ease infinite;
                 }
             `}</style>
-            {/* Left Decorative Panel */}
-            <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-gradient-to-br from-primary-600 to-accent-500 text-white p-12 animated-gradient">
-                 <div className="text-center animate-fade-in-up">
-                    <svg className="w-20 h-20 mx-auto mb-6" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                        <g fill="white">
-                            <path d="M40,20 Q50,10 60,20 L80,40 Q90,50 80,60 L60,80 Q50,90 40,80 L20,60 Q10,50 20,40 Z" transform="rotate(-15, 50, 50)"/>
-                            <path d="M30,35 L70,35 L70,65 L30,65 Z" opacity="0.7" transform="rotate(15, 50, 50)"/>
-                        </g>
-                    </svg>
-                    <h1 className="text-4xl font-heading font-bold mb-4">Earn Halal</h1>
-                    <p className="text-lg text-primary-100 mb-8">Your journey to ethical online earnings starts here.</p>
-                    <div className="space-y-4 text-left max-w-sm mx-auto">
-                        <div className="flex items-start gap-3">
-                            <CheckCircleIcon className="w-6 h-6 text-accent-300 mt-1 shrink-0" />
-                            <p className="text-primary-100">Complete simple tasks and get paid instantly.</p>
-                        </div>
-                         <div className="flex items-start gap-3">
-                            <CheckCircleIcon className="w-6 h-6 text-accent-300 mt-1 shrink-0" />
-                            <p className="text-primary-100">Withdraw your earnings through multiple local payment methods.</p>
-                        </div>
-                         <div className="flex items-start gap-3">
-                            <CheckCircleIcon className="w-6 h-6 text-accent-300 mt-1 shrink-0" />
-                            <p className="text-primary-100">A trusted and secure platform compliant with Halal principles.</p>
-                        </div>
-                    </div>
-                 </div>
-            </div>
-
-            {/* Right Form Panel */}
-            <div className="lg:w-1/2 w-full flex flex-col min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 lg:justify-center">
-                {/* This will grow and push the footer down on mobile */}
-                <div className="flex-grow flex items-center justify-center">
-                    <div className="w-full max-w-md space-y-8 py-12">
-                        <div className="bg-white rounded-2xl shadow-subtle-lg p-8 border border-gray-200">
-                            <div className="text-center mb-8">
-                                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                                    {isLogin ? 'Welcome Back!' : 'Create Your Account'}
-                                </h2>
-                                <p className="text-gray-600">
-                                    {isLogin ? 'Login to continue your journey.' : 'Join us to start earning.'}
-                                </p>
-                            </div>
-
-                            <form key={formKey} onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-4 form-animate">
-                                {error && <p className="text-red-600 text-sm text-center bg-red-100 p-2 rounded-md">{error}</p>}
-                                
-                                {isLogin ? (
-                                    <>
-                                        <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
-                                        <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-                                    </>
-                                ) : (
-                                    <>
-                                        <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" />
-                                        <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" />
-                                        <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone Number" />
-                                        <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-                                        <AuthInput 
-                                            icon={<InviteIcon {...iconProps} />} 
-                                            type="text" 
-                                            value={referrerUsername} 
-                                            onChange={()=>{}} 
-                                            placeholder="Referred by" 
-                                            readOnly={!!referrerUsername} 
-                                            required={false}
-                                        />
-                                    </>
-                                )}
-
-                                <div className="pt-4">
-                                    <button type="submit" className="w-full bg-primary-600 text-white font-bold py-3 rounded-lg hover:bg-primary-700 transition-all transform hover:scale-105 ease-out-circ shadow-md hover:shadow-lg">
-                                        {isLogin ? 'Login' : 'Sign Up'}
-                                    </button>
+            <div className="relative w-full max-w-4xl flex bg-white rounded-2xl shadow-subtle-lg overflow-hidden min-h-[600px]">
+                {/* Left Decorative Panel */}
+                <div className="hidden lg:flex flex-col w-1/2 bg-gradient-to-br from-primary-600 to-accent-500 text-white p-12 animated-gradient">
+                     <div className="my-auto animate-fade-in-up">
+                        <h2 className="text-4xl font-heading font-extrabold">Join Our Community</h2>
+                        <p className="mt-4 text-lg text-primary-200 opacity-90">
+                            Start earning rewards in a trusted and ethical environment.
+                        </p>
+                        <ul className="mt-8 space-y-5 text-left">
+                            <li className="flex items-start space-x-3">
+                                <div className="bg-white/20 p-2 rounded-full mt-1"><CheckCircleIcon className="w-5 h-5 text-white" /></div>
+                                <div>
+                                    <h3 className="font-bold">Instant Rewards</h3>
+                                    <p className="text-primary-200 text-sm">Get paid the moment you complete a task.</p>
                                 </div>
-                            </form>
+                            </li>
+                            <li className="flex items-start space-x-3">
+                                <div className="bg-white/20 p-2 rounded-full mt-1"><CheckCircleIcon className="w-5 h-5 text-white" /></div>
+                                <div>
+                                    <h3 className="font-bold">Secure Payouts</h3>
+                                    <p className="text-primary-200 text-sm">Withdraw your earnings via local payment methods.</p>
+                                </div>
+                            </li>
+                            <li className="flex items-start space-x-3">
+                                <div className="bg-white/20 p-2 rounded-full mt-1"><CheckCircleIcon className="w-5 h-5 text-white" /></div>
+                                <div>
+                                    <h3 className="font-bold">Ethical & Halal</h3>
+                                    <p className="text-primary-200 text-sm">All tasks are vetted to align with Halal principles.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
-                            <p className="text-center text-sm text-gray-500 mt-6">
+                {/* Right Form Panel */}
+                <div className="w-full lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center">
+                    <div>
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl font-bold font-heading text-gray-900">{isLogin ? 'Welcome Back!' : 'Create Your Account'}</h2>
+                            <p className="text-gray-500 mt-2">{isLogin ? 'Log in to continue your journey.' : 'Sign up to start earning today.'}</p>
+                        </div>
+
+                        <form onSubmit={isLogin ? handleLoginSubmit : handleSignupSubmit} className="space-y-5">
+                            {!isLogin && (
+                                <AuthInput icon={<UserIcon {...iconProps} />} type="text" value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" />
+                            )}
+                            <AuthInput icon={<EmailIcon {...iconProps} />} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" />
+                            {!isLogin && (
+                                <AuthInput icon={<PhoneIcon {...iconProps} />} type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number" />
+                            )}
+                            <PasswordInput value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
+                             {!isLogin && (
+                                <AuthInput icon={<InviteIcon {...iconProps} />} type="text" value={referrerUsername} onChange={e => setReferrerUsername(e.target.value)} placeholder="Referrer Code (Optional)" required={false} readOnly={!!referrerUsername} />
+                            )}
+
+                            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                            
+                            <button type="submit" className="w-full bg-primary-600 text-white font-semibold py-3 rounded-lg hover:bg-primary-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                {isLogin ? 'Log In' : 'Sign Up'}
+                            </button>
+                        </form>
+                        
+                        <div className="mt-6 text-center">
+                            <p className="text-gray-600 text-sm">
                                 {isLogin ? "Don't have an account?" : "Already have an account?"}
-                                <button onClick={toggleForm} className="font-medium text-primary-600 hover:underline ml-1">
-                                    {isLogin ? 'Sign Up' : 'Login'}
+                                <button onClick={toggleForm} className="font-semibold text-primary-600 hover:underline ml-1">
+                                    {isLogin ? 'Sign Up' : 'Log In'}
                                 </button>
                             </p>
                         </div>
                     </div>
-                </div>
-                <div className="lg:hidden flex-shrink-0 text-center text-gray-500 text-sm pb-8">
-                    &copy; {new Date().getFullYear()} Earn Halal. All Rights Reserved.
                 </div>
             </div>
         </div>

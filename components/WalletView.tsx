@@ -108,7 +108,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div className="lg:col-span-2">
-        <div className="bg-white p-6 rounded-2xl shadow-subtle-md">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-subtle-md">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Request a Withdrawal</h2>
             
             {savedDetails && !isEditingDetails ? (
@@ -197,7 +197,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
             </div>
         )}
 
-        <div className="bg-white p-6 rounded-2xl shadow-subtle-md">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-subtle-md">
           <h3 className="text-xl font-bold text-gray-900 mb-4">Transaction History</h3>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
             {transactions.map(tx => (

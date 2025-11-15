@@ -6,9 +6,11 @@ interface ProfileSettingsViewProps {
     userProfile: UserProfile | null;
     onUpdateProfile: (updatedData: { name: string; email: string; password?: string }) => Promise<void>;
     onLogout: () => void;
+    showChatbot: boolean;
+    onToggleChatbot: (isVisible: boolean) => void;
 }
 
-const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile, onLogout }) => {
+const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile, onLogout, showChatbot, onToggleChatbot }) => {
     const [name, setName] = useState(userProfile?.username || '');
     const [email, setEmail] = useState(userProfile?.email || '');
     const [password, setPassword] = useState('');
@@ -43,7 +45,7 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, 
     };
 
     return (
-        <div className="bg-white p-8 rounded-xl shadow-subtle-md max-w-2xl mx-auto">
+        <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Profile Settings</h2>
             <form className="space-y-6" onSubmit={handleSubmit}>
                 <div>
@@ -75,7 +77,25 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, 
                     ) : 'Save Changes'}
                 </button>
             </form>
-            <div className="mt-8 border-t pt-6 border-gray-200">
+            <div className="mt-8 border-t pt-6 border-gray-200 space-y-4">
+                 <div className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
+                    <label htmlFor="chatbot-toggle" className="font-medium text-gray-700 cursor-pointer select-none">Show AI Support Chatbot</label>
+                    <button
+                        id="chatbot-toggle"
+                        role="switch"
+                        aria-checked={showChatbot}
+                        onClick={() => onToggleChatbot(!showChatbot)}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
+                            showChatbot ? 'bg-primary-600' : 'bg-gray-300'
+                        }`}
+                    >
+                        <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                showChatbot ? 'translate-x-6' : 'translate-x-1'
+                            }`}
+                        />
+                    </button>
+                </div>
                 <button
                     onClick={onLogout}
                     className="w-full bg-red-100 text-red-700 font-semibold py-3 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
