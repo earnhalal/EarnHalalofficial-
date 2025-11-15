@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FingerprintIcon } from './icons';
 
 // This is a global declaration to prevent TypeScript errors for the Lottie Player and particles.js library.
 declare global {
@@ -124,6 +125,14 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
         }, 2500);
     };
 
+    const handleFingerprintAuth = (mode: 'login' | 'signup') => {
+        if (mode === 'signup') {
+            alert("To set up fingerprint login, please complete the standard registration first. You can enable it in your profile settings later.");
+        } else {
+            alert("Simulating WebAuthn API... Authenticating with fingerprint.\n\nNote: This is a UI demonstration. A full implementation requires the Web Authentication API and backend support to be functional.");
+        }
+    };
+
     return (
         <>
             <style>{`
@@ -144,7 +153,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                 ref={containerRef}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
-                className={`auth-container min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-slate-900 dark:via-emerald-950 dark:to-teal-950 transition-all duration-700 overflow-hidden`}
+                className={`auth-container min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-slate-900 dark:via-emerald-950 dark:to-teal-950 transition-all duration-700 overflow-auto py-8`}
             >
                 <div id="particles-js-auth"></div>
 
@@ -196,7 +205,12 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                         <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="checkbox checkbox-success checkbox-sm" />
                                         <span className="text-xs text-gray-600 dark:text-gray-400">I agree to the <a href="#" className="text-emerald-600 font-medium hover:underline">Terms & Conditions</a> and <a href="#" className="text-emerald-600 font-medium hover:underline">Privacy Policy</a></span>
                                     </label>
-                                    <button type="submit" className="btn w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg py-4 mt-2">Create Halal Account</button>
+                                    <div className="flex items-center gap-3 pt-2">
+                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Create Halal Account</button>
+                                        <button type="button" onClick={() => handleFingerprintAuth('signup')} aria-label="Use Fingerprint" className="btn btn-square h-14 w-14 bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700">
+                                            <FingerprintIcon className="w-8 h-8"/>
+                                        </button>
+                                    </div>
                                 </form>
                             ) : (
                                 <form onSubmit={handleLoginSubmit} className="space-y-5">
@@ -206,7 +220,12 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                         <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="checkbox checkbox-sm checkbox-success" /><span>Remember me</span></label>
                                         <a href="#" className="text-emerald-600 hover:underline font-medium">Forgot?</a>
                                     </div>
-                                    <button type="submit" className="btn w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg py-4">Login Securely</button>
+                                    <div className="flex items-center gap-3 pt-2">
+                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Login Securely</button>
+                                         <button type="button" onClick={() => handleFingerprintAuth('login')} aria-label="Use Fingerprint" className="btn btn-square h-14 w-14 bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700">
+                                            <FingerprintIcon className="w-8 h-8"/>
+                                        </button>
+                                    </div>
                                 </form>
                             )}
                           </div>

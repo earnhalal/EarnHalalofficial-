@@ -308,3 +308,10 @@ export const UserGroupIcon: React.FC<IconProps> = (props) => (
         <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m-7.5-2.952a4.5 4.5 0 0 1-9 0m9 0a4.5 4.5 0 0 0-9 0m4.5-9a4.5 4.5 0 0 1 9 0m-9 0a4.5 4.5 0 0 0-9 0" />
     </svg>
 );
+
+export const FingerprintIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.864 4.243A7.5 7.5 0 0 1 19.5 12c0 2.063-.836 3.942-2.197 5.303m-4.606-4.606a3 3 0 1 0-4.242-4.242 3 3 0 0 0 4.242 4.242ZM12 18.75c-3.435 0-6.425-2.25-7.614-5.303m1.042-4.444a7.5 7.5 0 0 0-5.72 6.034" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6.375 6.375 0 1 0 0-12.75 6.375 6.375 0 0 0 0 12.75Z" />
+    </svg>
+);
