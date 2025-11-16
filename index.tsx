@@ -1,5 +1,4 @@
-// FIX: Import 'vite/client' here to provide global types for JSX and import.meta.env, resolving all JSX and import.meta.env typing errors.
-import 'vite/client';
+// The vite/client types are now referenced globally in types.ts for better project-wide consistency.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';

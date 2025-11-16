@@ -24,7 +24,17 @@ const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveVi
            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600">
                 <MenuIcon className="w-6 h-6" />
             </button>
-            <div className="w-9 h-9 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">EH</div>
+            <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="8" fill="url(#paint0_linear_header)"/>
+                <path d="M12 10H20C22.2091 10 24 11.7909 24 14V16C24 18.2091 22.2091 20 20 20H12V10Z" fill="white" fillOpacity="0.5"/>
+                <path d="M12 22H28V30H12V22Z" fill="white"/>
+                <defs>
+                    <linearGradient id="paint0_linear_header" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#10b981"/>
+                        <stop offset="1" stopColor="#059669"/>
+                    </linearGradient>
+                </defs>
+            </svg>
             <span className="font-bold text-lg text-emerald-700">Earn Halal</span>
         </div>
         <div className="flex items-center gap-3">

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
   InfoIcon, DocumentTextIcon, ClipboardListIcon, GiftIcon, GameControllerIcon,
-  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon, UserGroupIcon, MailIcon, HomeIcon
+  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, ChevronDownIcon, UserGroupIcon, MailIcon
 } from './icons';
 import type { View } from '../types';
 
@@ -11,6 +11,7 @@ interface SidebarProps {
   setActiveView: (view: View) => void;
   isSidebarOpen: boolean;
   onClose: () => void;
+  unreadUpdatesCount: number;
 }
 
 const NavItem: React.FC<{
@@ -19,7 +20,8 @@ const NavItem: React.FC<{
   isActive: boolean;
   onClick: () => void;
   isSubItem?: boolean;
-}> = ({ icon, label, isActive, onClick, isSubItem = false }) => (
+  badgeCount?: number;
+}> = ({ icon, label, isActive, onClick, isSubItem = false, badgeCount }) => (
   <button
     onClick={onClick}
     className={`w-full flex items-center space-x-3 rounded-md transition-all duration-200 group relative ${
@@ -32,13 +34,16 @@ const NavItem: React.FC<{
   >
     {isActive && !isSubItem && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-emerald-500 rounded-r-full"></div>}
     <div className={`${isActive ? 'text-emerald-600' : 'text-gray-400 group-hover:text-emerald-600'}`}>{icon}</div>
-    <span className="font-semibold text-sm">{label}</span>
+    <span className="font-semibold text-sm flex-1 text-left">{label}</span>
+    {badgeCount && badgeCount > 0 && (
+        <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{badgeCount}</span>
+    )}
   </button>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose, unreadUpdatesCount }) => {
   const mainViews: { view: View; label: string; icon: React.ReactNode }[] = [
-    { view: 'DASHBOARD', label: 'Dashboard', icon: <HomeIcon className="w-5 h-5" /> },
+    { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-5 h-5" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-5 h-5" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
     { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-5 h-5" /> },
@@ -53,29 +58,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'UPDATES_INBOX', label: 'Inbox', icon: <MailIcon className="w-5 h-5" /> },
   ];
   
-  const moreMenuViews: View[] = ['HOW_IT_WORKS', 'ABOUT_US', 'CONTACT_US', 'PRIVACY_POLICY', 'TERMS_CONDITIONS'];
-
-  const moreMenuItems: { view: View; label: string; icon: React.ReactNode }[] = [
-    { view: 'HOW_IT_WORKS', label: 'How it Works', icon: <InfoIcon className="w-5 h-5" /> },
-    { view: 'ABOUT_US', label: 'About Us', icon: <InfoIcon className="w-5 h-5" /> },
-    { view: 'CONTACT_US', label: 'Contact Us', icon: <InfoIcon className="w-5 h-5" /> },
-    { view: 'PRIVACY_POLICY', label: 'Privacy Policy', icon: <DocumentTextIcon className="w-5 h-5" /> },
-    { view: 'TERMS_CONDITIONS', label: 'Terms', icon: <DocumentTextIcon className="w-5 h-5" /> },
-  ];
-
-  const isMoreMenuActive = moreMenuViews.includes(activeView);
-  const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(isMoreMenuActive);
-  
   const handleItemClick = (view: View) => {
       setActiveView(view);
       onClose();
   }
-
-  useEffect(() => {
-    if (isMoreMenuActive) {
-      setIsMoreMenuOpen(true);
-    }
-  }, [activeView, isMoreMenuActive]);
 
   return (
     <aside
@@ -85,9 +71,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     >
       <div className="p-4 flex flex-col h-full">
         <div className="flex items-center space-x-3 mb-8 px-2 pt-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">
-                EH
-            </div>
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="8" fill="url(#paint0_linear_sidebar)"/>
+                <path d="M12 10H20C22.2091 10 24 11.7909 24 14V16C24 18.2091 22.2091 20 20 20H12V10Z" fill="white" fillOpacity="0.5"/>
+                <path d="M12 22H28V30H12V22Z" fill="white"/>
+                <defs>
+                    <linearGradient id="paint0_linear_sidebar" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+                        <stop stopColor="#10b981"/>
+                        <stop offset="1" stopColor="#059669"/>
+                    </linearGradient>
+                </defs>
+            </svg>
           <span className="text-xl font-bold text-gray-800">Earn Halal</span>
         </div>
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2">
@@ -98,6 +92,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
               label={label}
               isActive={activeView === view}
               onClick={() => handleItemClick(view)}
+              badgeCount={view === 'UPDATES_INBOX' ? unreadUpdatesCount : 0}
             />
           ))}
         </nav>

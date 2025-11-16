@@ -1,9 +1,33 @@
 // types.ts
 
-// FIX: Removed `/// <reference types="vite/client" />`. This was causing a type resolution error.
-// Global types for JSX and import.meta.env are now provided by a direct import in `index.tsx`.
+// FIX: Import 'react' to ensure JSX types are available globally. This is crucial for TS to recognize standard JSX elements like <div>, <svg>, etc.
+import 'react';
+
+// FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
+// /// <reference types="vite/client" />
+
+// FIX: Globally declare and augment types for JSX custom elements and import.meta.env
+// This fixes widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors
+// and also the 'import.meta.env' error which arose from removing 'vite/client' types.
+declare global {
+  // For import.meta.env used in AIAgentChatbot.tsx
+  interface ImportMeta {
+    readonly env: {
+      readonly [key: string]: string;
+      readonly VITE_API_KEY: string;
+    };
+  }
+
+  // For augmenting JSX to include custom elements like 'lottie-player' without overwriting existing elements.
+  namespace JSX {
+    interface IntrinsicElements extends React.JSX.IntrinsicElements {
+      'lottie-player': any;
+    }
+  }
+}
 
 // The global JSX declaration for 'lottie-player' was moved to AuthView.tsx to avoid overwriting React's default intrinsic elements.
+// (Note: it has been moved back here in a safer, augmenting way to fix global type issues)
 
 export type View =
   | 'DASHBOARD'

@@ -45,7 +45,7 @@ const AIAgentChatbot: React.FC = () => {
 
     const initializeChat = () => {
         try {
-            const apiKey = import.meta.env.VITE_API_KEY as string;
+            const apiKey = import.meta.env.VITE_API_KEY;
             if (!apiKey) {
                 console.error("VITE_API_KEY is not set in environment variables.");
                 setMessages(prev => [...prev, {id: Date.now(), text: "Sorry, the AI chat service is not configured.", sender: 'bot'}]);
@@ -108,7 +108,7 @@ const AIAgentChatbot: React.FC = () => {
     const generateSuggestions = async (lastMessage: string) => {
         if (!chatSession.current) return;
         try {
-             const apiKey = import.meta.env.VITE_API_KEY as string;
+             const apiKey = import.meta.env.VITE_API_KEY;
              if (!apiKey) throw new Error("VITE_API_KEY not found");
              const ai = new GoogleGenAI({ apiKey });
              const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Jobs feature kia hai?"]`;

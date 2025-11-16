@@ -798,7 +798,7 @@ const App: React.FC = () => {
 
   const mainContent = (
       <div className="flex flex-col md:flex-row bg-gradient-to-b from-green-50/50 to-white min-h-screen font-sans">
-          <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+          <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} unreadUpdatesCount={unreadUpdatesCount} />
           {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden"></div>}
           <div className="flex-1 flex flex-col w-full">
               <Header
@@ -806,7 +806,7 @@ const App: React.FC = () => {
                   setIsSidebarOpen={setIsSidebarOpen}
                   setActiveView={setActiveView}
               />
-              <main className="flex-grow pb-20 md:pb-6">
+              <main className="flex-grow pb-20 md:pb-6 p-4">
                   {renderContent()}
               </main>
               <BottomNav activeView={activeView} setActiveView={setActiveView} />
