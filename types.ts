@@ -1,10 +1,9 @@
 // types.ts
 
-// FIX: Added Vite client types reference to ensure global types for JSX and import.meta.env are loaded.
-/// <reference types="vite/client" />
+// FIX: Removed `/// <reference types="vite/client" />`. This was causing a type resolution error.
+// Global types for JSX and import.meta.env are now provided by a direct import in `index.tsx`.
 
-// FIX: Removed the global JSX declaration for 'lottie-player'. It was incorrectly overwriting React's default intrinsic elements,
-// causing errors for all standard HTML/SVG elements. The declaration was moved to AuthView.tsx where the element is used.
+// The global JSX declaration for 'lottie-player' was moved to AuthView.tsx to avoid overwriting React's default intrinsic elements.
 
 export type View =
   | 'DASHBOARD'

@@ -1,4 +1,5 @@
-// The Vite client types reference has been moved to types.ts for more reliable global type resolution.
+// FIX: Import 'vite/client' here to provide global types for JSX and import.meta.env, resolving all JSX and import.meta.env typing errors.
+import 'vite/client';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';

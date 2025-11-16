@@ -3,7 +3,7 @@ import React from 'react';
 
 const LoadingScreen: React.FC = () => {
     return (
-        <div className="bg-transparent min-h-screen flex flex-col items-center justify-center text-white animate-fade-in-slow">
+        <div className="fixed inset-0 z-50 bg-gray-900 min-h-screen flex flex-col items-center justify-center text-white animate-fade-in-slow">
             <style>{`
                 @keyframes fade-in-slow {
                     from { opacity: 0; }

@@ -772,14 +772,22 @@ const App: React.FC = () => {
   if (isLoading) {
     return <LoadingScreen />;
   }
-  
-  if (!user || !userProfile) {
+
+  // If auth is resolved and there's no user, show public views
+  if (!user) {
     if (authAction) {
         return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />;
     }
     return <LandingView onGetStarted={handleAuthNavigation} />;
   }
 
+  // If there's a user but their profile is not yet loaded, continue showing the loading screen.
+  // This prevents trying to access properties of a null userProfile.
+  if (!userProfile) {
+    return <LoadingScreen />;
+  }
+
+  // From here on, we know we have a logged-in user with a loaded profile.
   if (userProfile.paymentStatus === 'UNPAID') {
     return <PaymentView onSubmit={handlePaymentSubmit} />;
   }
