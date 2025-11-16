@@ -2,7 +2,8 @@
 
 // FIX: Import 'react' to ensure JSX types are available globally. This is crucial for TS to recognize standard JSX elements like <div>, <svg>, etc.
 // FIX: Changed `import 'react';` to `import React from 'react';` to resolve "Cannot find namespace 'React'" error.
-import React from 'react';
+// FIX: Using `import * as React` to ensure the full module type space is available for augmentation.
+import * as React from 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
 // /// <reference types="vite/client" />

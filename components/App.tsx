@@ -152,7 +152,8 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeView, setActiveViewInternal] = useState<View>('DASHBOARD');
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
+  const [withdrawalStatuses, setWithdrawalStatuses] = useState<Record<string, Transaction['status']>>({});
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -172,6 +173,17 @@ const App: React.FC = () => {
   
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
   const [showChatbot, setShowChatbot] = useState(true);
+
+  // Create the final transactions list by merging base data with real-time statuses
+  const transactions = useMemo(() => {
+    return baseTransactions.map(tx => {
+        // If it's a withdrawal and we have a status update for it, apply it.
+        if (tx.type === TransactionType.WITHDRAWAL && tx.id && withdrawalStatuses[tx.id]) {
+            return { ...tx, status: withdrawalStatuses[tx.id] };
+        }
+        return tx;
+    });
+  }, [baseTransactions, withdrawalStatuses]);
 
 
   // --- Data Fetching & Auth ---
@@ -221,16 +233,39 @@ const App: React.FC = () => {
             console.error("Error listening to user profile:", error);
         });
 
-        // Setup listeners for subcollections
+        // Setup listener for user's transaction subcollection
         const transactionsQuery = query(collection(db, "users", firebaseUser.uid, "transactions"), orderBy("date", "desc"));
         const unsubscribeTransactions = onSnapshot(transactionsQuery, (snapshot) => {
           const trans: Transaction[] = [];
           snapshot.forEach(doc => trans.push({ id: doc.id, ...doc.data() } as Transaction));
-          setTransactions(trans);
+          setBaseTransactions(trans);
         }, (error) => {
             console.error("Error listening to transactions:", error);
         });
         
+        // Setup listener for withdrawal request status updates
+        const withdrawalRequestsQuery = query(collection(db, "withdrawal_requests"), where("userId", "==", firebaseUser.uid));
+        const unsubscribeWithdrawals = onSnapshot(withdrawalRequestsQuery, (requestsSnapshot) => {
+            setWithdrawalStatuses(currentStatuses => {
+                const newStatuses = {...currentStatuses};
+                let hasChanges = false;
+                requestsSnapshot.docChanges().forEach(change => {
+                    // We listen for adds and modifications
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        // Check if the data is valid and if the status is different
+                        if (data.userTransactionId && data.status && newStatuses[data.userTransactionId] !== data.status) {
+                            newStatuses[data.userTransactionId] = data.status;
+                            hasChanges = true;
+                        }
+                    }
+                });
+                return hasChanges ? newStatuses : currentStatuses;
+            });
+        }, (error) => {
+            console.error("Error listening to withdrawal requests:", error);
+        });
+
         const userTasksQuery = query(collection(db, "users", firebaseUser.uid, "user_tasks"));
         const unsubscribeUserTasks = onSnapshot(userTasksQuery, (snapshot) => {
             const uTasks: UserCreatedTask[] = [];
@@ -261,6 +296,7 @@ const App: React.FC = () => {
         return () => {
           unsubscribeProfile();
           unsubscribeTransactions();
+          unsubscribeWithdrawals();
           unsubscribeUserTasks();
           unsubscribeApplications();
           unsubscribeUserGroups();
@@ -269,7 +305,8 @@ const App: React.FC = () => {
       } else {
         setUser(null);
         setUserProfile(null);
-        setTransactions([]);
+        setBaseTransactions([]);
+        setWithdrawalStatuses({});
         setTasks([]);
         setUserCreatedTasks([]);
         setJobs([]);
