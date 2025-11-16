@@ -492,35 +492,67 @@ const App: React.FC = () => {
   };
   
   const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
-    if(!user || !userProfile || userProfile.balance < amount) return;
-    
-    const action = async () => {
-        const userDocRef = doc(db, "users", user.uid);
-        const batch = writeBatch(db);
+    if (!user || !userProfile) return;
 
-        // 1. Deduct balance and save withdrawal details
-        batch.update(userDocRef, {
+    const action = async () => {
+      const userDocRef = doc(db, "users", user.uid);
+      
+      try {
+        await runTransaction(db, async (transaction) => {
+          const userDoc = await transaction.get(userDocRef);
+          if (!userDoc.exists()) {
+            throw new Error("User document does not exist!");
+          }
+
+          const currentBalance = userDoc.data().balance;
+          if (currentBalance < amount) {
+            throw new Error("Insufficient balance for this withdrawal.");
+          }
+
+          // All checks passed, prepare writes.
+          
+          const withdrawalRequestRef = doc(collection(db, "withdrawal_requests"));
+          const userTransactionRef = doc(collection(userDocRef, "transactions"));
+
+          // Update user's balance and save withdrawal details
+          transaction.update(userDocRef, {
             balance: increment(-amount),
             savedWithdrawalDetails: details,
-        });
+          });
 
-        // 2. Add transaction record
-        const transRef = doc(collection(userDocRef, "transactions"));
-        batch.set(transRef, {
+          // Create the user's personal transaction record
+          transaction.set(userTransactionRef, {
             type: TransactionType.WITHDRAWAL,
             description: `Withdrawal to ${details.method}`,
             amount: -amount,
             date: serverTimestamp(),
             withdrawalDetails: details,
-            status: 'Pending'
+            status: 'Pending',
+            withdrawalRequestId: withdrawalRequestRef.id,
+          });
+
+          // Create the top-level withdrawal request for the Admin Panel
+          transaction.set(withdrawalRequestRef, {
+            userId: user.uid,
+            username: userDoc.data().username,
+            amount: amount,
+            withdrawalDetails: details,
+            status: 'Pending',
+            createdAt: serverTimestamp(),
+            userTransactionId: userTransactionRef.id,
+          });
         });
-        await batch.commit();
+      } catch (error) {
+        console.error("Withdrawal transaction failed:", error);
+        // The transaction is atomic, so if it fails, no changes are made.
+        // The user's balance will not be deducted.
+      }
     };
     
     if (userProfile.walletPin) {
         setPinLockMode('enter');
         setShowPinLock(true);
-        setPinAction(() => action); // Use a function to prevent stale closure
+        setPinAction(() => action);
     } else {
         await action();
     }
