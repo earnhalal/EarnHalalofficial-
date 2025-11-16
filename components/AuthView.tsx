@@ -193,8 +193,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
 
                         {success && (
                             <div className="text-center mb-6">
-                                {/* FIX: Corrected prop to 'autoplay' for the web component. */}
-                                <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_3ru5yzai.json" background="transparent" speed="1" style={{ width: '140px', height: '140px' }} loop autoPlay className="mx-auto"></lottie-player>
+                                {/* FIX: Corrected prop 'autoPlay' to 'autoplay' for the web component. */}
+                                <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_3ru5yzai.json" background="transparent" speed="1" style={{ width: '140px', height: '140px' }} loop autoplay className="mx-auto"></lottie-player>
                                 <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Welcome!</p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Redirecting to dashboard...</p>
                             </div>
