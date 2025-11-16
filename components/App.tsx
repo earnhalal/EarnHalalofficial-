@@ -375,6 +375,7 @@ const App: React.FC = () => {
             completedTaskIds: [],
             savedWithdrawalDetails: null,
             walletPin: null,
+            isFingerprintEnabled: false,
         };
         await setDoc(userDocRef, newUserProfile);
         
@@ -394,6 +395,7 @@ const App: React.FC = () => {
   const handleLogin = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      localStorage.setItem('lastUserEmail', email);
       setAuthAction(null);
     } catch (error: any) {
       alert(`Login failed: ${error.message}`);
@@ -739,6 +741,13 @@ const App: React.FC = () => {
       localStorage.setItem('showChatbot', JSON.stringify(isVisible));
   };
 
+  const handleSetFingerprintEnabled = async () => {
+    if (!user) return;
+    const userDocRef = doc(db, "users", user.uid);
+    await updateDoc(userDocRef, { isFingerprintEnabled: true });
+    // The onSnapshot listener will automatically update the userProfile state.
+  };
+
   // --- Render Logic ---
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
@@ -751,7 +760,7 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={handleToggleChatbot} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={handleToggleChatbot} onSetFingerprintEnabled={handleSetFingerprintEnabled} />,
       HOW_IT_WORKS: <HowItWorksView />,
       ABOUT_US: <AboutUsView />,
       CONTACT_US: <ContactUsView />,

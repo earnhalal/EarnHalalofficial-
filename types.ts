@@ -137,6 +137,7 @@ export interface UserProfile {
   completedTaskIds: string[];
   savedWithdrawalDetails: WithdrawalDetails | null;
   walletPin: string | null;
+  isFingerprintEnabled?: boolean;
   referredBy?: {
     uid: string;
     username: string;

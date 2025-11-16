@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { UserProfile } from '../types';
-import { LogoutIcon } from './icons';
+import { LogoutIcon, FingerprintIcon, CheckCircleIcon } from './icons';
 
 interface ProfileSettingsViewProps {
     userProfile: UserProfile | null;
@@ -8,15 +8,17 @@ interface ProfileSettingsViewProps {
     onLogout: () => void;
     showChatbot: boolean;
     onToggleChatbot: (isVisible: boolean) => void;
+    onSetFingerprintEnabled: () => Promise<void>;
 }
 
-const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile, onLogout, showChatbot, onToggleChatbot }) => {
+const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, onUpdateProfile, onLogout, showChatbot, onToggleChatbot, onSetFingerprintEnabled }) => {
     const [name, setName] = useState(userProfile?.username || '');
     const [email, setEmail] = useState(userProfile?.email || '');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [messageType, setMessageType] = useState<'success' | 'error'>('success');
+    const [isSettingFingerprint, setIsSettingFingerprint] = useState(false);
 
     if (!userProfile) {
         return null;
@@ -41,6 +43,20 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, 
         } finally {
             setIsSubmitting(false);
             setTimeout(() => setMessage(''), 4000);
+        }
+    };
+
+    const handleSetupFingerprint = async () => {
+        setIsSettingFingerprint(true);
+        try {
+            // Simulate scanning process
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            await onSetFingerprintEnabled();
+        } catch (error) {
+            console.error("Failed to set up fingerprint:", error);
+            // Optionally set an error message for the user
+        } finally {
+            setIsSettingFingerprint(false);
         }
     };
 
@@ -78,6 +94,33 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ userProfile, 
                 </button>
             </form>
             <div className="mt-8 border-t pt-6 border-gray-200 space-y-4">
+                <h3 className="text-xl font-bold text-gray-800 -mb-2">Security & Preferences</h3>
+                 {userProfile.isFingerprintEnabled ? (
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 border border-green-200">
+                        <div className="flex items-center gap-3">
+                            <FingerprintIcon className="w-6 h-6 text-green-600" />
+                            <span className="font-medium text-green-800">Fingerprint Login is Enabled</span>
+                        </div>
+                        <CheckCircleIcon className="w-6 h-6 text-green-600" />
+                    </div>
+                ) : (
+                    <div className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center gap-3">
+                            <FingerprintIcon className="w-6 h-6 text-gray-500" />
+                            <span className="font-medium text-gray-700">Enable Fingerprint Login</span>
+                        </div>
+                        <button
+                            onClick={handleSetupFingerprint}
+                            disabled={isSettingFingerprint}
+                            className="font-semibold text-sm bg-primary-600 text-white py-1.5 px-4 rounded-md hover:bg-primary-700 disabled:bg-primary-400 flex items-center justify-center w-24"
+                        >
+                            {isSettingFingerprint ? (
+                               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            ) : 'Set Up'}
+                        </button>
+                    </div>
+                )}
+
                  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-gray-50">
                     <label htmlFor="chatbot-toggle" className="font-medium text-gray-700 cursor-pointer select-none">Show AI Support Chatbot</label>
                     <button

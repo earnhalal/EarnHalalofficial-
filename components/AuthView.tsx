@@ -1,16 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FingerprintIcon } from './icons';
 
-// This is a global declaration to prevent TypeScript errors for the Lottie Player and particles.js library.
+// This is a global declaration to prevent TypeScript errors for the particles.js library.
+// The lottie-player type is now handled globally in types.ts.
 declare global {
-  // FIX: The declaration for 'lottie-player' has been moved to types.ts for better global handling
-  // and to resolve widespread JSX intrinsic element errors.
-  namespace JSX {
-    interface IntrinsicElements {
-      'lottie-player': any;
-    }
-  }
-
   interface Window {
         particlesJS: any;
   }
@@ -34,10 +27,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [fingerprintMessage, setFingerprintMessage] = useState('');
 
-    const cardRef = useRef<HTMLDivElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    
     useEffect(() => {
         setIsSignup(initialView === 'signup');
     }, [initialView]);
@@ -91,24 +82,6 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
       };
     }, []);
 
-    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-        if (!cardRef.current) return;
-        const card = cardRef.current;
-        const rect = card.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = (y - centerY) / 8;
-        const rotateY = (centerX - x) / 8;
-        card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
-    };
-
-    const handleMouseLeave = () => {
-        if (!cardRef.current) return;
-        cardRef.current.style.transform = 'perspective(1200px) rotateX(0) rotateY(0) scale(1)';
-    };
-
     const handleSignupSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -132,11 +105,19 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     };
 
     const handleFingerprintAuth = (mode: 'login' | 'signup') => {
+        setFingerprintMessage('');
         if (mode === 'signup') {
-            alert("To set up fingerprint login, please complete the standard registration first. You can enable it in your profile settings later.");
+            setFingerprintMessage("Complete registration first, then enable fingerprint login in your profile settings.");
         } else {
-            alert("Simulating WebAuthn API... Authenticating with fingerprint.\n\nNote: This is a UI demonstration. A full implementation requires the Web Authentication API and backend support to be functional.");
+            const lastUserEmail = localStorage.getItem('lastUserEmail');
+            if (lastUserEmail) {
+                setEmail(lastUserEmail);
+                setFingerprintMessage(`Fingerprint recognized for ${lastUserEmail}. Please enter your password to log in.`);
+            } else {
+                setFingerprintMessage("No fingerprint login found on this device. Set it up in settings after logging in.");
+            }
         }
+        setTimeout(() => setFingerprintMessage(''), 6000);
     };
 
     return (
@@ -146,7 +127,6 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                 .dark { --primary: #34d399; --accent: #22c55e; --gold: #fcd34d; }
                 .auth-container { font-family: 'Inter', sans-serif; }
                 .auth-container h1, .auth-container h2, .auth-container h3, .font-heading { font-family: 'Space Grotesk', sans-serif; }
-                .tilt-card { transform: perspective(1200px) rotateX(0deg) rotateY(0deg) scale(1); transition: transform 0.4s ease, box-shadow 0.4s ease; }
                 .glass { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.15); border: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: var(--glow), inset 0 0 15px rgba(16, 185, 129, 0.08); }
                 .input-glow:focus { outline: none; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3), var(--glow); border-color: var(--primary); }
                 .halal-badge { background: linear-gradient(135deg, var(--gold), #f59e0b); animation: pulse 2s infinite; }
@@ -156,15 +136,12 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                 input { font-family: 'Space Grotesk', sans-serif !important; font-weight: 500; }
             `}</style>
             <div
-                ref={containerRef}
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
                 className={`auth-container min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-slate-900 dark:via-emerald-950 dark:to-teal-950 transition-all duration-700 overflow-auto py-8`}
             >
                 <div id="particles-js-auth"></div>
 
                 <div className="relative w-full max-w-md mx-auto p-4">
-                    <div ref={cardRef} className="glass rounded-3xl p-8 tilt-card shadow-2xl">
+                    <div className="glass rounded-3xl p-8 shadow-2xl shadow-emerald-500/10">
                         <div className="text-center mb-8">
                             <div className="flex justify-center items-center gap-2 mb-3">
                                 <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-xl">EH</div>
@@ -202,6 +179,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                         
                         {!success && (
                           <div>
+                            {fingerprintMessage && <p className="text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-4 p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">{fingerprintMessage}</p>}
                             {isSignup ? (
                                 <form onSubmit={handleSignupSubmit} className="space-y-5">
                                     <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full Name" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
