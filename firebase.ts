@@ -2,6 +2,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, serverTimestamp, increment, arrayUnion } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration.
 // DEV NOTE: Hardcoded keys provided by the user to resolve deployment issues.
@@ -22,6 +23,7 @@ const app = initializeApp(firebaseConfig);
 // Get Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 // Export Firestore utility functions
 export { serverTimestamp, increment, arrayUnion };

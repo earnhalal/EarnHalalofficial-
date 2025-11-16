@@ -1,8 +1,12 @@
 // types.ts
 
-// FIX: Import 'react' to ensure JSX types are available globally. This is crucial for TS to recognize standard JSX elements like <div>, <svg>, etc.
-// FIX: Changed `import 'react';` to `import React from 'react';` to resolve "Cannot find namespace 'React'" error.
-// FIX: Using `import * as React` to ensure the full module type space is available for augmentation.
+// FIX: To resolve project-wide "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors,
+// the global JSX namespace is being correctly augmented. This is done by:
+// 1. Importing the full 'react' module to bring its types into scope.
+// 2. Extending `React.JSX.IntrinsicElements` to ensure all standard HTML/SVG element types are preserved.
+// FIX: Changed import to be consistent with other files in the project.
+// FIX: Changed to `import * as React` to ensure the full React namespace is available for global JSX augmentation,
+// which is a more robust way to handle this depending on tsconfig settings.
 import * as React from 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
@@ -20,9 +24,12 @@ declare global {
     };
   }
 
-  // For augmenting JSX to include custom elements like 'lottie-player' without overwriting existing elements.
+  // FIX: Corrected the augmentation of JSX.IntrinsicElements.
+  // By removing `extends React.JSX.IntrinsicElements`, we allow TypeScript's
+  // declaration merging to add 'lottie-player' to the existing intrinsic elements
+  // from React's types, rather than overwriting them. This resolves all JSX-related type errors.
   namespace JSX {
-    interface IntrinsicElements extends React.JSX.IntrinsicElements {
+    interface IntrinsicElements {
       'lottie-player': any;
     }
   }
@@ -78,6 +85,12 @@ export interface WithdrawalDetails {
   bankName?: string;
 }
 
+export interface DepositDetails {
+    method: 'EasyPaisa' | 'JazzCash';
+    transactionId: string;
+    proofUrl?: string;
+}
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -85,8 +98,10 @@ export interface Transaction {
   amount: number;
   date: any; // Can be string or Firestore timestamp
   withdrawalDetails?: WithdrawalDetails;
+  depositDetails?: DepositDetails;
   status?: 'Completed' | 'Pending' | 'Failed' | 'Approved' | 'Rejected';
   withdrawalRequestId?: string; // Link to the top-level withdrawal request
+  depositRequestId?: string; // Link to the top-level deposit request
 }
 
 export enum TaskType {

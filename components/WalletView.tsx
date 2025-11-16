@@ -205,7 +205,8 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                 <div>
                    <p className="font-semibold text-sm text-gray-800 flex items-center gap-2 flex-wrap">
                         <span>{tx.description}</span>
-                        {(tx.type === TransactionType.WITHDRAWAL || tx.type === TransactionType.PENDING_DEPOSIT) && tx.status && (
+                        {/* FIX: The status badge now also displays for completed 'Deposit' types. This ensures that when a 'Pending Deposit' is approved and its type changes, the user can still see its 'Approved' status. */}
+                        {(tx.type === TransactionType.WITHDRAWAL || tx.type === TransactionType.PENDING_DEPOSIT || tx.type === TransactionType.DEPOSIT) && tx.status && (
                             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${
                                 tx.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' 
                                 : tx.status === 'Failed' || tx.status === 'Rejected' ? 'bg-red-100 text-red-800'

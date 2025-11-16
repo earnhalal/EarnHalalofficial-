@@ -36,9 +36,10 @@ import { TagIcon, ArrowUpCircleIcon, GameControllerIcon } from './icons';
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, PaymentStatus, SocialGroup } from '../types';
 import { TransactionType, TaskType } from '../types';
 
-import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
+import { auth, db, storage, serverTimestamp, increment, arrayUnion } from '../firebase';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword, User } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, where, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 
 // --- New Data & Types ---
@@ -154,6 +155,8 @@ const App: React.FC = () => {
   const [activeView, setActiveViewInternal] = useState<View>('DASHBOARD');
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
   const [withdrawalStatuses, setWithdrawalStatuses] = useState<Record<string, Transaction['status']>>({});
+  // FIX: Added state to hold real-time deposit statuses from Firestore.
+  const [depositStatuses, setDepositStatuses] = useState<Record<string, Transaction['status']>>({});
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -175,15 +178,25 @@ const App: React.FC = () => {
   const [showChatbot, setShowChatbot] = useState(true);
 
   // Create the final transactions list by merging base data with real-time statuses
+  // FIX: The transaction merging logic is updated to handle both deposit and withdrawal status updates in real-time. This ensures that when an admin approves or rejects a request, the user's UI updates instantly without requiring a page refresh.
   const transactions = useMemo(() => {
     return baseTransactions.map(tx => {
-        // If it's a withdrawal and we have a status update for it, apply it.
-        if (tx.type === TransactionType.WITHDRAWAL && tx.id && withdrawalStatuses[tx.id]) {
-            return { ...tx, status: withdrawalStatuses[tx.id] };
+        const newTx = { ...tx };
+        // Apply withdrawal status updates. The withdrawalRequestId links the user's transaction to the admin-facing request.
+        if (tx.type === TransactionType.WITHDRAWAL && tx.withdrawalRequestId && withdrawalStatuses[tx.withdrawalRequestId]) {
+            newTx.status = withdrawalStatuses[tx.withdrawalRequestId];
         }
-        return tx;
+        // Apply deposit status updates. The depositRequestId links the user's transaction to the admin-facing request.
+        if (tx.type === TransactionType.PENDING_DEPOSIT && tx.depositRequestId && depositStatuses[tx.depositRequestId]) {
+            newTx.status = depositStatuses[tx.depositRequestId];
+            // If a deposit is approved, we also change its type for clarity in the UI.
+            if (depositStatuses[tx.depositRequestId] === 'Approved') {
+                newTx.type = TransactionType.DEPOSIT;
+            }
+        }
+        return newTx;
     });
-  }, [baseTransactions, withdrawalStatuses]);
+  }, [baseTransactions, withdrawalStatuses, depositStatuses]);
 
 
   // --- Data Fetching & Auth ---
@@ -243,19 +256,19 @@ const App: React.FC = () => {
             console.error("Error listening to transactions:", error);
         });
         
-        // Setup listener for withdrawal request status updates
+        // FIX: The listener for withdrawals is now keyed by the request document ID itself for better robustness.
         const withdrawalRequestsQuery = query(collection(db, "withdrawal_requests"), where("userId", "==", firebaseUser.uid));
         const unsubscribeWithdrawals = onSnapshot(withdrawalRequestsQuery, (requestsSnapshot) => {
             setWithdrawalStatuses(currentStatuses => {
                 const newStatuses = {...currentStatuses};
                 let hasChanges = false;
                 requestsSnapshot.docChanges().forEach(change => {
-                    // We listen for adds and modifications
+                    // We listen for adds and modifications to catch status changes.
                     if (change.type === "added" || change.type === "modified") {
                         const data = change.doc.data();
-                        // Check if the data is valid and if the status is different
-                        if (data.userTransactionId && data.status && newStatuses[data.userTransactionId] !== data.status) {
-                            newStatuses[data.userTransactionId] = data.status;
+                        const requestId = change.doc.id; // The unique ID of the withdrawal request.
+                        if (requestId && data.status && newStatuses[requestId] !== data.status) {
+                            newStatuses[requestId] = data.status;
                             hasChanges = true;
                         }
                     }
@@ -264,6 +277,29 @@ const App: React.FC = () => {
             });
         }, (error) => {
             console.error("Error listening to withdrawal requests:", error);
+        });
+        
+        // FIX: A new real-time listener is added for the `deposit_requests` collection. This mirrors the withdrawal listener and ensures that
+        // any status changes made by an admin on a deposit are immediately reflected in the user's app, fixing the core issue.
+        const depositRequestsQuery = query(collection(db, "deposit_requests"), where("userId", "==", firebaseUser.uid));
+        const unsubscribeDeposits = onSnapshot(depositRequestsQuery, (requestsSnapshot) => {
+            setDepositStatuses(currentStatuses => {
+                const newStatuses = {...currentStatuses};
+                let hasChanges = false;
+                requestsSnapshot.docChanges().forEach(change => {
+                    if (change.type === "added" || change.type === "modified") {
+                        const data = change.doc.data();
+                        const requestId = change.doc.id; // The unique ID of the deposit request.
+                        if (requestId && data.status && newStatuses[requestId] !== data.status) {
+                            newStatuses[requestId] = data.status;
+                            hasChanges = true;
+                        }
+                    }
+                });
+                return hasChanges ? newStatuses : currentStatuses;
+            });
+        }, (error) => {
+            console.error("Error listening to deposit requests:", error);
         });
 
         const userTasksQuery = query(collection(db, "users", firebaseUser.uid, "user_tasks"));
@@ -297,6 +333,7 @@ const App: React.FC = () => {
           unsubscribeProfile();
           unsubscribeTransactions();
           unsubscribeWithdrawals();
+          unsubscribeDeposits(); // FIX: Unsubscribe from the new listener on cleanup.
           unsubscribeUserTasks();
           unsubscribeApplications();
           unsubscribeUserGroups();
@@ -583,6 +620,7 @@ const App: React.FC = () => {
         console.error("Withdrawal transaction failed:", error);
         // The transaction is atomic, so if it fails, no changes are made.
         // The user's balance will not be deducted.
+        // The user's balance will not be deducted.
       }
     };
     
@@ -609,21 +647,48 @@ const App: React.FC = () => {
       setPinAction(null);
   };
   
-  const handleDeposit = async (amount: number, transactionId: string) => {
-      if (!user) return;
-      const userDocRef = doc(db, "users", user.uid);
-      await addDoc(collection(userDocRef, "transactions"), {
-          type: TransactionType.PENDING_DEPOSIT,
-          description: `Deposit via EasyPaisa`,
-          amount: amount,
-          date: serverTimestamp(),
-          status: 'Pending',
-          withdrawalDetails: {
-              method: "EasyPaisa",
-              accountName: "M-WASEEM",
-              accountNumber: transactionId,
-          }
-      });
+  const handleDeposit = async (amount: number, method: 'EasyPaisa' | 'JazzCash', transactionId: string) => {
+    if (!user || !userProfile) {
+      throw new Error("Critical error: User is not logged in. Please refresh and try again.");
+    }
+
+    console.log(`[DEPOSIT_TXID] User: ${user.uid}, Amount: ${amount}, Method: ${method}, TxID: ${transactionId}`);
+    
+    const userDocRef = doc(db, "users", user.uid);
+    const batch = writeBatch(db);
+
+    // 1. Create document in top-level 'deposit_requests' collection for admin panel
+    console.log("[DEPOSIT_BATCH_TXID] Preparing deposit_requests document...");
+    const depositRequestRef = doc(collection(db, "deposit_requests"));
+    batch.set(depositRequestRef, {
+      userId: user.uid,
+      username: userProfile.username,
+      amount: amount,
+      transactionId: transactionId,
+      method: method,
+      status: 'Pending',
+      createdAt: serverTimestamp(),
+    });
+
+    // 2. Create a corresponding transaction in the user's history for their view
+    console.log("[DEPOSIT_BATCH_TXID] Preparing user transaction document...");
+    const userTransactionRef = doc(collection(userDocRef, "transactions"));
+    batch.set(userTransactionRef, {
+      type: TransactionType.PENDING_DEPOSIT,
+      description: `Deposit via ${method}`,
+      amount: amount,
+      date: serverTimestamp(),
+      status: 'Pending',
+      depositDetails: {
+        method: method,
+        transactionId: transactionId,
+      },
+      depositRequestId: depositRequestRef.id // Link to the admin-facing request
+    });
+    
+    console.log("[DEPOSIT_COMMIT_TXID] Committing batch write to Firestore...");
+    await batch.commit();
+    console.log("[DEPOSIT_SUCCESS_TXID] Deposit request submitted successfully!");
   };
 
   const handleBuySpin = async (cost: number): Promise<boolean> => {
