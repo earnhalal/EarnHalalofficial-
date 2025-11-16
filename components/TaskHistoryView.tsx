@@ -49,9 +49,13 @@ const TaskHistoryView: React.FC<TaskHistoryViewProps> = ({ userTasks }) => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <div className="flex items-center justify-center">
-                                            <span>{task.completions} / {task.quantity}</span>
-                                            <div className="w-16 bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 ml-2">
+                                        {/* IMPROVED PROGRESS BAR */}
+                                        <div className="w-full">
+                                            <div className="flex justify-between mb-1">
+                                                <span className="text-sm font-medium text-gray-900 dark:text-white">{task.completions}/{task.quantity}</span>
+                                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{completionPercentage.toFixed(0)}%</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
                                                 <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: `${completionPercentage}%` }}></div>
                                             </div>
                                         </div>

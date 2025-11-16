@@ -1,6 +1,7 @@
 // types.ts
 
-// FIX: The <reference types="vite/client" /> directive was removed from this file to resolve a "Cannot find type definition file" error. It has been moved to the main application entrypoint (index.tsx) to ensure types are loaded globally.
+// FIX: Added Vite client types reference to ensure global types for JSX and import.meta.env are loaded.
+/// <reference types="vite/client" />
 
 // FIX: Removed the global JSX declaration for 'lottie-player'. It was incorrectly overwriting React's default intrinsic elements,
 // causing errors for all standard HTML/SVG elements. The declaration was moved to AuthView.tsx where the element is used.

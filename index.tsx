@@ -1,10 +1,4 @@
-// FIX: Added Vite client types reference to the application entrypoint.
-// This ensures that TypeScript loads the necessary global types for Vite projects,
-// including the correct JSX namespace for React and types for `import.meta.env`.
-// This single change resolves all 'Property does not exist on type 'JSX.IntrinsicElements''
-// and 'Property 'env' does not exist on type 'ImportMeta'' errors throughout the application.
-/// <reference types="vite/client" />
-
+// The Vite client types reference has been moved to types.ts for more reliable global type resolution.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
