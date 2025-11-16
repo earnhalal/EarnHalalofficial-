@@ -3,15 +3,18 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, serverTimestamp, increment, arrayUnion } from "firebase/firestore";
 
-// Your web app's Firebase configuration from the prompt
+// Your web app's Firebase configuration.
+// DEV NOTE: Hardcoded keys provided by the user to resolve deployment issues.
+// For better security, these should be moved to Vercel Environment Variables.
 const firebaseConfig = {
   apiKey: "AIzaSyCZJEJlevQr475TjkU5SjbSYk_S5bSkaiU",
   authDomain: "earnapp-f8d27.firebaseapp.com",
   projectId: "earnapp-f8d27",
-  storageBucket: "earnapp-f8d27.appspot.com",
+  storageBucket: "earnapp-f8d27.firebasestorage.app",
   messagingSenderId: "151886381795",
   appId: "1:151886381795:web:d76b5280b7c8cd30767bd6"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

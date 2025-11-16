@@ -49,7 +49,7 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             icon: <BombIcon className="w-10 h-10" />,
             gradient: 'bg-gradient-to-br from-gray-500 to-gray-700',
             view: 'MINES_GAME' as View,
-            isComingSoon: true,
+            isComingSoon: false,
         },
         {
             title: 'Ludo Star',
@@ -57,7 +57,7 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             icon: <TrophyIcon className="w-10 h-10" />,
             gradient: 'bg-gradient-to-br from-green-400 to-green-600',
             view: 'LUDO_GAME' as View,
-            isComingSoon: true,
+            isComingSoon: false,
         },
         {
             title: 'Coin Flip',
@@ -65,7 +65,7 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             icon: <CoinIcon className="w-10 h-10" />,
             gradient: 'bg-gradient-to-br from-yellow-400 to-yellow-600',
             view: 'COIN_FLIP_GAME' as View,
-            isComingSoon: true,
+            isComingSoon: false,
         },
         {
             title: 'Daily Lottery',
@@ -73,7 +73,7 @@ const PlayAndEarnView: React.FC<PlayAndEarnViewProps> = ({ setActiveView }) => {
             icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10"><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-1.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3m2.25-4.5h5.25m-5.25 0h3m-3 0h-3M3 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>,
             gradient: 'bg-gradient-to-br from-purple-400 to-purple-600',
             view: 'LOTTERY_GAME' as View,
-            isComingSoon: true,
+            isComingSoon: false,
         },
     ];
 

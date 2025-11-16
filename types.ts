@@ -1,14 +1,9 @@
 // types.ts
 
-// FIX: Add a global declaration for JSX.IntrinsicElements to allow any element.
-// This is a workaround for a project configuration issue where TypeScript isn't recognizing standard JSX elements.
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      [elemName: string]: any;
-    }
-  }
-}
+// FIX: The <reference types="vite/client" /> directive was removed from this file to resolve a "Cannot find type definition file" error. It has been moved to the main application entrypoint (index.tsx) to ensure types are loaded globally.
+
+// FIX: Removed the global JSX declaration for 'lottie-player'. It was incorrectly overwriting React's default intrinsic elements,
+// causing errors for all standard HTML/SVG elements. The declaration was moved to AuthView.tsx where the element is used.
 
 export type View =
   | 'DASHBOARD'

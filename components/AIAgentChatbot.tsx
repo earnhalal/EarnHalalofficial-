@@ -45,7 +45,13 @@ const AIAgentChatbot: React.FC = () => {
 
     const initializeChat = () => {
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const apiKey = import.meta.env.VITE_API_KEY as string;
+            if (!apiKey) {
+                console.error("VITE_API_KEY is not set in environment variables.");
+                setMessages(prev => [...prev, {id: Date.now(), text: "Sorry, the AI chat service is not configured.", sender: 'bot'}]);
+                return;
+            }
+            const ai = new GoogleGenAI({ apiKey });
             const systemInstruction = `You are a friendly and respectful customer support agent for a web app called 'Earn Halal'. Your name is ${agentName}.
 
 **Core Instructions:**
@@ -102,7 +108,9 @@ const AIAgentChatbot: React.FC = () => {
     const generateSuggestions = async (lastMessage: string) => {
         if (!chatSession.current) return;
         try {
-             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+             const apiKey = import.meta.env.VITE_API_KEY as string;
+             if (!apiKey) throw new Error("VITE_API_KEY not found");
+             const ai = new GoogleGenAI({ apiKey });
              const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Jobs feature kia hai?"]`;
              
              const response = await ai.models.generateContent({

@@ -3,13 +3,14 @@ import { FingerprintIcon } from './icons';
 
 // This is a global declaration to prevent TypeScript errors for the Lottie Player and particles.js library.
 declare global {
-  // FIX: The global JSX intrinsic elements declaration from types.ts was not being applied to this file.
-  // This redeclaration with an index signature ensures custom elements like 'lottie-player' are recognized.
+  // FIX: Added declaration for 'lottie-player' here to augment JSX.IntrinsicElements for the custom element used in this component.
+  // This resolves issues where the global type was being overwritten in types.ts.
   namespace JSX {
     interface IntrinsicElements {
-      [elemName: string]: any;
+      'lottie-player': any;
     }
   }
+
   interface Window {
         particlesJS: any;
   }
@@ -192,7 +193,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
 
                         {success && (
                             <div className="text-center mb-6">
-                                <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_3ru5yzai.json" background="transparent" speed="1" style={{ width: '140px', height: '140px' }} loop autoPlay className="mx-auto"></lottie-player>
+                                {/* FIX: Corrected prop to 'autoplay' for the web component. */}
+                                <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_3ru5yzai.json" background="transparent" speed="1" style={{ width: '140px', height: '140px' }} loop autoplay className="mx-auto"></lottie-player>
                                 <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Welcome!</p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Redirecting to dashboard...</p>
                             </div>
