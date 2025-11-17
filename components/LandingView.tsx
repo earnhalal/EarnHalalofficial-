@@ -7,11 +7,7 @@ import {
 } from './icons';
 
 // This is a global declaration to prevent TypeScript errors for the particles.js library.
-declare global {
-  interface Window {
-        particlesJS: any;
-  }
-}
+// Global type declarations have been moved to types.ts for better project-wide consistency.
 
 interface LandingViewProps {
   onGetStarted: (view: 'login' | 'signup') => void;

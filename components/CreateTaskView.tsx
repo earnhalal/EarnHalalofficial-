@@ -92,9 +92,9 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
     return (
         <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto text-center animate-fade-in">
             <CheckCircleIcon className="w-20 h-20 text-primary-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-900">Campaign Launched!</h2>
+            <h2 className="text-3xl font-bold text-gray-900">Task Submitted for Review!</h2>
             <p className="text-gray-600 mt-2 mb-6">
-                Your task "{submittedTask.title}" is now live for the community.
+                Your task "{submittedTask.title}" is now pending Admin approval. You will be notified once it's live.
             </p>
             <div className="bg-gray-50 p-6 rounded-lg text-left space-y-2 mb-8 border border-gray-200">
                 <p><strong>Type:</strong> {submittedTask.type}</p>

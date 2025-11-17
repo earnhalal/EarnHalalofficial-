@@ -30,6 +30,7 @@ import CoinFlipGame from './games/CoinFlipGame';
 import MinesGame from './games/MinesGame';
 import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
+import NotificationToast from './NotificationToast';
 import { TagIcon, ArrowUpCircleIcon, GameControllerIcon } from './icons';
 
 
@@ -54,6 +55,13 @@ export interface AppUpdate {
     icon: React.ReactElement<React.SVGProps<SVGSVGElement>>;
     color: string;
 }
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info';
+};
 
 const appUpdates: AppUpdate[] = [
     {
@@ -176,6 +184,10 @@ const App: React.FC = () => {
   
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
   const [showChatbot, setShowChatbot] = useState(true);
+  
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const prevTransactionsRef = useRef<Transaction[]>([]);
+  const prevUserCreatedTasksRef = useRef<UserCreatedTask[]>([]);
 
   // Create the final transactions list by merging base data with real-time statuses
   // FIX: The transaction merging logic is updated to handle both deposit and withdrawal status updates in real-time. This ensures that when an admin approves or rejects a request, the user's UI updates instantly without requiring a page refresh.
@@ -302,13 +314,15 @@ const App: React.FC = () => {
             console.error("Error listening to deposit requests:", error);
         });
 
-        const userTasksQuery = query(collection(db, "users", firebaseUser.uid, "user_tasks"));
+        // FIX: Listen to the global 'tasks' collection, filtered by the current user's ID.
+        // This ensures the Task History view receives real-time status updates from the admin panel.
+        const userTasksQuery = query(collection(db, "tasks"), where("createdBy", "==", firebaseUser.uid), orderBy("submittedAt", "desc"));
         const unsubscribeUserTasks = onSnapshot(userTasksQuery, (snapshot) => {
             const uTasks: UserCreatedTask[] = [];
             snapshot.forEach(doc => uTasks.push({ id: doc.id, ...doc.data()} as UserCreatedTask));
             setUserCreatedTasks(uTasks);
         }, (error) => {
-            console.error("Error listening to user tasks:", error);
+            console.error("Error listening to user-created tasks:", error);
         });
 
         const applicationsQuery = query(collection(db, "users", firebaseUser.uid, "applications"), orderBy("date", "desc"));
@@ -417,6 +431,78 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   }, [user, userProfile]);
+
+  // Effect for triggering one-time notifications on status changes
+  useEffect(() => {
+    const oldTransactions = prevTransactionsRef.current;
+    const newNotifications: Notification[] = [];
+
+    // Check for transaction status changes (Deposits/Withdrawals)
+    transactions.forEach(newTx => {
+        const oldTx = oldTransactions.find(t => t.id === newTx.id);
+        if (oldTx && oldTx.status === 'Pending' && newTx.status !== 'Pending') {
+            const notificationId = `${newTx.id}_${newTx.status}`;
+            if (!localStorage.getItem(notificationId)) {
+                let title = '';
+                let message = '';
+                let type: 'success' | 'error' = 'success';
+
+                const actionType = newTx.type === TransactionType.WITHDRAWAL ? 'Withdrawal' : 'Deposit';
+                if (newTx.status === 'Approved' || newTx.status === 'Completed') {
+                    title = `${actionType} Approved!`;
+                    message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} has been processed.`;
+                } else if (newTx.status === 'Rejected' || newTx.status === 'Failed') {
+                    title = `${actionType} Rejected`;
+                    message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} was rejected. Please contact support for details.`;
+                    type = 'error';
+                }
+                
+                if (title) {
+                    newNotifications.push({ id: notificationId, title, message, type });
+                    localStorage.setItem(notificationId, 'true');
+                }
+            }
+        }
+    });
+
+    const oldTasks = prevUserCreatedTasksRef.current;
+    // Check for user-created task status changes
+    userCreatedTasks.forEach(newTask => {
+        const oldTask = oldTasks.find(t => t.id === newTask.id);
+        if (oldTask && oldTask.status === 'pending' && newTask.status !== 'pending') {
+            const notificationId = `${newTask.id}_${newTask.status}`;
+            if (!localStorage.getItem(notificationId)) {
+                let title = '';
+                let message = '';
+                let type: 'success' | 'error' = 'success';
+
+                if (newTask.status === 'approved') {
+                    title = 'Task Approved!';
+                    message = `Your task "${newTask.title}" is now live for the community.`;
+                } else if (newTask.status === 'rejected') {
+                    title = 'Task Rejected';
+                    message = `Your task "${newTask.title}" was rejected by the admin.`;
+                    type = 'error';
+                }
+
+                if (title) {
+                    newNotifications.push({ id: notificationId, title, message, type });
+                    localStorage.setItem(notificationId, 'true');
+                }
+            }
+        }
+    });
+
+    if (newNotifications.length > 0) {
+        setNotifications(prev => [...prev, ...newNotifications]);
+    }
+
+    // Update refs for next render
+    prevTransactionsRef.current = transactions;
+    prevUserCreatedTasksRef.current = userCreatedTasks;
+
+  }, [transactions, userCreatedTasks]);
+
 
   const handleAuthNavigation = useCallback((view: 'login' | 'signup') => {
       setAuthAction(view);
@@ -532,28 +618,24 @@ const App: React.FC = () => {
       const userDocRef = doc(db, "users", user.uid);
       const batch = writeBatch(db);
 
-      // 1. Add task to global 'tasks' collection
+      const taskData = {
+          ...task,
+          quantity,
+          completions: 0,
+          views: 0,
+          status: 'pending' as const,
+          submittedAt: serverTimestamp(),
+          createdBy: user.uid,
+      };
+
+      // 1. Add task to global 'tasks' collection (Single Source of Truth)
       const newTaskRef = doc(collection(db, "tasks"));
-      batch.set(newTaskRef, {
-          ...task,
-          quantity,
-          completions: 0,
-          views: 0,
-      });
+      batch.set(newTaskRef, taskData);
 
-      // 2. Add task to user's 'user_tasks' subcollection
-      const userTaskRef = doc(collection(userDocRef, "user_tasks"));
-       batch.set(userTaskRef, {
-          ...task,
-          quantity,
-          completions: 0,
-          views: 0,
-      });
-
-      // 3. Deduct balance from user
+      // 2. Deduct balance from user
       batch.update(userDocRef, { balance: increment(-totalCost) });
 
-      // 4. Add transaction record
+      // 3. Add transaction record
       const transRef = doc(collection(userDocRef, "transactions"));
       batch.set(transRef, {
           type: TransactionType.TASK_CREATION,
@@ -882,6 +964,10 @@ const App: React.FC = () => {
     // The onSnapshot listener will automatically update the userProfile state.
   };
 
+  const handleCloseNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
   // --- Render Logic ---
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
@@ -968,6 +1054,20 @@ const App: React.FC = () => {
         />
       )}
       {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+      
+      {/* Notification Toasts Container */}
+      <div className="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm">
+          {notifications.map(n => (
+              <NotificationToast 
+                  key={n.id} 
+                  title={n.title} 
+                  message={n.message} 
+                  type={n.type} 
+                  onClose={() => handleCloseNotification(n.id)} 
+              />
+          ))}
+      </div>
+
       {mainContent}
     </>
   );

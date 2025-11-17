@@ -1,5 +1,5 @@
 // components/EarnView.tsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { UserCreatedTask } from '../types';
 import { CheckCircleIcon } from './icons';
 
@@ -117,6 +117,8 @@ interface EarnViewProps {
 const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, completedTaskIds }) => {
   const [taskForProof, setTaskForProof] = useState<UserCreatedTask | null>(null);
 
+  const approvedTasks = useMemo(() => tasks.filter(task => task.status === 'approved'), [tasks]);
+
   const handleCompleteClick = (task: UserCreatedTask) => {
     // Register the view/click
     onTaskView(task.id);
@@ -126,7 +128,7 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
     setTaskForProof(task);
   };
 
-  if (tasks.length === 0) {
+  if (approvedTasks.length === 0) {
     return (
       <div className="bg-white p-8 rounded-xl shadow-subtle text-center">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">No Tasks Available</h2>
@@ -150,7 +152,7 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
           />
       )}
       <h2 className="text-3xl font-bold text-gray-900">Available Tasks</h2>
-      {tasks.map((task, index) => {
+      {approvedTasks.map((task, index) => {
         const isCompletedByUser = completedTaskIds.includes(task.id);
 
         return (

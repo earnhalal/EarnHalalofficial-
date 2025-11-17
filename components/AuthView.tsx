@@ -5,11 +5,7 @@ import { FingerprintIcon } from './icons';
 // The lottie-player type is now handled globally in types.ts.
 // FIX: Removed faulty global JSX declaration. This was overwriting all standard HTML/SVG element types
 // and causing project-wide errors. The correct augmenting declaration is in types.ts.
-declare global {
-  interface Window {
-        particlesJS: any;
-  }
-}
+// Global type declarations have been moved to types.ts for better project-wide consistency.
 
 interface AuthViewProps {
     onSignup: (data: {username: string, email: string, phone: string, password: string}) => void;

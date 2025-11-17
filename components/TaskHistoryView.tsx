@@ -32,7 +32,6 @@ const TaskHistoryView: React.FC<TaskHistoryViewProps> = ({ userTasks }) => {
                     <tbody>
                         {userTasks.map(task => {
                             const completionPercentage = task.quantity > 0 ? (task.completions / task.quantity) * 100 : 0;
-                            const isCompleted = task.completions >= task.quantity;
                             const totalCost = task.reward * task.quantity;
 
                             return (
@@ -42,10 +41,13 @@ const TaskHistoryView: React.FC<TaskHistoryViewProps> = ({ userTasks }) => {
                                         <p className="text-xs font-normal text-gray-500">{task.type}</p>
                                     </th>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                                            isCompleted ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                                        <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${
+                                            task.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                                            task.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                                            task.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' :
+                                            'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                                         }`}>
-                                            {isCompleted ? 'Completed' : 'Active'}
+                                            {task.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">

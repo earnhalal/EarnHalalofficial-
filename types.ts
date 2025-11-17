@@ -1,13 +1,9 @@
 // types.ts
 
-// FIX: To resolve project-wide "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors,
-// the global JSX namespace is being correctly augmented. This is done by:
-// 1. Importing the full 'react' module to bring its types into scope.
-// 2. Extending `React.JSX.IntrinsicElements` to ensure all standard HTML/SVG element types are preserved.
-// FIX: Changed import to be consistent with other files in the project.
-// FIX: Changed to `import * as React` to ensure the full React namespace is available for global JSX augmentation,
-// which is a more robust way to handle this depending on tsconfig settings.
-import * as React from 'react';
+// FIX: Add an import for 'react' to make its global types, including the JSX namespace, available.
+// This resolves the "Cannot find type definition file for 'react'" error and subsequent
+// "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors project-wide.
+import 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
 // /// <reference types="vite/client" />
@@ -16,6 +12,11 @@ import * as React from 'react';
 // This fixes widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors
 // and also the 'import.meta.env' error which arose from removing 'vite/client' types.
 declare global {
+  // For particles.js used in AuthView.tsx and LandingView.tsx
+  interface Window {
+    particlesJS: any;
+  }
+
   // For import.meta.env used in AIAgentChatbot.tsx
   interface ImportMeta {
     readonly env: {
@@ -24,19 +25,13 @@ declare global {
     };
   }
 
-  // FIX: Corrected the augmentation of JSX.IntrinsicElements.
-  // By removing `extends React.JSX.IntrinsicElements`, we allow TypeScript's
-  // declaration merging to add 'lottie-player' to the existing intrinsic elements
-  // from React's types, rather than overwriting them. This resolves all JSX-related type errors.
+  // Augmenting JSX.IntrinsicElements to add support for the 'lottie-player' custom element.
   namespace JSX {
     interface IntrinsicElements {
       'lottie-player': any;
     }
   }
 }
-
-// The global JSX declaration for 'lottie-player' was moved to AuthView.tsx to avoid overwriting React's default intrinsic elements.
-// (Note: it has been moved back here in a safer, augmenting way to fix global type issues)
 
 export type View =
   | 'DASHBOARD'
@@ -125,6 +120,9 @@ export interface UserCreatedTask extends Task {
     quantity: number;
     completions: number;
     views: number;
+    status: 'pending' | 'approved' | 'rejected';
+    submittedAt: any;
+    createdBy: string;
 }
 
 
