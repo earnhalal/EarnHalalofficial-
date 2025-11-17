@@ -132,6 +132,8 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                 #particles-js-auth { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
                 input::placeholder { font-family: 'Space Grotesk', sans-serif !important; font-weight: 500; color: #94a3b8 !important; }
                 input { font-family: 'Space Grotesk', sans-serif !important; font-weight: 500; }
+                @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
+                .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
             `}</style>
             <div
                 className={`auth-container min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-slate-900 dark:via-emerald-950 dark:to-teal-950 transition-all duration-700 overflow-auto py-8`}
@@ -166,16 +168,13 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                             <button onClick={() => { setIsSignup(false); setSuccess(false); }} className={`relative z-10 flex-1 py-3 text-sm font-bold transition-all ${!isSignup ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>Log In</button>
                         </div>
 
-                        {success && (
-                            <div className="text-center mb-6">
-                                {/* FIX: Corrected prop 'autoPlay' to 'autoplay' for the web component. */}
-                                <lottie-player src="https://assets3.lottiefiles.com/packages/lf20_3ru5yzai.json" background="transparent" speed="1" style={{ width: '140px', height: '140px' }} loop autoplay className="mx-auto"></lottie-player>
-                                <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Welcome!</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">Redirecting to dashboard...</p>
+                        {success ? (
+                             <div className="text-center mb-6 animate-fade-in">
+                                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-500 mx-auto mb-4"></div>
+                                <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Hold tight!</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your halal earnings journey is loading...</p>
                             </div>
-                        )}
-                        
-                        {!success && (
+                        ) : (
                           <div>
                             {fingerprintMessage && <p className="text-center text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-4 p-2 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">{fingerprintMessage}</p>}
                             {isSignup ? (

@@ -71,8 +71,8 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
       setMessage('Please enter a valid amount.');
       return;
     }
-    if (numAmount < 100) {
-      setMessage('Minimum withdrawal amount is 100 Rs.');
+    if (numAmount < 1000) {
+      setMessage('Minimum withdrawal amount is 1000 Rs.');
       return;
     }
     if (numAmount > balance) {
@@ -161,13 +161,16 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                         type="number"
                         value={amount}
                         onChange={e => setAmount(e.target.value)}
-                        placeholder={`Min 100.00`}
+                        placeholder={`Min 1000.00`}
                         className="flex-grow w-full p-3 border rounded-md bg-gray-50 border-gray-300 text-lg"
                         required
                     />
                     <button type="submit" className="w-full sm:w-auto bg-primary-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-primary-700 transition-colors disabled:bg-gray-400">
                         Withdraw
                     </button>
+                </div>
+                 <div className="text-xs text-center text-gray-500 mt-2">
+                    Min withdrawal: 1,000 Rs • Max withdrawal: 50,000 Rs
                 </div>
                  {message && <p className={`mt-4 text-center text-sm ${message.includes('successfully') || message.includes('pending') ? 'text-green-600' : 'text-red-600'}`}>{message}</p>}
             </form>

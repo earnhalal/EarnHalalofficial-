@@ -1,6 +1,36 @@
-import React, { useState } from 'react';
+// components/Header.tsx
+import React, { useState, useEffect } from 'react';
 import type { View } from '../types';
 import { MenuIcon, GiftIcon } from './icons';
+
+// --- Data for Dynamic Notifications ---
+const names = [
+    'Ahmed', 'Fatima', 'Ali', 'Ayesha', 'Zainab', 'Bilal', 'Hassan', 'Sana', 'Usman', 'Maryam', 'Abdullah', 'Khadija',
+    'Omer', 'Hira', 'Saad', 'Zoya', 'Hamza', 'Rabia', 'Haris', 'Mahnoor', 'Imran', 'Amna', 'Faisal', 'Nida', 'Kamran',
+    'Saba', 'Junaid', 'Iqra', 'Asif', 'Hina', 'Salman', 'Sidra', 'Tariq', 'Farah', 'Nadeem', 'Kinza', 'Waqar', 'Aiman',
+    'Yasir', 'Saima', 'Shahid', 'Beenish', 'Adnan', 'Madiha', 'Rizwan', 'Sobia', 'Zeeshan', 'Alina', 'Arif', 'Samina',
+    'Danish', 'Nazia', 'Irfan', 'Fozia', 'Majid', 'Rukhsar', 'Nasir', 'Sonia', 'Raheel', 'Arooj', 'Kashif', 'Shazia',
+    'Tahir', 'Mehreen', 'Waseem', 'Laiba', 'Zahid', 'Anum', 'Babar', 'Hafsa', 'Ehsan', 'Iram', 'Gohar', 'Javeria',
+    'Shakeel', 'Sadia', 'Atif', 'Ambreen', 'Farhan', 'Mishal', 'Javed', 'Noreen', 'Mubashir', 'Rabia', 'Qaiser', 'Saira',
+    'Saleem', 'Tayyaba', 'Umar', 'Uzma', 'Wasif', 'Zain', 'Abid', 'Fariha', 'Ejaz', 'Gul', 'Fahad', 'Huma', 'Jamal', 'Lubna',
+    'Mohsin', 'Nadia', 'Owais', 'Qurat', 'Rehan', 'Sanam', 'Taimoor', 'Wajiha', 'Zubair', 'Aqsa', 'Basit', 'Erum',
+    'Furqan', 'Hania', 'Ismail', 'Komal', 'Mansoor', 'Naheed', 'Parvez', 'Rida', 'Shehzad', 'Tooba', 'Waheed', 'Zara',
+    'Abrar', 'Benish', 'Dilawar', 'Faiza', 'Ghaffar', 'Hira', 'Jibran', 'Laila', 'Mustafa', 'Naila', 'Qasim', 'Ramsha',
+    'Sohail', 'Tehmina', 'Usama', 'Warda', 'Yousuf', 'Aalia', 'Bisma', 'Dawod', 'Fakhra', 'Ghulam', 'Humaira', 'Ilyas',
+    'Kiran', 'Mehwish', 'Noman', 'Qandeel', 'Rauf', 'Shabnam', 'Talha', 'Vaneeza', 'Yahya', 'Afshan', 'Buraq', 'Durdana',
+    'Fiza', 'Hammad', 'Inam', 'Jahanzaib', 'Kanza', 'Moin', 'Neelam', 'Qamar', 'Rizwana', 'Sultan', 'Tanzil', 'Wania',
+    'Zohaib', 'Anila', 'Bilqees', 'Ehtisham', 'Farkhanda', 'Habib', 'Iffat', 'Jalil', 'Marium', 'Nighat', 'Raheela',
+    'Sarfaraz', 'Tanzeela', 'Yaqoob', 'Azhar', 'Bushra', 'Farooq', 'Hameed', 'Israr', 'Khawar', 'Musarrat', 'Naveed',
+    'Rehana', 'Sikandar', 'Yasmin'
+];
+const amounts = [100, 250, 500, 750, 1000, 1250, 2000, 50, 150, 300, 600, 900, 1500, 2500];
+const events = [
+  'earned from Spin & Win!',
+  'completed a Task!',
+  'received a Deposit!',
+  'processed a Withdrawal!',
+  'earned a Referral Bonus!'
+];
 
 interface HeaderProps {
   username: string;
@@ -10,12 +40,35 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveView }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(true);
+  const [notification, setNotification] = useState({ name: 'Ahmed', amount: 750, event: 'earned from Spin & Win!' });
+  const [isNotificationAnimating, setIsNotificationAnimating] = useState(true);
+
+  useEffect(() => {
+    const notificationInterval = setInterval(() => {
+      // Trigger fade-out animation
+      setIsNotificationAnimating(false);
+
+      // After the fade-out completes, update the content and trigger fade-in
+      setTimeout(() => {
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+        const randomEvent = events[Math.floor(Math.random() * events.length)];
+
+        setNotification({ name: randomName, amount: randomAmount, event: randomEvent });
+        setIsNotificationAnimating(true); // Trigger fade-in animation
+      }, 500); // This duration must match the CSS transition duration
+    }, 4000); // Change notification every 4 seconds
+
+    return () => clearInterval(notificationInterval);
+  }, []); // Empty dependency array ensures this effect runs only once
 
   return (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
       {isBannerVisible && (
         <div className="bg-emerald-500 text-white text-sm font-medium p-2 text-center relative">
-          <span>🔔 Ahmed just earned <strong>Rs 750</strong> from Spin & Win! <button onClick={() => setActiveView('SPIN_WHEEL')} className="font-bold underline hover:text-emerald-200">Play Now</button></span>
+          <span className={`transition-opacity duration-500 ${isNotificationAnimating ? 'opacity-100' : 'opacity-0'}`}>
+            🔔 {notification.name} just {notification.event} <strong>Rs {notification.amount}</strong>!
+          </span>
           <button onClick={() => setIsBannerVisible(false)} className="absolute top-1/2 right-3 -translate-y-1/2 text-white/70 hover:text-white">&times;</button>
         </div>
       )}

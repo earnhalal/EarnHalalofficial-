@@ -92,7 +92,8 @@ const DepositView: React.FC<DepositViewProps> = ({ onDeposit, transactions }) =>
       {/* Left Column: Form and Instructions */}
       <div className="lg:col-span-2 space-y-8">
         <div className="bg-white p-6 rounded-xl shadow-subtle-md border border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Deposit Instructions</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Deposit Instructions</h2>
+            <p className="text-sm text-gray-500 mb-4">Min: 100 Rs • Max: 50,000 Rs</p>
             
             <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">1. Select Method</label>

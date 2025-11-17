@@ -230,11 +230,9 @@ const App: React.FC = () => {
             }
 
           } else {
-            // Create a new user profile
+            // This path is now primarily handled by handleSignup to ensure referral data is captured.
+            // It remains as a fallback.
             const username = firebaseUser.displayName || `user_${firebaseUser.uid.substring(0, 6)}`;
-            const referrerMatch = window.location.pathname.match(/\/ref\/(\w+)/);
-            const referrerUsername = referrerMatch ? referrerMatch[1] : null;
-
             const newUserProfile: UserProfile = {
               uid: firebaseUser.uid,
               username: username,
@@ -245,7 +243,7 @@ const App: React.FC = () => {
               paymentStatus: 'UNPAID',
               jobSubscription: null,
               referralCount: 0,
-              balance: 0,
+              balance: 100, // Default joining bonus
               completedTaskIds: [],
               savedWithdrawalDetails: null,
               walletPin: null
@@ -515,12 +513,14 @@ const App: React.FC = () => {
     setIsSidebarOpen(false);
   };
 
-  const handleSignup = async (data: {username: string, email: string, phone: string, password: string, referrer?: string}) => {
+  const handleSignup = async (data: {username: string, email: string, phone: string, password: string}) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         await updateProfile(userCredential.user, { displayName: data.username });
 
         const userDocRef = doc(db, "users", userCredential.user.uid);
+        
+        // Base user profile
         const newUserProfile: UserProfile = {
             uid: userCredential.user.uid,
             username: data.username,
@@ -531,19 +531,49 @@ const App: React.FC = () => {
             paymentStatus: 'UNPAID',
             jobSubscription: null,
             referralCount: 0,
-            balance: 25, // FREE BONUS
+            balance: 100, // UPDATED: Joining Bonus
             completedTaskIds: [],
             savedWithdrawalDetails: null,
             walletPin: null,
             isFingerprintEnabled: false,
         };
+        
+        // Handle referral logic
+        const referrerMatch = window.location.pathname.match(/\/ref\/(\w+)/);
+        const referrerUsername = referrerMatch ? referrerMatch[1] : null;
+
+        if (referrerUsername) {
+            // TODO: BACKEND LOGIC REQUIRED for crediting bonus. This part only sets up the relationship.
+            // A Cloud Function should monitor the new user's `completedTaskIds.length`.
+            // When it reaches 50 and `referralBonusProcessed` is false, it should:
+            // - Add 200 Rs to the referrer's balance.
+            // - Create a "Referral Bonus" transaction for the referrer.
+            // - Set `referralBonusProcessed` to true for the new user.
+            try {
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username_lowercase", "==", referrerUsername.toLowerCase()));
+                const querySnapshot = await getDocs(q);
+                if (!querySnapshot.empty) {
+                    const referrerDoc = querySnapshot.docs[0];
+                    newUserProfile.referredBy = { uid: referrerDoc.id, username: referrerDoc.data().username };
+                    newUserProfile.referralBonusProcessed = false; // Flag to ensure bonus is paid only once.
+                    
+                    // Immediately increment the referrer's count. The bonus is conditional.
+                    await updateDoc(referrerDoc.ref, { referralCount: increment(1) });
+                }
+            } catch(e) {
+                console.error("Error processing referrer:", e);
+            }
+        }
+        
+        // Set the new user profile document in Firestore
         await setDoc(userDocRef, newUserProfile);
         
         // Add welcome bonus transaction
         await addDoc(collection(userDocRef, "transactions"), {
             type: TransactionType.REFERRAL,
             description: "Welcome Bonus",
-            amount: 25,
+            amount: 100, // UPDATED: Joining Bonus
             date: serverTimestamp()
         });
 

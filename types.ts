@@ -1,8 +1,8 @@
 // types.ts
 
-// FIX: Add an import for 'react' to make its global types, including the JSX namespace, available.
-// This resolves the "Cannot find type definition file for 'react'" error and subsequent
-// "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors project-wide.
+// FIX: Import 'react' to bring its types, including the global JSX namespace, into scope.
+// This resolves the widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors
+// and the "Cannot find type definition file for 'react'" error caused by the previous triple-slash directive.
 import 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.

@@ -38,7 +38,7 @@ const InviteView: React.FC<InviteViewProps> = ({ username, totalReferrals, pendi
         <div className="bg-white border border-gray-200 p-6 sm:p-8 rounded-2xl shadow-subtle-md text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">Invite Friends, Earn Rewards</h2>
             <p className="max-w-2xl mx-auto text-gray-600 mb-6">
-               Share your unique link. You'll earn a <span className="font-bold text-accent-600">Rs 50 bonus</span> for every friend who joins and pays the one-time joining fee!
+               Share your unique link. You'll earn a <span className="font-bold text-accent-600">Rs 200 bonus</span> for every friend who joins, pays the one-time joining fee, and completes their first 50 tasks!
             </p>
 
             <div className="bg-gray-100 p-4 rounded-xl max-w-lg mx-auto mb-6 border border-gray-200">

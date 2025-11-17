@@ -160,7 +160,8 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="reward" className="block text-sm font-medium text-gray-700">Reward per Task (Rs)</label>
-                    <input type="number" id="reward" value={form.reward} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., 5" step="0.01" min="0.1" required />
+                    <input type="number" id="reward" value={form.reward} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., 5" step="0.01" min="1" max="10" required />
+                    <p className="text-xs text-gray-500 mt-1">Reward must be between 1 and 10 Rs.</p>
                   </div>
                   <div>
                     <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Number of Tasks</label>
