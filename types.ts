@@ -1,9 +1,8 @@
 // types.ts
 
-// FIX: Import 'react' to bring its types, including the global JSX namespace, into scope.
-// This resolves the widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors
-// and the "Cannot find type definition file for 'react'" error caused by the previous triple-slash directive.
-import 'react';
+// FIX: Changed import to `import * as React from 'react'` to ensure the React namespace and its nested types are correctly resolved.
+// This allows for explicit extension of React's JSX types, resolving widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors.
+import * as React from 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
 // /// <reference types="vite/client" />
@@ -25,9 +24,11 @@ declare global {
     };
   }
 
-  // Augmenting JSX.IntrinsicElements to add support for the 'lottie-player' custom element.
+  // FIX: Explicitly extending React.JSX.IntrinsicElements ensures that we are augmenting the existing
+  // HTML/SVG elements from React, not overwriting them. This resolves the errors where standard
+  // elements like 'div', 'svg', 'path', etc., were not recognized.
   namespace JSX {
-    interface IntrinsicElements {
+    interface IntrinsicElements extends React.JSX.IntrinsicElements {
       'lottie-player': any;
     }
   }
@@ -152,11 +153,12 @@ export interface UserProfile {
   savedWithdrawalDetails: WithdrawalDetails | null;
   walletPin: string | null;
   isFingerprintEnabled?: boolean;
+  referralCode?: string;
   referredBy?: {
     uid: string;
     username: string;
   };
-  referralBonusProcessed?: boolean;
+  tasksCompletedCount: number;
 }
 
 export interface Job {
@@ -186,4 +188,17 @@ export interface SocialGroup {
     submittedBy: string; // user uid
     submittedAt: any; // Firestore timestamp
     status: 'pending' | 'approved' | 'rejected';
+}
+
+export type ReferralStatus = 'pending' | 'referrer_tasks_pending' | 'bonus_credited';
+
+export interface Referral {
+    id: string;
+    referrerId: string;
+    referredUserId: string;
+    referredUsername: string;
+    referredUserTasksCompleted: number;
+    status: ReferralStatus;
+    bonusAmount: number;
+    createdAt: any; // Firestore timestamp
 }

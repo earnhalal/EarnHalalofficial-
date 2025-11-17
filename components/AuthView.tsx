@@ -8,7 +8,7 @@ import { FingerprintIcon } from './icons';
 // Global type declarations have been moved to types.ts for better project-wide consistency.
 
 interface AuthViewProps {
-    onSignup: (data: {username: string, email: string, phone: string, password: string}) => void;
+    onSignup: (data: {username: string, email: string, phone: string, password: string, referralCode?: string}) => void;
     onLogin: (email: string, password: string) => void;
     initialView: 'login' | 'signup';
 }
@@ -24,6 +24,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [referralCode, setReferralCode] = useState('');
     const [error, setError] = useState('');
     const [fingerprintMessage, setFingerprintMessage] = useState('');
 
@@ -34,6 +35,13 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
     useEffect(() => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         setDarkMode(prefersDark);
+
+        // Check for referral code in URL on mount
+        const params = new URLSearchParams(window.location.search);
+        const refCode = params.get('ref');
+        if (refCode) {
+            setReferralCode(refCode);
+        }
     }, []);
 
     useEffect(() => {
@@ -89,7 +97,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
         }
         setSuccess(true);
         setTimeout(() => {
-            onSignup({ username: name, email, phone, password });
+            onSignup({ username: name, email, phone, password, referralCode });
         }, 2500);
     };
 
@@ -183,6 +191,10 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                     <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
                                     <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
                                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" required minLength={6} className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
+                                    <div>
+                                        <input type="text" value={referralCode} onChange={e => setReferralCode(e.target.value)} placeholder="Referral Code (Optional)" readOnly={!!new URLSearchParams(window.location.search).get('ref')} className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500 read-only:bg-emerald-50 dark:read-only:bg-emerald-900/50 read-only:font-bold read-only:text-emerald-700 dark:read-only:text-emerald-300" />
+                                        <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Earn a <span className="font-bold text-accent-600 dark:text-accent-400">200 Rs</span> bonus by signing up with a valid referral code!</p>
+                                    </div>
                                     <label className="flex items-center gap-3 cursor-pointer mt-4">
                                         <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="checkbox checkbox-success checkbox-sm" />
                                         <span className="text-xs text-gray-600 dark:text-gray-400">I agree to the <a href="#" className="text-emerald-600 font-medium hover:underline">Terms & Conditions</a> and <a href="#" className="text-emerald-600 font-medium hover:underline">Privacy Policy</a></span>

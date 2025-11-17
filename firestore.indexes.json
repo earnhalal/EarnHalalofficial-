@@ -1,3 +1,4 @@
+
 {
   "indexes": [
     {
@@ -40,6 +41,30 @@
           "fieldPath": "submittedAt",
           "order": "DESCENDING"
         }
+      ]
+    },
+    {
+      "collectionId": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "referralCode",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionId": "referrals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "referrerId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionId": "referrals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "referredUserId", "order": "ASCENDING" }
       ]
     }
   ]

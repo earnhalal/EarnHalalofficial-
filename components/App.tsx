@@ -34,7 +34,7 @@ import NotificationToast from './NotificationToast';
 import { TagIcon, ArrowUpCircleIcon, GameControllerIcon } from './icons';
 
 
-import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, PaymentStatus, SocialGroup } from '../types';
+import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, PaymentStatus, SocialGroup, Referral } from '../types';
 import { TransactionType, TaskType } from '../types';
 
 import { auth, db, storage, serverTimestamp, increment, arrayUnion } from '../firebase';
@@ -163,7 +163,6 @@ const App: React.FC = () => {
   const [activeView, setActiveViewInternal] = useState<View>('DASHBOARD');
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
   const [withdrawalStatuses, setWithdrawalStatuses] = useState<Record<string, Transaction['status']>>({});
-  // FIX: Added state to hold real-time deposit statuses from Firestore.
   const [depositStatuses, setDepositStatuses] = useState<Record<string, Transaction['status']>>({});
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
@@ -172,36 +171,27 @@ const App: React.FC = () => {
   const [socialGroups, setSocialGroups] = useState<SocialGroup[]>([]);
   const [userSocialGroups, setUserSocialGroups] = useState<SocialGroup[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
   const [notificationPermission, setNotificationPermission] = useState('default');
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  
   const [authAction, setAuthAction] = useState<'login' | 'signup' | null>(null);
-  
   const [showPinLock, setShowPinLock] = useState(false);
   const [pinLockMode, setPinLockMode] = useState<'set' | 'enter'>('set');
   const [pinAction, setPinAction] = useState<(() => void) | null>(null);
-  
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
   const [showChatbot, setShowChatbot] = useState(true);
-  
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const prevTransactionsRef = useRef<Transaction[]>([]);
   const prevUserCreatedTasksRef = useRef<UserCreatedTask[]>([]);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
 
-  // Create the final transactions list by merging base data with real-time statuses
-  // FIX: The transaction merging logic is updated to handle both deposit and withdrawal status updates in real-time. This ensures that when an admin approves or rejects a request, the user's UI updates instantly without requiring a page refresh.
   const transactions = useMemo(() => {
     return baseTransactions.map(tx => {
         const newTx = { ...tx };
-        // Apply withdrawal status updates. The withdrawalRequestId links the user's transaction to the admin-facing request.
         if (tx.type === TransactionType.WITHDRAWAL && tx.withdrawalRequestId && withdrawalStatuses[tx.withdrawalRequestId]) {
             newTx.status = withdrawalStatuses[tx.withdrawalRequestId];
         }
-        // Apply deposit status updates. The depositRequestId links the user's transaction to the admin-facing request.
         if (tx.type === TransactionType.PENDING_DEPOSIT && tx.depositRequestId && depositStatuses[tx.depositRequestId]) {
             newTx.status = depositStatuses[tx.depositRequestId];
-            // If a deposit is approved, we also change its type for clarity in the UI.
             if (depositStatuses[tx.depositRequestId] === 'Approved') {
                 newTx.type = TransactionType.DEPOSIT;
             }
@@ -217,7 +207,6 @@ const App: React.FC = () => {
       if (firebaseUser) {
         setUser(firebaseUser);
         
-        // Setup Firestore listener for the user's profile
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
           if (docSnap.exists()) {
@@ -230,33 +219,12 @@ const App: React.FC = () => {
             }
 
           } else {
-            // This path is now primarily handled by handleSignup to ensure referral data is captured.
-            // It remains as a fallback.
-            const username = firebaseUser.displayName || `user_${firebaseUser.uid.substring(0, 6)}`;
-            const newUserProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              username: username,
-              username_lowercase: username.toLowerCase(),
-              email: firebaseUser.email || '',
-              phone: '',
-              joinedAt: serverTimestamp(),
-              paymentStatus: 'UNPAID',
-              jobSubscription: null,
-              referralCount: 0,
-              balance: 100, // Default joining bonus
-              completedTaskIds: [],
-              savedWithdrawalDetails: null,
-              walletPin: null
-            };
-            
-            setDoc(userDocRef, newUserProfile).catch(console.error);
-            setUserProfile(newUserProfile);
+            console.warn("User profile not found on login, might be a race condition during signup.");
           }
         }, (error) => {
             console.error("Error listening to user profile:", error);
         });
 
-        // Setup listener for user's transaction subcollection
         const transactionsQuery = query(collection(db, "users", firebaseUser.uid, "transactions"), orderBy("date", "desc"));
         const unsubscribeTransactions = onSnapshot(transactionsQuery, (snapshot) => {
           const trans: Transaction[] = [];
@@ -266,17 +234,15 @@ const App: React.FC = () => {
             console.error("Error listening to transactions:", error);
         });
         
-        // FIX: The listener for withdrawals is now keyed by the request document ID itself for better robustness.
         const withdrawalRequestsQuery = query(collection(db, "withdrawal_requests"), where("userId", "==", firebaseUser.uid));
         const unsubscribeWithdrawals = onSnapshot(withdrawalRequestsQuery, (requestsSnapshot) => {
             setWithdrawalStatuses(currentStatuses => {
                 const newStatuses = {...currentStatuses};
                 let hasChanges = false;
                 requestsSnapshot.docChanges().forEach(change => {
-                    // We listen for adds and modifications to catch status changes.
                     if (change.type === "added" || change.type === "modified") {
                         const data = change.doc.data();
-                        const requestId = change.doc.id; // The unique ID of the withdrawal request.
+                        const requestId = change.doc.id;
                         if (requestId && data.status && newStatuses[requestId] !== data.status) {
                             newStatuses[requestId] = data.status;
                             hasChanges = true;
@@ -289,8 +255,6 @@ const App: React.FC = () => {
             console.error("Error listening to withdrawal requests:", error);
         });
         
-        // FIX: A new real-time listener is added for the `deposit_requests` collection. This mirrors the withdrawal listener and ensures that
-        // any status changes made by an admin on a deposit are immediately reflected in the user's app, fixing the core issue.
         const depositRequestsQuery = query(collection(db, "deposit_requests"), where("userId", "==", firebaseUser.uid));
         const unsubscribeDeposits = onSnapshot(depositRequestsQuery, (requestsSnapshot) => {
             setDepositStatuses(currentStatuses => {
@@ -299,7 +263,7 @@ const App: React.FC = () => {
                 requestsSnapshot.docChanges().forEach(change => {
                     if (change.type === "added" || change.type === "modified") {
                         const data = change.doc.data();
-                        const requestId = change.doc.id; // The unique ID of the deposit request.
+                        const requestId = change.doc.id;
                         if (requestId && data.status && newStatuses[requestId] !== data.status) {
                             newStatuses[requestId] = data.status;
                             hasChanges = true;
@@ -312,8 +276,6 @@ const App: React.FC = () => {
             console.error("Error listening to deposit requests:", error);
         });
 
-        // FIX: Listen to the global 'tasks' collection, filtered by the current user's ID.
-        // This ensures the Task History view receives real-time status updates from the admin panel.
         const userTasksQuery = query(collection(db, "tasks"), where("createdBy", "==", firebaseUser.uid), orderBy("submittedAt", "desc"));
         const unsubscribeUserTasks = onSnapshot(userTasksQuery, (snapshot) => {
             const uTasks: UserCreatedTask[] = [];
@@ -332,12 +294,18 @@ const App: React.FC = () => {
             console.error("Error listening to applications:", error);
         });
 
-        // Fetch user's submitted groups
         const userGroupsQuery = query(collection(db, 'social_groups'), where('submittedBy', '==', firebaseUser.uid), orderBy('submittedAt', 'desc'));
         const unsubscribeUserGroups = onSnapshot(userGroupsQuery, (snapshot) => {
             const groupsData: SocialGroup[] = [];
             snapshot.forEach(doc => groupsData.push({ id: doc.id, ...doc.data() } as SocialGroup));
             setUserSocialGroups(groupsData);
+        }, console.error);
+        
+        const referralsQuery = query(collection(db, 'referrals'), where('referrerId', '==', firebaseUser.uid));
+        const unsubscribeReferrals = onSnapshot(referralsQuery, (snapshot) => {
+            const referralsData: Referral[] = [];
+            snapshot.forEach(doc => referralsData.push({ id: doc.id, ...doc.data() } as Referral));
+            setReferrals(referralsData);
         }, console.error);
 
 
@@ -345,10 +313,11 @@ const App: React.FC = () => {
           unsubscribeProfile();
           unsubscribeTransactions();
           unsubscribeWithdrawals();
-          unsubscribeDeposits(); // FIX: Unsubscribe from the new listener on cleanup.
+          unsubscribeDeposits();
           unsubscribeUserTasks();
           unsubscribeApplications();
           unsubscribeUserGroups();
+          unsubscribeReferrals();
         };
 
       } else {
@@ -385,7 +354,6 @@ const App: React.FC = () => {
         console.error("Error fetching global jobs:", error);
     });
 
-    // Fetch all approved social groups
     const groupsQuery = query(collection(db, 'social_groups'), where('status', '==', 'approved'), orderBy('submittedAt', 'desc'));
     const unsubscribeGroups = onSnapshot(groupsQuery, (snapshot) => {
         const groupsData: SocialGroup[] = [];
@@ -393,7 +361,6 @@ const App: React.FC = () => {
         setSocialGroups(groupsData);
     }, console.error);
     
-    // Check notification permission
     if ('Notification' in window) {
       setNotificationPermission(Notification.permission);
     }
@@ -406,7 +373,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // Effect for loading settings from localStorage
   useEffect(() => {
     try {
       const seenIdsRaw = localStorage.getItem('seenUpdateIds');
@@ -418,84 +384,54 @@ const App: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to load settings from localStorage", error);
-      localStorage.removeItem('seenUpdateIds');
-      localStorage.removeItem('showChatbot');
     }
   }, []);
   
-  // Set loading to false once profile is loaded or user is confirmed logged out
   useEffect(() => {
     if ((user && userProfile) || !user) {
       setIsLoading(false);
     }
   }, [user, userProfile]);
 
-  // Effect for triggering one-time notifications on status changes
   useEffect(() => {
     const oldTransactions = prevTransactionsRef.current;
     const newNotifications: Notification[] = [];
 
-    // Check for transaction status changes (Deposits/Withdrawals)
     transactions.forEach(newTx => {
         const oldTx = oldTransactions.find(t => t.id === newTx.id);
         if (oldTx && oldTx.status === 'Pending' && newTx.status !== 'Pending') {
             const notificationId = `${newTx.id}_${newTx.status}`;
             if (!localStorage.getItem(notificationId)) {
-                let title = '';
-                let message = '';
-                let type: 'success' | 'error' = 'success';
-
+                let title = '', message = '', type: 'success' | 'error' = 'success';
                 const actionType = newTx.type === TransactionType.WITHDRAWAL ? 'Withdrawal' : 'Deposit';
                 if (newTx.status === 'Approved' || newTx.status === 'Completed') {
-                    title = `${actionType} Approved!`;
-                    message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} has been processed.`;
+                    title = `${actionType} Approved!`; message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} has been processed.`;
                 } else if (newTx.status === 'Rejected' || newTx.status === 'Failed') {
-                    title = `${actionType} Rejected`;
-                    message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} was rejected. Please contact support for details.`;
-                    type = 'error';
+                    title = `${actionType} Rejected`; message = `Your ${actionType.toLowerCase()} of Rs. ${Math.abs(newTx.amount)} was rejected. Contact support.`; type = 'error';
                 }
-                
-                if (title) {
-                    newNotifications.push({ id: notificationId, title, message, type });
-                    localStorage.setItem(notificationId, 'true');
-                }
+                if (title) { newNotifications.push({ id: notificationId, title, message, type }); localStorage.setItem(notificationId, 'true'); }
             }
         }
     });
 
     const oldTasks = prevUserCreatedTasksRef.current;
-    // Check for user-created task status changes
     userCreatedTasks.forEach(newTask => {
         const oldTask = oldTasks.find(t => t.id === newTask.id);
         if (oldTask && oldTask.status === 'pending' && newTask.status !== 'pending') {
             const notificationId = `${newTask.id}_${newTask.status}`;
             if (!localStorage.getItem(notificationId)) {
-                let title = '';
-                let message = '';
-                let type: 'success' | 'error' = 'success';
-
+                let title = '', message = '', type: 'success' | 'error' = 'success';
                 if (newTask.status === 'approved') {
-                    title = 'Task Approved!';
-                    message = `Your task "${newTask.title}" is now live for the community.`;
+                    title = 'Task Approved!'; message = `Your task "${newTask.title}" is now live.`;
                 } else if (newTask.status === 'rejected') {
-                    title = 'Task Rejected';
-                    message = `Your task "${newTask.title}" was rejected by the admin.`;
-                    type = 'error';
+                    title = 'Task Rejected'; message = `Your task "${newTask.title}" was rejected.`; type = 'error';
                 }
-
-                if (title) {
-                    newNotifications.push({ id: notificationId, title, message, type });
-                    localStorage.setItem(notificationId, 'true');
-                }
+                if (title) { newNotifications.push({ id: notificationId, title, message, type }); localStorage.setItem(notificationId, 'true'); }
             }
         }
     });
 
-    if (newNotifications.length > 0) {
-        setNotifications(prev => [...prev, ...newNotifications]);
-    }
-
-    // Update refs for next render
+    if (newNotifications.length > 0) setNotifications(prev => [...prev, ...newNotifications]);
     prevTransactionsRef.current = transactions;
     prevUserCreatedTasksRef.current = userCreatedTasks;
 
@@ -506,21 +442,19 @@ const App: React.FC = () => {
       setAuthAction(view);
   }, []);
 
-  // --- Handlers ---
   const setActiveView = (view: View) => {
     if (view === activeView) return;
     setActiveViewInternal(view);
     setIsSidebarOpen(false);
   };
 
-  const handleSignup = async (data: {username: string, email: string, phone: string, password: string}) => {
+  const handleSignup = async (data: {username: string, email: string, phone: string, password: string, referralCode?: string}) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         await updateProfile(userCredential.user, { displayName: data.username });
 
         const userDocRef = doc(db, "users", userCredential.user.uid);
         
-        // Base user profile
         const newUserProfile: UserProfile = {
             uid: userCredential.user.uid,
             username: data.username,
@@ -531,51 +465,51 @@ const App: React.FC = () => {
             paymentStatus: 'UNPAID',
             jobSubscription: null,
             referralCount: 0,
-            balance: 100, // UPDATED: Joining Bonus
+            balance: 100,
             completedTaskIds: [],
             savedWithdrawalDetails: null,
             walletPin: null,
             isFingerprintEnabled: false,
+            referralCode: `${data.username.toLowerCase().replace(/\s+/g, '')}${Math.floor(100 + Math.random() * 900)}`,
+            tasksCompletedCount: 0,
         };
         
-        // Handle referral logic
-        const referrerMatch = window.location.pathname.match(/\/ref\/(\w+)/);
-        const referrerUsername = referrerMatch ? referrerMatch[1] : null;
+        const batch = writeBatch(db);
 
-        if (referrerUsername) {
-            // TODO: BACKEND LOGIC REQUIRED for crediting bonus. This part only sets up the relationship.
-            // A Cloud Function should monitor the new user's `completedTaskIds.length`.
-            // When it reaches 50 and `referralBonusProcessed` is false, it should:
-            // - Add 200 Rs to the referrer's balance.
-            // - Create a "Referral Bonus" transaction for the referrer.
-            // - Set `referralBonusProcessed` to true for the new user.
-            try {
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("username_lowercase", "==", referrerUsername.toLowerCase()));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const referrerDoc = querySnapshot.docs[0];
-                    newUserProfile.referredBy = { uid: referrerDoc.id, username: referrerDoc.data().username };
-                    newUserProfile.referralBonusProcessed = false; // Flag to ensure bonus is paid only once.
-                    
-                    // Immediately increment the referrer's count. The bonus is conditional.
-                    await updateDoc(referrerDoc.ref, { referralCount: increment(1) });
-                }
-            } catch(e) {
-                console.error("Error processing referrer:", e);
+        if (data.referralCode) {
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("referralCode", "==", data.referralCode));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                const referrerDoc = querySnapshot.docs[0];
+                newUserProfile.referredBy = { uid: referrerDoc.id, username: referrerDoc.data().username };
+                
+                batch.update(referrerDoc.ref, { referralCount: increment(1) });
+                
+                const referralDocRef = doc(collection(db, "referrals"));
+                batch.set(referralDocRef, {
+                    referrerId: referrerDoc.id,
+                    referredUserId: userCredential.user.uid,
+                    referredUsername: data.username,
+                    referredUserTasksCompleted: 0,
+                    status: 'pending',
+                    bonusAmount: 200,
+                    createdAt: serverTimestamp()
+                } as Omit<Referral, 'id'>);
             }
         }
         
-        // Set the new user profile document in Firestore
-        await setDoc(userDocRef, newUserProfile);
+        batch.set(userDocRef, newUserProfile);
         
-        // Add welcome bonus transaction
-        await addDoc(collection(userDocRef, "transactions"), {
+        const welcomeBonusRef = doc(collection(userDocRef, "transactions"));
+        batch.set(welcomeBonusRef, {
             type: TransactionType.REFERRAL,
             description: "Welcome Bonus",
-            amount: 100, // UPDATED: Joining Bonus
+            amount: 100,
             date: serverTimestamp()
         });
+
+        await batch.commit();
 
     } catch (error: any) {
         alert(`Signup failed: ${error.message}`);
@@ -601,6 +535,35 @@ const App: React.FC = () => {
       const userDocRef = doc(db, "users", user.uid);
       await updateDoc(userDocRef, { paymentStatus: 'PENDING_VERIFICATION' });
   };
+
+  const checkAndPayBonus = async (referralId: string) => {
+    const referralRef = doc(db, "referrals", referralId);
+    try {
+        await runTransaction(db, async (transaction) => {
+            const referralDoc = await transaction.get(referralRef);
+            if (!referralDoc.exists() || referralDoc.data().status === 'bonus_credited') return;
+
+            const referralData = referralDoc.data() as Referral;
+            const referrerRef = doc(db, "users", referralData.referrerId);
+            const referrerDoc = await transaction.get(referrerRef);
+            if (!referrerDoc.exists()) return;
+
+            const referrerData = referrerDoc.data() as UserProfile;
+
+            if (referralData.referredUserTasksCompleted >= 10 && referrerData.tasksCompletedCount >= 50) {
+                transaction.update(referrerRef, { balance: increment(200) });
+                const transRef = doc(collection(referrerRef, "transactions"));
+                transaction.set(transRef, {
+                    type: TransactionType.REFERRAL,
+                    description: `Bonus from ${referralData.referredUsername || 'referred user'}`,
+                    amount: 200,
+                    date: serverTimestamp()
+                });
+                transaction.update(referralRef, { status: 'bonus_credited' });
+            }
+        });
+    } catch (e) { console.error(`Bonus check failed for referral ${referralId}:`, e); }
+  };
   
   const handleCompleteTask = async (taskId: string) => {
     if(!user || !userProfile) return;
@@ -609,31 +572,54 @@ const App: React.FC = () => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
-    const userDocRef = doc(db, "users", user.uid);
-    const taskDocRef = doc(db, "tasks", taskId);
-    
     try {
-      await runTransaction(db, async (transaction) => {
-        transaction.update(userDocRef, {
-            balance: increment(task.reward),
-            completedTaskIds: arrayUnion(taskId)
-        });
-        transaction.update(taskDocRef, {
-            completions: increment(1)
+        await runTransaction(db, async (transaction) => {
+            const userDocRef = doc(db, "users", user.uid);
+            const taskDocRef = doc(db, "tasks", taskId);
+            
+            transaction.update(userDocRef, {
+                balance: increment(task.reward),
+                completedTaskIds: arrayUnion(taskId),
+                tasksCompletedCount: increment(1)
+            });
+            transaction.update(taskDocRef, { completions: increment(1) });
+            
+            const transColRef = collection(userDocRef, "transactions");
+            const newTransRef = doc(transColRef);
+            transaction.set(newTransRef, {
+                type: TransactionType.EARNING,
+                description: `Completed: ${task.title}`,
+                amount: task.reward,
+                date: serverTimestamp()
+            });
+
+            if (userProfile.referredBy) {
+                const referralQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
+                const referralSnapshot = await getDocs(referralQuery);
+                if (!referralSnapshot.empty) {
+                    transaction.update(referralSnapshot.docs[0].ref, { referredUserTasksCompleted: increment(1) });
+                }
+            }
         });
 
-        // Add transaction record
-        const transColRef = collection(userDocRef, "transactions");
-        const newTransRef = doc(transColRef); // Create a new doc reference
-        transaction.set(newTransRef, {
-            type: TransactionType.EARNING,
-            description: `Completed: ${task.title}`,
-            amount: task.reward,
-            date: serverTimestamp()
-        });
-      });
+        const updatedUserCount = (userProfile.tasksCompletedCount || 0) + 1;
+        
+        // Check 1: Did a referred user (me) just become eligible?
+        if (userProfile.referredBy && updatedUserCount >= 10) {
+             const referralQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
+             const refSnap = await getDocs(referralQuery);
+             if(!refSnap.empty) await checkAndPayBonus(refSnap.docs[0].id);
+        }
+
+        // Check 2: Did a referrer (me) just make others eligible?
+        if (updatedUserCount >= 50) {
+            const myReferralsQuery = query(collection(db, "referrals"), where("referrerId", "==", user.uid));
+            const myRefsSnap = await getDocs(myReferralsQuery);
+            myRefsSnap.forEach(doc => checkAndPayBonus(doc.id));
+        }
+
     } catch (error) {
-        console.error("Task completion failed:", error);
+        console.error("Task completion or referral check failed:", error);
     }
   };
   
@@ -648,32 +634,12 @@ const App: React.FC = () => {
       const userDocRef = doc(db, "users", user.uid);
       const batch = writeBatch(db);
 
-      const taskData = {
-          ...task,
-          quantity,
-          completions: 0,
-          views: 0,
-          status: 'pending' as const,
-          submittedAt: serverTimestamp(),
-          createdBy: user.uid,
-      };
-
-      // 1. Add task to global 'tasks' collection (Single Source of Truth)
+      const taskData = { ...task, quantity, completions: 0, views: 0, status: 'pending' as const, submittedAt: serverTimestamp(), createdBy: user.uid };
       const newTaskRef = doc(collection(db, "tasks"));
       batch.set(newTaskRef, taskData);
-
-      // 2. Deduct balance from user
       batch.update(userDocRef, { balance: increment(-totalCost) });
-
-      // 3. Add transaction record
       const transRef = doc(collection(userDocRef, "transactions"));
-      batch.set(transRef, {
-          type: TransactionType.TASK_CREATION,
-          description: `Campaign: ${task.title}`,
-          amount: -totalCost,
-          date: serverTimestamp(),
-      });
-      
+      batch.set(transRef, { type: TransactionType.TASK_CREATION, description: `Campaign: ${task.title}`, amount: -totalCost, date: serverTimestamp() });
       await batch.commit();
   };
   
@@ -682,67 +648,21 @@ const App: React.FC = () => {
 
     const action = async () => {
       const userDocRef = doc(db, "users", user.uid);
-      
       try {
         await runTransaction(db, async (transaction) => {
           const userDoc = await transaction.get(userDocRef);
-          if (!userDoc.exists()) {
-            throw new Error("User document does not exist!");
-          }
-
-          const currentBalance = userDoc.data().balance;
-          if (currentBalance < amount) {
-            throw new Error("Insufficient balance for this withdrawal.");
-          }
-
-          // All checks passed, prepare writes.
-          
+          if (!userDoc.exists() || userDoc.data().balance < amount) throw new Error("Insufficient balance.");
           const withdrawalRequestRef = doc(collection(db, "withdrawal_requests"));
           const userTransactionRef = doc(collection(userDocRef, "transactions"));
-
-          // Update user's balance and save withdrawal details
-          transaction.update(userDocRef, {
-            balance: increment(-amount),
-            savedWithdrawalDetails: details,
-          });
-
-          // Create the user's personal transaction record
-          transaction.set(userTransactionRef, {
-            type: TransactionType.WITHDRAWAL,
-            description: `Withdrawal to ${details.method}`,
-            amount: -amount,
-            date: serverTimestamp(),
-            withdrawalDetails: details,
-            status: 'Pending',
-            withdrawalRequestId: withdrawalRequestRef.id,
-          });
-
-          // Create the top-level withdrawal request for the Admin Panel
-          transaction.set(withdrawalRequestRef, {
-            userId: user.uid,
-            username: userDoc.data().username,
-            amount: amount,
-            withdrawalDetails: details,
-            status: 'Pending',
-            createdAt: serverTimestamp(),
-            userTransactionId: userTransactionRef.id,
-          });
+          transaction.update(userDocRef, { balance: increment(-amount), savedWithdrawalDetails: details });
+          transaction.set(userTransactionRef, { type: TransactionType.WITHDRAWAL, description: `Withdrawal to ${details.method}`, amount: -amount, date: serverTimestamp(), withdrawalDetails: details, status: 'Pending', withdrawalRequestId: withdrawalRequestRef.id });
+          transaction.set(withdrawalRequestRef, { userId: user.uid, username: userDoc.data().username, amount, withdrawalDetails: details, status: 'Pending', createdAt: serverTimestamp(), userTransactionId: userTransactionRef.id });
         });
-      } catch (error) {
-        console.error("Withdrawal transaction failed:", error);
-        // The transaction is atomic, so if it fails, no changes are made.
-        // The user's balance will not be deducted.
-        // The user's balance will not be deducted.
-      }
+      } catch (error) { console.error("Withdrawal failed:", error); }
     };
     
-    if (userProfile.walletPin) {
-        setPinLockMode('enter');
-        setShowPinLock(true);
-        setPinAction(() => action);
-    } else {
-        await action();
-    }
+    if (userProfile.walletPin) { setPinLockMode('enter'); setShowPinLock(true); setPinAction(() => action); } 
+    else { await action(); }
   };
   
   const handleSetPin = async (pin: string) => {
@@ -760,47 +680,14 @@ const App: React.FC = () => {
   };
   
   const handleDeposit = async (amount: number, method: 'EasyPaisa' | 'JazzCash', transactionId: string) => {
-    if (!user || !userProfile) {
-      throw new Error("Critical error: User is not logged in. Please refresh and try again.");
-    }
-
-    console.log(`[DEPOSIT_TXID] User: ${user.uid}, Amount: ${amount}, Method: ${method}, TxID: ${transactionId}`);
-    
+    if (!user || !userProfile) throw new Error("User not logged in.");
     const userDocRef = doc(db, "users", user.uid);
     const batch = writeBatch(db);
-
-    // 1. Create document in top-level 'deposit_requests' collection for admin panel
-    console.log("[DEPOSIT_BATCH_TXID] Preparing deposit_requests document...");
     const depositRequestRef = doc(collection(db, "deposit_requests"));
-    batch.set(depositRequestRef, {
-      userId: user.uid,
-      username: userProfile.username,
-      amount: amount,
-      transactionId: transactionId,
-      method: method,
-      status: 'Pending',
-      createdAt: serverTimestamp(),
-    });
-
-    // 2. Create a corresponding transaction in the user's history for their view
-    console.log("[DEPOSIT_BATCH_TXID] Preparing user transaction document...");
+    batch.set(depositRequestRef, { userId: user.uid, username: userProfile.username, amount, transactionId, method, status: 'Pending', createdAt: serverTimestamp() });
     const userTransactionRef = doc(collection(userDocRef, "transactions"));
-    batch.set(userTransactionRef, {
-      type: TransactionType.PENDING_DEPOSIT,
-      description: `Deposit via ${method}`,
-      amount: amount,
-      date: serverTimestamp(),
-      status: 'Pending',
-      depositDetails: {
-        method: method,
-        transactionId: transactionId,
-      },
-      depositRequestId: depositRequestRef.id // Link to the admin-facing request
-    });
-    
-    console.log("[DEPOSIT_COMMIT_TXID] Committing batch write to Firestore...");
+    batch.set(userTransactionRef, { type: TransactionType.PENDING_DEPOSIT, description: `Deposit via ${method}`, amount, date: serverTimestamp(), status: 'Pending', depositDetails: { method, transactionId }, depositRequestId: depositRequestRef.id });
     await batch.commit();
-    console.log("[DEPOSIT_SUCCESS_TXID] Deposit request submitted successfully!");
   };
 
   const handleBuySpin = async (cost: number): Promise<boolean> => {
@@ -810,18 +697,10 @@ const App: React.FC = () => {
           const batch = writeBatch(db);
           batch.update(userDocRef, { balance: increment(-cost) });
           const transRef = doc(collection(userDocRef, "transactions"));
-          batch.set(transRef, {
-              type: TransactionType.SPIN_PURCHASE,
-              description: `Purchased a Spin`,
-              amount: -cost,
-              date: serverTimestamp()
-          });
+          batch.set(transRef, { type: TransactionType.SPIN_PURCHASE, description: `Purchased a Spin`, amount: -cost, date: serverTimestamp() });
           await batch.commit();
           return true;
-      } catch (e) {
-          console.error(e);
-          return false;
-      }
+      } catch (e) { console.error(e); return false; }
   };
   
   const handleGameWin = async (amount: number, gameName: string) => {
@@ -830,12 +709,7 @@ const App: React.FC = () => {
       const batch = writeBatch(db);
       batch.update(userDocRef, { balance: increment(amount) });
       const transRef = doc(collection(userDocRef, "transactions"));
-      batch.set(transRef, {
-          type: TransactionType.GAME_WIN,
-          description: `Won in ${gameName}`,
-          amount: amount,
-          date: serverTimestamp()
-      });
+      batch.set(transRef, { type: TransactionType.GAME_WIN, description: `Won in ${gameName}`, amount, date: serverTimestamp() });
       await batch.commit();
   };
 
@@ -845,12 +719,7 @@ const App: React.FC = () => {
       const batch = writeBatch(db);
       batch.update(userDocRef, { balance: increment(-amount) });
       const transRef = doc(collection(userDocRef, "transactions"));
-      batch.set(transRef, {
-          type: TransactionType.GAME_LOSS,
-          description: `Bet in ${gameName}`,
-          amount: -amount,
-          date: serverTimestamp()
-      });
+      batch.set(transRef, { type: TransactionType.GAME_LOSS, description: `Bet in ${gameName}`, amount: -amount, date: serverTimestamp() });
       await batch.commit();
   };
   
@@ -860,81 +729,37 @@ const App: React.FC = () => {
       const batch = writeBatch(db);
       batch.update(userDocRef, { balance: increment(amount) });
       const transRef = doc(collection(userDocRef, "transactions"));
-      batch.set(transRef, {
-          type: TransactionType.BET_CANCELLED,
-          description: `Cancelled Bet in ${gameName}`,
-          amount: amount,
-          date: serverTimestamp()
-      });
+      batch.set(transRef, { type: TransactionType.BET_CANCELLED, description: `Cancelled Bet in ${gameName}`, amount, date: serverTimestamp() });
       await batch.commit();
   };
 
 
   const handleSubscribe = async (plan: JobSubscriptionPlan, cost: number) => {
      if(!user || !userProfile || userProfile.balance < cost) return;
-      
      const expiry = new Date();
      expiry.setDate(expiry.getDate() + (plan === 'Business' || plan === 'Enterprise' ? 60 : 30));
-      
      const userDocRef = doc(db, "users", user.uid);
      const batch = writeBatch(db);
-     
-     batch.update(userDocRef, {
-         balance: increment(-cost),
-         jobSubscription: {
-             plan: plan,
-             expiryDate: expiry.toISOString().split('T')[0],
-             applicationsToday: 0,
-             lastApplicationDate: new Date().toISOString().split('T')[0]
-         }
-     });
-     
+     batch.update(userDocRef, { balance: increment(-cost), jobSubscription: { plan, expiryDate: expiry.toISOString().split('T')[0], applicationsToday: 0, lastApplicationDate: new Date().toISOString().split('T')[0] } });
      const transRef = doc(collection(userDocRef, "transactions"));
-     batch.set(transRef, {
-         type: TransactionType.JOB_SUBSCRIPTION,
-         description: `${plan} Plan Subscription`,
-         amount: -cost,
-         date: serverTimestamp()
-     });
+     batch.set(transRef, { type: TransactionType.JOB_SUBSCRIPTION, description: `${plan} Plan Subscription`, amount: -cost, date: serverTimestamp() });
      await batch.commit();
   };
 
   const handleApply = async (jobId: string) => {
     if (!user || !userProfile || !userProfile.jobSubscription) return;
     const { plan, applicationsToday, lastApplicationDate } = userProfile.jobSubscription;
-    
     const today = new Date().toISOString().split('T')[0];
-    let dailyCount = applicationsToday;
-    if (lastApplicationDate !== today) dailyCount = 0;
-    
+    let dailyCount = lastApplicationDate !== today ? 0 : applicationsToday;
     const limit = plan === 'Starter' ? 5 : plan === 'Growth' ? 15 : Infinity;
-    if (dailyCount >= limit) {
-        alert("Daily application limit reached.");
-        return;
-    }
-    
+    if (dailyCount >= limit) { alert("Daily application limit reached."); return; }
     const job = jobs.find(j => j.id === jobId);
     if (!job) return;
-
     const userDocRef = doc(db, "users", user.uid);
     const batch = writeBatch(db);
-    
-    batch.update(userDocRef, {
-        jobSubscription: {
-            ...userProfile.jobSubscription,
-            applicationsToday: increment(1),
-            lastApplicationDate: today
-        }
-    });
-
+    batch.update(userDocRef, { jobSubscription: { ...userProfile.jobSubscription, applicationsToday: increment(1), lastApplicationDate: today } });
     const appRef = doc(collection(userDocRef, "applications"));
-    batch.set(appRef, {
-        jobId: jobId,
-        jobTitle: job.title,
-        date: serverTimestamp(),
-        status: 'Submitted'
-    });
-    
+    batch.set(appRef, { jobId, jobTitle: job.title, date: serverTimestamp(), status: 'Submitted' });
     await batch.commit();
   };
   
@@ -946,59 +771,18 @@ const App: React.FC = () => {
     await updateDoc(doc(db, "users", user.uid), { username: data.name, email: data.email });
   };
   
-  const handleRequestPermission = () => {
-    Notification.requestPermission().then(permission => {
-      setNotificationPermission(permission);
-    });
-  };
-
+  const handleRequestPermission = () => { Notification.requestPermission().then(setNotificationPermission); };
   const handleCreateSocialGroup = async (groupData: {url: string, title: string, description: string, category: SocialGroup['category']}) => {
     if (!user) return;
-    
-    const newGroup: Omit<SocialGroup, 'id' | 'imageUrl'> = {
-        ...groupData,
-        submittedBy: user.uid,
-        submittedAt: serverTimestamp(),
-        status: 'pending'
-    };
-
-    await addDoc(collection(db, "social_groups"), newGroup);
+    await addDoc(collection(db, "social_groups"), { ...groupData, submittedBy: user.uid, submittedAt: serverTimestamp(), status: 'pending' });
   };
-  
-  const unreadUpdatesCount = useMemo(() => {
-    return appUpdates.filter(u => !seenUpdateIds.includes(u.id)).length;
-  }, [seenUpdateIds]);
+  const unreadUpdatesCount = useMemo(() => appUpdates.filter(u => !seenUpdateIds.includes(u.id)).length, [seenUpdateIds]);
+  const handleMarkUpdateAsRead = (id: string) => { if (seenUpdateIds.includes(id)) return; const newSeenIds = [...seenUpdateIds, id]; setSeenUpdateIds(newSeenIds); localStorage.setItem('seenUpdateIds', JSON.stringify(newSeenIds)); };
+  const handleMarkAllUpdatesAsRead = () => { const allIds = appUpdates.map(u => u.id); setSeenUpdateIds(allIds); localStorage.setItem('seenUpdateIds', JSON.stringify(allIds)); };
+  const handleToggleChatbot = (isVisible: boolean) => { setShowChatbot(isVisible); localStorage.setItem('showChatbot', JSON.stringify(isVisible)); };
+  const handleSetFingerprintEnabled = async () => { if (!user) return; await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); };
+  const handleCloseNotification = (id: string) => { setNotifications(prev => prev.filter(n => n.id !== id)); };
 
-  const handleMarkUpdateAsRead = (id: string) => {
-      if (seenUpdateIds.includes(id)) return;
-      const newSeenIds = [...seenUpdateIds, id];
-      setSeenUpdateIds(newSeenIds);
-      localStorage.setItem('seenUpdateIds', JSON.stringify(newSeenIds));
-  };
-
-  const handleMarkAllUpdatesAsRead = () => {
-      const allIds = appUpdates.map(u => u.id);
-      setSeenUpdateIds(allIds);
-      localStorage.setItem('seenUpdateIds', JSON.stringify(allIds));
-  };
-
-  const handleToggleChatbot = (isVisible: boolean) => {
-      setShowChatbot(isVisible);
-      localStorage.setItem('showChatbot', JSON.stringify(isVisible));
-  };
-
-  const handleSetFingerprintEnabled = async () => {
-    if (!user) return;
-    const userDocRef = doc(db, "users", user.uid);
-    await updateDoc(userDocRef, { isFingerprintEnabled: true });
-    // The onSnapshot listener will automatically update the userProfile state.
-  };
-
-  const handleCloseNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  // --- Render Logic ---
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
       DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
@@ -1006,18 +790,15 @@ const App: React.FC = () => {
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
-      INVITE: <InviteView username={userProfile?.username ?? ''} totalReferrals={userProfile?.referralCount ?? 0} pendingBonuses={0} referralEarnings={transactions.filter(t => t.type === TransactionType.REFERRAL).reduce((sum, tx) => sum + tx.amount, 0)} />,
+      INVITE: <InviteView userProfile={userProfile} referrals={referrals} />,
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
       PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={handleToggleChatbot} onSetFingerprintEnabled={handleSetFingerprintEnabled} />,
-      HOW_IT_WORKS: <HowItWorksView />,
-      ABOUT_US: <AboutUsView />,
-      CONTACT_US: <ContactUsView />,
+      HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
       MY_APPLICATIONS: <MyApplicationsView applications={applications} />,
-      PRIVACY_POLICY: <PrivacyPolicyView />,
-      TERMS_CONDITIONS: <TermsAndConditionsView />,
+      PRIVACY_POLICY: <PrivacyPolicyView />, TERMS_CONDITIONS: <TermsAndConditionsView />,
       LUDO_GAME: <LudoGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       LOTTERY_GAME: <LotteryGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       COIN_FLIP_GAME: <CoinFlipGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
@@ -1028,77 +809,28 @@ const App: React.FC = () => {
     return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />;
   };
 
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
+  if (isLoading) return <LoadingScreen />;
+  if (!user) { if (authAction) { return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />; } return <LandingView onGetStarted={handleAuthNavigation} />; }
+  if (!userProfile) return <LoadingScreen />;
+  if (userProfile.paymentStatus === 'UNPAID') return <PaymentView onSubmit={handlePaymentSubmit} />;
+  if (userProfile.paymentStatus === 'PENDING_VERIFICATION') return <PendingVerificationView />;
 
-  // If auth is resolved and there's no user, show public views
-  if (!user) {
-    if (authAction) {
-        return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />;
-    }
-    return <LandingView onGetStarted={handleAuthNavigation} />;
-  }
-
-  // If there's a user but their profile is not yet loaded, continue showing the loading screen.
-  // This prevents trying to access properties of a null userProfile.
-  if (!userProfile) {
-    return <LoadingScreen />;
-  }
-
-  // From here on, we know we have a logged-in user with a loaded profile.
-  if (userProfile.paymentStatus === 'UNPAID') {
-    return <PaymentView onSubmit={handlePaymentSubmit} />;
-  }
-  
-  if (userProfile.paymentStatus === 'PENDING_VERIFICATION') {
-    return <PendingVerificationView />;
-  }
-
-  const mainContent = (
+  return (
+    <>
+      {notificationPermission === 'default' && <NotificationBanner onRequestPermission={handleRequestPermission} onDismiss={() => setNotificationPermission('dismissed')} />}
+      {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+      <div className="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm"> {notifications.map(n => (<NotificationToast key={n.id} title={n.title} message={n.message} type={n.type} onClose={() => handleCloseNotification(n.id)} />))} </div>
       <div className="flex flex-col md:flex-row bg-gradient-to-b from-green-50/50 to-white min-h-screen font-sans">
           <Sidebar activeView={activeView} setActiveView={setActiveView} isSidebarOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} unreadUpdatesCount={unreadUpdatesCount} />
           {isSidebarOpen && <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-30 md:hidden"></div>}
           <div className="flex-1 flex flex-col w-full">
-              <Header
-                  username={userProfile.username}
-                  setIsSidebarOpen={setIsSidebarOpen}
-                  setActiveView={setActiveView}
-              />
-              <main className="flex-grow pb-20 md:pb-6 p-4">
-                  {renderContent()}
-              </main>
+              <Header username={userProfile.username} setIsSidebarOpen={setIsSidebarOpen} setActiveView={setActiveView} />
+              <main className="flex-grow pb-20 md:pb-6 p-4">{renderContent()}</main>
               <BottomNav activeView={activeView} setActiveView={setActiveView} />
           </div>
           {showChatbot && <AIAgentChatbot />}
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={handlePinCorrect} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
-  );
-  
-  return (
-    <>
-      {notificationPermission === 'default' && (
-        <NotificationBanner
-          onRequestPermission={handleRequestPermission}
-          onDismiss={() => setNotificationPermission('dismissed')}
-        />
-      )}
-      {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
-      
-      {/* Notification Toasts Container */}
-      <div className="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm">
-          {notifications.map(n => (
-              <NotificationToast 
-                  key={n.id} 
-                  title={n.title} 
-                  message={n.message} 
-                  type={n.type} 
-                  onClose={() => handleCloseNotification(n.id)} 
-              />
-          ))}
-      </div>
-
-      {mainContent}
     </>
   );
 };
