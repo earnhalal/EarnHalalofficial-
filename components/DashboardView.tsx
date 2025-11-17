@@ -6,7 +6,7 @@ import { InviteIcon, CreateTaskIcon, DocumentCheckIcon, TrophyIcon, SparklesIcon
 interface DashboardViewProps {
   balance: number;
   tasksCompleted: number;
-  referrals: number;
+  invitedCount: number;
   setActiveView: (view: View) => void;
   username: string;
 }
@@ -24,7 +24,7 @@ const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string |
 );
 
 
-const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, referrals, setActiveView, username }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, invitedCount, setActiveView, username }) => {
   const userLevel = 3;
   const levelProgress = 65; // Example percentage
 
@@ -60,7 +60,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <StatCard icon={<DocumentCheckIcon className="w-6 h-6 text-white"/>} label="Tasks Done" value={tasksCompleted} color="bg-blue-500" />
-          <StatCard icon={<InviteIcon className="w-6 h-6 text-white"/>} label="Referrals" value={referrals} color="bg-purple-500" />
+          <StatCard icon={<InviteIcon className="w-6 h-6 text-white"/>} label="Friends Invited" value={invitedCount} color="bg-purple-500" />
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex items-center gap-4">
             <div className="relative w-12 h-12 flex-shrink-0">
                 <svg className="w-full h-full" viewBox="0 0 36 36">

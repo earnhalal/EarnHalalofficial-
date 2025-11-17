@@ -24,12 +24,12 @@ const names = [
     'Rehana', 'Sikandar', 'Yasmin'
 ];
 const amounts = [100, 250, 500, 750, 1000, 1250, 2000, 50, 150, 300, 600, 900, 1500, 2500];
-const events = [
-  'earned from Spin & Win!',
-  'completed a Task!',
-  'received a Deposit!',
-  'processed a Withdrawal!',
-  'earned a Referral Bonus!'
+const eventTemplates = [
+  { action: 'earned', source: 'from Spin & Win!' },
+  { action: 'earned', source: 'by completing a Task!' },
+  { action: 'received a deposit of', source: '' },
+  { action: 'processed a withdrawal of', source: '' },
+  { action: 'earned', source: 'from a Referral Bonus!' }
 ];
 
 interface HeaderProps {
@@ -40,7 +40,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveView }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(true);
-  const [notification, setNotification] = useState({ name: 'Ahmed', amount: 750, event: 'earned from Spin & Win!' });
+  const [notificationMessage, setNotificationMessage] = useState('🔔 Welcome to Earn Halal! See what others are earning.');
   const [isNotificationAnimating, setIsNotificationAnimating] = useState(true);
 
   useEffect(() => {
@@ -52,9 +52,11 @@ const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveVi
       setTimeout(() => {
         const randomName = names[Math.floor(Math.random() * names.length)];
         const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
-        const randomEvent = events[Math.floor(Math.random() * events.length)];
-
-        setNotification({ name: randomName, amount: randomAmount, event: randomEvent });
+        const randomEvent = eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+        
+        const message = `🔔 ${randomName} just ${randomEvent.action} <strong>Rs ${randomAmount}</strong> ${randomEvent.source}`;
+        
+        setNotificationMessage(message);
         setIsNotificationAnimating(true); // Trigger fade-in animation
       }, 500); // This duration must match the CSS transition duration
     }, 4000); // Change notification every 4 seconds
@@ -66,9 +68,10 @@ const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveVi
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-20 shadow-sm">
       {isBannerVisible && (
         <div className="bg-emerald-500 text-white text-sm font-medium p-2 text-center relative">
-          <span className={`transition-opacity duration-500 ${isNotificationAnimating ? 'opacity-100' : 'opacity-0'}`}>
-            🔔 {notification.name} just {notification.event} <strong>Rs {notification.amount}</strong>!
-          </span>
+          <span 
+            className={`transition-opacity duration-500 ${isNotificationAnimating ? 'opacity-100' : 'opacity-0'}`}
+            dangerouslySetInnerHTML={{ __html: notificationMessage }}
+          />
           <button onClick={() => setIsBannerVisible(false)} className="absolute top-1/2 right-3 -translate-y-1/2 text-white/70 hover:text-white">&times;</button>
         </div>
       )}

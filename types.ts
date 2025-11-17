@@ -1,7 +1,8 @@
 // types.ts
 
-// FIX: Changed import to `import * as React from 'react'` to ensure the React namespace and its nested types are correctly resolved.
-// This allows for explicit extension of React's JSX types, resolving widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors.
+// FIX: Import the full React namespace to make its types available for explicit extension.
+// This is necessary to solve the widespread 'Property ... does not exist on type 'JSX.IntrinsicElements''
+// errors throughout the project.
 import * as React from 'react';
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
@@ -24,14 +25,11 @@ declare global {
     };
   }
 
-  // FIX: Explicitly extending React.JSX.IntrinsicElements ensures that we are augmenting the existing
-  // HTML/SVG elements from React, not overwriting them. This resolves the errors where standard
-  // elements like 'div', 'svg', 'path', etc., were not recognized.
-  namespace JSX {
-    interface IntrinsicElements extends React.JSX.IntrinsicElements {
-      'lottie-player': any;
-    }
-  }
+  // FIX: Removed the faulty JSX.IntrinsicElements augmentation.
+  // The previous implementation was overwriting React's default types instead of merging with them,
+  // which caused all standard HTML and SVG elements to be unrecognized by TypeScript.
+  // Since the custom 'lottie-player' element is not used in the project, this entire block has been removed,
+  // allowing the project to fall back to the default JSX types from @types/react.
 }
 
 export type View =
@@ -147,17 +145,16 @@ export interface UserProfile {
   joinedAt: any; // Firestore Timestamp
   paymentStatus: PaymentStatus;
   jobSubscription: JobSubscription | null;
-  referralCount: number;
+  referralCount: number; // Deprecated, use invitedCount instead for clarity
+  invitedCount: number;
+  totalReferralEarnings: number;
   balance: number;
   completedTaskIds: string[];
   savedWithdrawalDetails: WithdrawalDetails | null;
   walletPin: string | null;
   isFingerprintEnabled?: boolean;
-  referralCode?: string;
-  referredBy?: {
-    uid: string;
-    username: string;
-  };
+  referralCode: string; // Made non-optional
+  referredBy?: string; // Storing only referrerId
   tasksCompletedCount: number;
 }
 
@@ -190,7 +187,7 @@ export interface SocialGroup {
     status: 'pending' | 'approved' | 'rejected';
 }
 
-export type ReferralStatus = 'pending' | 'referrer_tasks_pending' | 'bonus_credited';
+export type ReferralStatus = 'pending_referrer_tasks' | 'pending_referred_tasks' | 'eligible' | 'credited';
 
 export interface Referral {
     id: string;

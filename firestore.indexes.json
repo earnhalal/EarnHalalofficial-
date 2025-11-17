@@ -57,7 +57,16 @@
       "collectionId": "referrals",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "referrerId", "order": "ASCENDING" }
+        { "fieldPath": "referrerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionId": "referrals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "referrerId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
     {

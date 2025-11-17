@@ -212,6 +212,15 @@ const App: React.FC = () => {
           if (docSnap.exists()) {
             const profileData = docSnap.data() as UserProfile;
             const wasUnpaid = userProfile?.paymentStatus === 'UNPAID';
+            
+            // MIGRATION: Ensure existing users have a referral code.
+            if (!profileData.referralCode) {
+                const newReferralCode = firebaseUser.uid.substring(0, 8);
+                updateDoc(userDocRef, { referralCode: newReferralCode })
+                    .catch(e => console.error("Failed to generate referral code:", e));
+                profileData.referralCode = newReferralCode; // Optimistic update
+            }
+
             setUserProfile(profileData);
             
             if (profileData.paymentStatus === 'VERIFIED' && wasUnpaid) {
@@ -301,7 +310,7 @@ const App: React.FC = () => {
             setUserSocialGroups(groupsData);
         }, console.error);
         
-        const referralsQuery = query(collection(db, 'referrals'), where('referrerId', '==', firebaseUser.uid));
+        const referralsQuery = query(collection(db, 'referrals'), where('referrerId', '==', firebaseUser.uid), orderBy('createdAt', 'desc'));
         const unsubscribeReferrals = onSnapshot(referralsQuery, (snapshot) => {
             const referralsData: Referral[] = [];
             snapshot.forEach(doc => referralsData.push({ id: doc.id, ...doc.data() } as Referral));
@@ -465,12 +474,14 @@ const App: React.FC = () => {
             paymentStatus: 'UNPAID',
             jobSubscription: null,
             referralCount: 0,
+            invitedCount: 0,
+            totalReferralEarnings: 0,
             balance: 100,
             completedTaskIds: [],
             savedWithdrawalDetails: null,
             walletPin: null,
             isFingerprintEnabled: false,
-            referralCode: `${data.username.toLowerCase().replace(/\s+/g, '')}${Math.floor(100 + Math.random() * 900)}`,
+            referralCode: userCredential.user.uid.substring(0, 8),
             tasksCompletedCount: 0,
         };
         
@@ -482,20 +493,23 @@ const App: React.FC = () => {
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 const referrerDoc = querySnapshot.docs[0];
-                newUserProfile.referredBy = { uid: referrerDoc.id, username: referrerDoc.data().username };
+                newUserProfile.referredBy = referrerDoc.id;
                 
-                batch.update(referrerDoc.ref, { referralCount: increment(1) });
+                // CRITICAL FIX: Increment the referrer's 'invitedCount' field.
+                // This is done within the same batch transaction to ensure data consistency.
+                batch.update(referrerDoc.ref, { invitedCount: increment(1) });
                 
                 const referralDocRef = doc(collection(db, "referrals"));
-                batch.set(referralDocRef, {
+                const newReferral: Omit<Referral, 'id'> = {
                     referrerId: referrerDoc.id,
                     referredUserId: userCredential.user.uid,
                     referredUsername: data.username,
                     referredUserTasksCompleted: 0,
-                    status: 'pending',
+                    status: 'pending_referred_tasks',
                     bonusAmount: 200,
                     createdAt: serverTimestamp()
-                } as Omit<Referral, 'id'>);
+                };
+                batch.set(referralDocRef, newReferral);
             }
         }
         
@@ -503,8 +517,8 @@ const App: React.FC = () => {
         
         const welcomeBonusRef = doc(collection(userDocRef, "transactions"));
         batch.set(welcomeBonusRef, {
-            type: TransactionType.REFERRAL,
-            description: "Welcome Bonus",
+            type: TransactionType.JOINING_FEE,
+            description: "Joining Bonus",
             amount: 100,
             date: serverTimestamp()
         });
@@ -536,92 +550,118 @@ const App: React.FC = () => {
       await updateDoc(userDocRef, { paymentStatus: 'PENDING_VERIFICATION' });
   };
 
-  const checkAndPayBonus = async (referralId: string) => {
-    const referralRef = doc(db, "referrals", referralId);
-    try {
-        await runTransaction(db, async (transaction) => {
-            const referralDoc = await transaction.get(referralRef);
-            if (!referralDoc.exists() || referralDoc.data().status === 'bonus_credited') return;
+  const payEligibleBonuses = useCallback(async (referralIds: string[]) => {
+    for (const referralId of referralIds) {
+        try {
+            await runTransaction(db, async (transaction) => {
+                const referralDocRef = doc(db, "referrals", referralId);
+                const referralDoc = await transaction.get(referralDocRef);
+                if (!referralDoc.exists() || referralDoc.data().status !== 'eligible') {
+                    return; // Already paid or not eligible, skip.
+                }
 
-            const referralData = referralDoc.data() as Referral;
-            const referrerRef = doc(db, "users", referralData.referrerId);
-            const referrerDoc = await transaction.get(referrerRef);
-            if (!referrerDoc.exists()) return;
-
-            const referrerData = referrerDoc.data() as UserProfile;
-
-            if (referralData.referredUserTasksCompleted >= 10 && referrerData.tasksCompletedCount >= 50) {
-                transaction.update(referrerRef, { balance: increment(200) });
+                const referral = referralDoc.data() as Referral;
+                const referrerRef = doc(db, "users", referral.referrerId);
+                
+                transaction.update(referrerRef, {
+                    balance: increment(referral.bonusAmount),
+                    totalReferralEarnings: increment(referral.bonusAmount)
+                });
                 const transRef = doc(collection(referrerRef, "transactions"));
                 transaction.set(transRef, {
                     type: TransactionType.REFERRAL,
-                    description: `Bonus from ${referralData.referredUsername || 'referred user'}`,
-                    amount: 200,
+                    description: `Bonus from ${referral.referredUsername}`,
+                    amount: referral.bonusAmount,
                     date: serverTimestamp()
                 });
-                transaction.update(referralRef, { status: 'bonus_credited' });
-            }
-        });
-    } catch (e) { console.error(`Bonus check failed for referral ${referralId}:`, e); }
-  };
-  
-  const handleCompleteTask = async (taskId: string) => {
-    if(!user || !userProfile) return;
-    if(userProfile.completedTaskIds.includes(taskId)) return;
+                transaction.update(referralDocRef, { status: 'credited' });
+            });
+        } catch (e) {
+            console.error(`Bonus payment transaction for referral ${referralId} failed:`, e);
+        }
+    }
+  }, []);
+
+  const handleCompleteTask = useCallback(async (taskId: string) => {
+    if (!user || !userProfile) return;
+    if (userProfile.completedTaskIds.includes(taskId)) return;
 
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
+    const userDocRef = doc(db, "users", user.uid);
+    const taskDocRef = doc(db, "tasks", taskId);
+    
+    const batch = writeBatch(db);
+    batch.update(userDocRef, {
+        balance: increment(task.reward),
+        completedTaskIds: arrayUnion(taskId),
+        tasksCompletedCount: increment(1)
+    });
+    batch.update(taskDocRef, { completions: increment(1) });
+    const newTransRef = doc(collection(userDocRef, "transactions"));
+    batch.set(newTransRef, {
+        type: TransactionType.EARNING,
+        description: `Completed: ${task.title}`,
+        amount: task.reward,
+        date: serverTimestamp()
+    });
+    
     try {
-        await runTransaction(db, async (transaction) => {
-            const userDocRef = doc(db, "users", user.uid);
-            const taskDocRef = doc(db, "tasks", taskId);
-            
-            transaction.update(userDocRef, {
-                balance: increment(task.reward),
-                completedTaskIds: arrayUnion(taskId),
-                tasksCompletedCount: increment(1)
-            });
-            transaction.update(taskDocRef, { completions: increment(1) });
-            
-            const transColRef = collection(userDocRef, "transactions");
-            const newTransRef = doc(transColRef);
-            transaction.set(newTransRef, {
-                type: TransactionType.EARNING,
-                description: `Completed: ${task.title}`,
-                amount: task.reward,
-                date: serverTimestamp()
-            });
+      await batch.commit();
 
-            if (userProfile.referredBy) {
-                const referralQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
-                const referralSnapshot = await getDocs(referralQuery);
-                if (!referralSnapshot.empty) {
-                    transaction.update(referralSnapshot.docs[0].ref, { referredUserTasksCompleted: increment(1) });
-                }
-            }
-        });
+      // --- Post-commit referral checks ---
+      const newTasksCompletedCount = (userProfile.tasksCompletedCount || 0) + 1;
 
-        const updatedUserCount = (userProfile.tasksCompletedCount || 0) + 1;
-        
-        // Check 1: Did a referred user (me) just become eligible?
-        if (userProfile.referredBy && updatedUserCount >= 10) {
-             const referralQuery = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
-             const refSnap = await getDocs(referralQuery);
-             if(!refSnap.empty) await checkAndPayBonus(refSnap.docs[0].id);
-        }
+      // Check if this user (as a referred user) has met their condition
+      if (userProfile.referredBy) {
+          const q = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+              const referralDoc = snapshot.docs[0];
+              const referralData = referralDoc.data() as Referral;
+              
+              if (referralData.status !== 'credited') {
+                  const updateData: Partial<Referral> = { referredUserTasksCompleted: increment(1) };
+                  
+                  if (newTasksCompletedCount >= 10) {
+                      const referrerDoc = await getDoc(doc(db, 'users', userProfile.referredBy));
+                      if (referrerDoc.exists() && (referrerDoc.data().tasksCompletedCount || 0) >= 50) {
+                          updateData.status = 'eligible';
+                      } else {
+                          updateData.status = 'pending_referrer_tasks';
+                      }
+                  }
+                  await updateDoc(referralDoc.ref, updateData);
+                  if (updateData.status === 'eligible') {
+                      await payEligibleBonuses([referralDoc.id]);
+                  }
+              }
+          }
+      }
 
-        // Check 2: Did a referrer (me) just make others eligible?
-        if (updatedUserCount >= 50) {
-            const myReferralsQuery = query(collection(db, "referrals"), where("referrerId", "==", user.uid));
-            const myRefsSnap = await getDocs(myReferralsQuery);
-            myRefsSnap.forEach(doc => checkAndPayBonus(doc.id));
-        }
+      // Check if this user (as a referrer) has met their condition
+      if (newTasksCompletedCount >= 50) {
+          const q = query(collection(db, "referrals"), where("referrerId", "==", user.uid), where("status", "==", "pending_referrer_tasks"));
+          const snapshot = await getDocs(q);
+          if (!snapshot.empty) {
+              const updateBatch = writeBatch(db);
+              const newlyEligibleIds: string[] = [];
+              snapshot.forEach(docSnap => {
+                  updateBatch.update(docSnap.ref, { status: 'eligible' });
+                  newlyEligibleIds.push(docSnap.id);
+              });
+              await updateBatch.commit();
+              if (newlyEligibleIds.length > 0) {
+                  await payEligibleBonuses(newlyEligibleIds);
+              }
+          }
+      }
 
     } catch (error) {
-        console.error("Task completion or referral check failed:", error);
+       console.error("Task completion & referral check failed:", error);
     }
-  };
+  }, [user, userProfile, tasks, payEligibleBonuses]);
   
   const handleTaskView = async (taskId: string) => {
       const taskDocRef = doc(db, "tasks", taskId);
@@ -785,7 +825,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
-      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
+      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
@@ -806,7 +846,7 @@ const App: React.FC = () => {
       SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
       UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={handleMarkUpdateAsRead} onMarkAllAsRead={handleMarkAllUpdatesAsRead} />,
     };
-    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.completedTaskIds.length ?? 0} referrals={userProfile?.referralCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />;
+    return views[activeView] || <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />;
   };
 
   if (isLoading) return <LoadingScreen />;
