@@ -48,9 +48,9 @@ const SubmissionModal: React.FC<{
 
         // 2. Use Gemini to suggest a title
         try {
-            const apiKey = import.meta.env.VITE_API_KEY as string;
+            const apiKey = process.env.API_KEY;
             if (!apiKey) {
-                throw new Error("VITE_API_KEY is not configured.");
+                throw new Error("API_KEY is not configured.");
             }
             const ai = new GoogleGenAI({ apiKey });
             const prompt = `Based on this social group URL, suggest a short, clean, and appropriate title for it. Example: for '.../ForexTradingPK', respond 'Forex Trading PK'. For '.../FunnyVideos', respond 'Funny Videos'. URL is: ${url}. Respond with ONLY the title text, nothing else.`;

@@ -184,6 +184,15 @@ const App: React.FC = () => {
   const prevUserCreatedTasksRef = useRef<UserCreatedTask[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
 
+  // This effect checks the URL path on load. If it's '/signup',
+  // it sets the app state to show the signup form, enabling referral links.
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === '/signup') {
+      setAuthAction('signup');
+    }
+  }, []);
+
   const transactions = useMemo(() => {
     return baseTransactions.map(tx => {
         const newTx = { ...tx };
@@ -484,32 +493,46 @@ const App: React.FC = () => {
             referralCode: userCredential.user.uid.substring(0, 8),
             tasksCompletedCount: 0,
         };
-        
+
         const batch = writeBatch(db);
 
-        if (data.referralCode) {
+        // Check for a referral username and apply referral logic if it exists.
+        // The 'referralCode' from the form now holds the referrer's username.
+        if (data.referralCode && data.referralCode.trim() !== '') {
             const usersRef = collection(db, "users");
-            const q = query(usersRef, where("referralCode", "==", data.referralCode));
+            // Find the referrer by their username, case-insensitively.
+            const q = query(usersRef, where("username_lowercase", "==", data.referralCode.trim().toLowerCase()));
             const querySnapshot = await getDocs(q);
+            
             if (!querySnapshot.empty) {
                 const referrerDoc = querySnapshot.docs[0];
-                newUserProfile.referredBy = referrerDoc.id;
-                
-                // CRITICAL FIX: Increment the referrer's 'invitedCount' field.
-                // This is done within the same batch transaction to ensure data consistency.
-                batch.update(referrerDoc.ref, { invitedCount: increment(1) });
-                
-                const referralDocRef = doc(collection(db, "referrals"));
-                const newReferral: Omit<Referral, 'id'> = {
-                    referrerId: referrerDoc.id,
-                    referredUserId: userCredential.user.uid,
-                    referredUsername: data.username,
-                    referredUserTasksCompleted: 0,
-                    status: 'pending_referred_tasks',
-                    bonusAmount: 200,
-                    createdAt: serverTimestamp()
-                };
-                batch.set(referralDocRef, newReferral);
+
+                // Prevent a user from referring themselves.
+                if (referrerDoc.id === userCredential.user.uid) {
+                    console.warn("User attempted to refer themselves. Skipping referral bonus.");
+                } else {
+                    // Link the new user to their referrer.
+                    newUserProfile.referredBy = referrerDoc.id;
+                    
+                    // Atomically increment the referrer's invited count.
+                    batch.update(referrerDoc.ref, { invitedCount: increment(1) });
+                    
+                    // Create a 'referrals' document to track the relationship and bonus status.
+                    const referralDocRef = doc(collection(db, "referrals"));
+                    const newReferral: Omit<Referral, 'id'> = {
+                        referrerId: referrerDoc.id,
+                        referredUserId: userCredential.user.uid,
+                        referredUsername: data.username,
+                        referredUserTasksCompleted: 0,
+                        status: 'pending_referred_tasks',
+                        bonusAmount: 200,
+                        createdAt: serverTimestamp()
+                    };
+                    batch.set(referralDocRef, newReferral);
+                }
+            } else {
+                // It's not a critical error if the referral username is invalid, so just log a warning.
+                console.warn(`Referrer with username "${data.referralCode}" not found.`);
             }
         }
         
@@ -526,6 +549,7 @@ const App: React.FC = () => {
         await batch.commit();
 
     } catch (error: any) {
+        console.error("Signup Error:", error);
         alert(`Signup failed: ${error.message}`);
     }
   };

@@ -1,9 +1,8 @@
 // types.ts
 
-// FIX: Import the full React namespace to make its types available for explicit extension.
-// This is necessary to solve the widespread 'Property ... does not exist on type 'JSX.IntrinsicElements''
-// errors throughout the project.
-import * as React from 'react';
+// FIX: The unnecessary top-level React import has been removed. It was causing a module resolution conflict
+// that prevented the application from loading. All component files that use JSX already import React
+// directly, which is the correct pattern.
 
 // FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
 // /// <reference types="vite/client" />
@@ -15,14 +14,6 @@ declare global {
   // For particles.js used in AuthView.tsx and LandingView.tsx
   interface Window {
     particlesJS: any;
-  }
-
-  // For import.meta.env used in AIAgentChatbot.tsx
-  interface ImportMeta {
-    readonly env: {
-      readonly [key: string]: string;
-      readonly VITE_API_KEY: string;
-    };
   }
 
   // FIX: Removed the faulty JSX.IntrinsicElements augmentation.

@@ -54,6 +54,13 @@
       ]
     },
     {
+      "collectionId": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "username_lowercase", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionId": "referrals",
       "queryScope": "COLLECTION",
       "fields": [
