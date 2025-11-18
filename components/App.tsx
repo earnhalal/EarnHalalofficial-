@@ -500,9 +500,15 @@ const App: React.FC = () => {
         // The 'referralCode' from the form now holds the referrer's username.
         if (data.referralCode && data.referralCode.trim() !== '') {
             const usersRef = collection(db, "users");
-            // Find the referrer by their username, case-insensitively.
-            const q = query(usersRef, where("username_lowercase", "==", data.referralCode.trim().toLowerCase()));
-            const querySnapshot = await getDocs(q);
+            // Attempt to find the referrer by their lowercase username first (more robust)
+            let q = query(usersRef, where("username_lowercase", "==", data.referralCode.trim().toLowerCase()));
+            let querySnapshot = await getDocs(q);
+            
+            // Fallback: If lowercase match fails (e.g., older users without lowercase field), try exact match
+            if (querySnapshot.empty) {
+                q = query(usersRef, where("username", "==", data.referralCode.trim()));
+                querySnapshot = await getDocs(q);
+            }
             
             if (!querySnapshot.empty) {
                 const referrerDoc = querySnapshot.docs[0];
@@ -518,13 +524,18 @@ const App: React.FC = () => {
                     batch.update(referrerDoc.ref, { invitedCount: increment(1) });
                     
                     // Create a 'referrals' document to track the relationship and bonus status.
+                    // STRICT INITIALIZATION:
+                    // We explicitly set referrerTasksCompleted to 0 AND isNewSystem to true.
+                    // This double-lock ensures new cards don't inherit global progress.
                     const referralDocRef = doc(collection(db, "referrals"));
                     const newReferral: Omit<Referral, 'id'> = {
                         referrerId: referrerDoc.id,
                         referredUserId: userCredential.user.uid,
                         referredUsername: data.username,
                         referredUserTasksCompleted: 0,
-                        status: 'pending_referred_tasks',
+                        referrerTasksCompleted: 0, // Force Zero
+                        isNewSystem: true, // Force Flag
+                        status: 'pending_referred_tasks', 
                         bonusAmount: 200,
                         createdAt: serverTimestamp()
                     };
@@ -635,50 +646,107 @@ const App: React.FC = () => {
       await batch.commit();
 
       // --- Post-commit referral checks ---
-      const newTasksCompletedCount = (userProfile.tasksCompletedCount || 0) + 1;
+      // Requirements:
+      // Friend needs 15 tasks.
+      // Inviter needs 25 tasks (starting from 0 for new cards).
+      const TARGET_FRIEND_TASKS = 15;
+      const TARGET_INVITER_TASKS = 25;
 
-      // Check if this user (as a referred user) has met their condition
+      // 1. Update "Friend Tasks" progress (If I am the Friend/Referred User)
       if (userProfile.referredBy) {
           const q = query(collection(db, "referrals"), where("referredUserId", "==", user.uid));
           const snapshot = await getDocs(q);
           if (!snapshot.empty) {
               const referralDoc = snapshot.docs[0];
-              const referralData = referralDoc.data() as Referral;
+              const refData = referralDoc.data() as Referral;
               
-              if (referralData.status !== 'credited') {
-                  const updateData: Partial<Referral> = { referredUserTasksCompleted: increment(1) };
+              if (refData.status !== 'credited') {
+                  const newFriendCount = (refData.referredUserTasksCompleted || 0) + 1;
                   
-                  if (newTasksCompletedCount >= 10) {
-                      const referrerDoc = await getDoc(doc(db, 'users', userProfile.referredBy));
-                      if (referrerDoc.exists() && (referrerDoc.data().tasksCompletedCount || 0) >= 50) {
-                          updateData.status = 'eligible';
-                      } else {
-                          updateData.status = 'pending_referrer_tasks';
-                      }
+                  // Check Inviter Progress
+                  let isInviterDone = false;
+                  
+                  // Determine if we use local or global counter
+                  const isNewSystem = refData.isNewSystem === true || typeof refData.referrerTasksCompleted === 'number';
+                  
+                  if (isNewSystem) {
+                      // Use specific counter if available (New System)
+                      isInviterDone = (refData.referrerTasksCompleted || 0) >= TARGET_INVITER_TASKS;
+                  } else {
+                      // Fallback for old cards: fetch inviter global stats
+                      const referrerDoc = await getDoc(doc(db, 'users', refData.referrerId));
+                      const referrerGlobal = referrerDoc.exists() ? (referrerDoc.data().tasksCompletedCount || 0) : 0;
+                      isInviterDone = referrerGlobal >= TARGET_INVITER_TASKS;
                   }
-                  await updateDoc(referralDoc.ref, updateData);
-                  if (updateData.status === 'eligible') {
+
+                  const updates: any = { referredUserTasksCompleted: increment(1) };
+                  if (newFriendCount >= TARGET_FRIEND_TASKS && isInviterDone) {
+                      updates.status = 'eligible';
+                  } else if (!isInviterDone) {
+                      // Even if friend is done, we wait for referrer
+                      updates.status = 'pending_referrer_tasks'; 
+                  } else {
+                      updates.status = 'pending_referred_tasks';
+                  }
+
+                  await updateDoc(referralDoc.ref, updates);
+                  if (updates.status === 'eligible') {
                       await payEligibleBonuses([referralDoc.id]);
                   }
               }
           }
       }
 
-      // Check if this user (as a referrer) has met their condition
-      if (newTasksCompletedCount >= 50) {
-          const q = query(collection(db, "referrals"), where("referrerId", "==", user.uid), where("status", "==", "pending_referrer_tasks"));
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-              const updateBatch = writeBatch(db);
-              const newlyEligibleIds: string[] = [];
-              snapshot.forEach(docSnap => {
-                  updateBatch.update(docSnap.ref, { status: 'eligible' });
-                  newlyEligibleIds.push(docSnap.id);
-              });
-              await updateBatch.commit();
-              if (newlyEligibleIds.length > 0) {
-                  await payEligibleBonuses(newlyEligibleIds);
-              }
+      // 2. Update "Your Tasks" progress (If I am the Inviter/Referrer)
+      // I just finished a task. I need to update ALL my referrals.
+      const q = query(collection(db, "referrals"), where("referrerId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      
+      const updateBatch = writeBatch(db);
+      const newlyEligibleIds: string[] = [];
+      let hasUpdates = false;
+
+      snapshot.forEach(docSnap => {
+          const refData = docSnap.data() as Referral;
+          if (refData.status === 'credited') return;
+
+          const isFriendDone = (refData.referredUserTasksCompleted || 0) >= TARGET_FRIEND_TASKS;
+
+          // Determine if this is a "New System" referral
+          const isNewSystem = refData.isNewSystem === true || typeof refData.referrerTasksCompleted === 'number';
+
+          if (isNewSystem) {
+               // Increment the specific counter for this referral
+               const currentLocal = refData.referrerTasksCompleted || 0;
+               const newInviterCount = currentLocal + 1;
+               
+               updateBatch.update(docSnap.ref, { referrerTasksCompleted: increment(1) });
+               
+               if (newInviterCount >= TARGET_INVITER_TASKS && isFriendDone && refData.status !== 'eligible') {
+                   updateBatch.update(docSnap.ref, { status: 'eligible' });
+                   newlyEligibleIds.push(docSnap.id);
+               }
+               hasUpdates = true;
+          } else {
+               // Scenario B: Old Card (Uses global counter)
+               // Global count just incremented by 1 in the first batch commit above.
+               // We use optimistic value here for checking.
+               const globalCount = (userProfile.tasksCompletedCount || 0) + 1;
+               
+               // For old cards, we DON'T increment a specific field. 
+               // We only check if the bonus should be unlocked based on global stats.
+               if (globalCount >= TARGET_INVITER_TASKS && isFriendDone && refData.status !== 'eligible') {
+                    updateBatch.update(docSnap.ref, { status: 'eligible' });
+                    newlyEligibleIds.push(docSnap.id);
+                    hasUpdates = true;
+               }
+          }
+      });
+
+      if (hasUpdates) {
+          await updateBatch.commit();
+          if (newlyEligibleIds.length > 0) {
+              await payEligibleBonuses(newlyEligibleIds);
           }
       }
 

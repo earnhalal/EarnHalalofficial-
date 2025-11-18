@@ -185,6 +185,8 @@ export interface Referral {
     referrerId: string;
     referredUserId: string;
     referredUsername: string;
+    isNewSystem?: boolean; // Flag to identify new cards definitively
+    referrerTasksCompleted?: number; // Tracks Inviter's tasks relative to this referral
     referredUserTasksCompleted: number;
     status: ReferralStatus;
     bonusAmount: number;

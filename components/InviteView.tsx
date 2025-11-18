@@ -55,13 +55,23 @@ const ProgressBar: React.FC<{ current: number; target: number; label: string; is
     );
 };
 
-const ReferralCard: React.FC<{ referral: Referral; userTasksCompleted: number; index: number }> = ({ referral, userTasksCompleted, index }) => {
+const ReferralCard: React.FC<{ referral: Referral; globalUserTasksCompleted: number; index: number }> = ({ referral, globalUserTasksCompleted, index }) => {
     // Visual Thresholds requested in prompt
     const USER_TASK_TARGET = 25;
     const FRIEND_TASK_TARGET = 15;
 
-    const isUserComplete = userTasksCompleted >= USER_TASK_TARGET;
-    const isFriendComplete = referral.referredUserTasksCompleted >= FRIEND_TASK_TARGET;
+    // Logic to determine which progress to show
+    // 1. Check if 'isNewSystem' is true (Explicit flag)
+    // 2. OR Check if 'referrerTasksCompleted' is a number (Implicit check for data existence)
+    // This covers cases where the flag might be missing but the counter exists.
+    const isNewModel = referral.isNewSystem === true || typeof referral.referrerTasksCompleted === 'number';
+    
+    // If it's a new model card, use its specific counter. Default to 0 if for some reason it's missing but flagged new.
+    // Otherwise, fall back to global tasks for legacy support.
+    const effectiveUserTasks = isNewModel 
+        ? (referral.referrerTasksCompleted ?? 0) 
+        : globalUserTasksCompleted;
+
     // Note: The backend controls the actual 'status', but we reflect UI state here
     const isBonusUnlocked = referral.status === 'eligible' || referral.status === 'credited';
     
@@ -99,15 +109,15 @@ const ReferralCard: React.FC<{ referral: Referral; userTasksCompleted: number; i
             {/* B) Progress Section */}
             <div className="space-y-1 relative z-10">
                 <ProgressBar 
-                    current={userTasksCompleted} 
+                    current={effectiveUserTasks} 
                     target={USER_TASK_TARGET} 
-                    label="Your Tasks (Global)" 
+                    label="Your Tasks" 
                     isGold 
                 />
                 <ProgressBar 
                     current={referral.referredUserTasksCompleted} 
                     target={FRIEND_TASK_TARGET} 
-                    label="Friend Tasks (Individual)" 
+                    label="Friend Tasks" 
                 />
             </div>
 
@@ -210,7 +220,7 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                     <div className="border-t border-white/5 pt-6 relative z-10">
                         <p className="text-center text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Share Instanty</p>
                         <div className="flex justify-center gap-4 md:gap-6">
-                            <a href={`https://wa.me/?text=Join%20Earn%20Halal!%20Register%20here:%20${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-green-500/10 hover:bg-green-500 text-green-500 hover:text-white rounded-2xl transition-all border border-green-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+                            <a href={`https://wa.me/?text=Join%20Earn%20Halal!%20Register%20here:%20${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-green-500/10 hover:bg-green-50 text-green-500 hover:text-white rounded-2xl transition-all border border-green-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(34,197,94,0.4)]">
                                 <WhatsAppIcon className="w-7 h-7" />
                             </a>
                             <a href={`fb-messenger://share/?link=${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-2xl transition-all border border-blue-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]">
@@ -264,7 +274,7 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                                 <ReferralCard 
                                     key={referral.id} 
                                     referral={referral} 
-                                    userTasksCompleted={userProfile?.tasksCompletedCount || 0} 
+                                    globalUserTasksCompleted={userProfile?.tasksCompletedCount || 0} 
                                     index={index}
                                 />
                             ))}
