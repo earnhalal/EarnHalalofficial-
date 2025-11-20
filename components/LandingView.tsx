@@ -1,3 +1,4 @@
+
 // components/LandingView.tsx
 import React, { useState, useEffect } from 'react';
 import { 
@@ -5,6 +6,7 @@ import {
     FacebookIcon, InstagramIcon, YoutubeIcon, LockIcon, MailIcon, PhoneIcon,
     DocumentTextIcon, DocumentArrowUpIcon, InfoIcon, SparklesIcon
 } from './icons';
+import { InfoModal, renderModalContent } from './LandingInfoViews';
 
 // This is a global declaration to prevent TypeScript errors for the particles.js library.
 // Global type declarations have been moved to types.ts for better project-wide consistency.
@@ -15,6 +17,7 @@ interface LandingViewProps {
 
 const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   useEffect(() => {
     if (window.particlesJS) {
@@ -31,6 +34,21 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
       });
     }
   }, []);
+
+  const getModalTitle = (key: string) => {
+      const titles: Record<string, string> = {
+          'how-it-works': 'How It Works',
+          'about': 'About Us',
+          'support': 'Contact Support',
+          'privacy': 'Privacy Policy',
+          'terms': 'Terms & Conditions',
+          'withdrawal': 'Withdrawal Policy',
+          'deposit': 'Deposit Info',
+          'refund': 'Refund Policy',
+          'disclaimer': 'Disclaimer'
+      };
+      return titles[key] || 'Information';
+  };
 
   return (
     <>
@@ -55,6 +73,15 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         .gradient-text { background: linear-gradient(135deg, #10b981, #34d399); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
       `}</style>
 
+      {activeModal && (
+          <InfoModal 
+            title={getModalTitle(activeModal)} 
+            onClose={() => setActiveModal(null)}
+          >
+              {renderModalContent(activeModal)}
+          </InfoModal>
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 text-gray-800 overflow-x-hidden">
         <div id="particles-js"></div>
 
@@ -65,8 +92,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
               <span className="font-bold text-lg text-emerald-600">Earn Halal</span>
             </a>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <a href="#features" className="nav-link text-gray-700">Features</a>
-              <a href="#how" className="nav-link text-gray-700">How It Works</a>
+              <button onClick={() => setActiveModal('about')} className="nav-link text-gray-700">About</button>
+              <button onClick={() => setActiveModal('how-it-works')} className="nav-link text-gray-700">How It Works</button>
               <a href="#payouts" className="nav-link text-gray-700">Payouts</a>
               <a href="#reviews" className="nav-link text-gray-700">Reviews</a>
             </nav>
@@ -83,8 +110,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         {mobileMenu && (
              <div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-6" style={{ transform: mobileMenu ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.3s ease-in-out'}}>
               <nav className="space-y-6 text-lg font-medium">
-                <a href="#features" onClick={() => setMobileMenu(false)} className="block">Features</a>
-                <a href="#how" onClick={() => setMobileMenu(false)} className="block">How It Works</a>
+                <button onClick={() => { setActiveModal('about'); setMobileMenu(false); }} className="block w-full text-left">About Us</button>
+                <button onClick={() => { setActiveModal('how-it-works'); setMobileMenu(false); }} className="block w-full text-left">How It Works</button>
                 <a href="#payouts" onClick={() => setMobileMenu(false)} className="block">Payouts</a>
                 <a href="#reviews" onClick={() => setMobileMenu(false)} className="block">Reviews</a>
                 <div className="pt-6 space-y-3">
@@ -166,16 +193,48 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             </section>
         </main>
         
-        <footer className="bg-gradient-to-t from-emerald-600 to-emerald-700 text-white relative overflow-hidden">
+        <footer className="bg-gradient-to-t from-emerald-800 to-emerald-900 text-white relative overflow-hidden">
             <div className="absolute inset-0 opacity-10" style={{background: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E') repeat"}}></div>
             <div className="relative max-w-7xl mx-auto px-6 py-16">
-                 {/* Footer content goes here, mirroring the HTML structure */}
-                <div className="border-t border-white/20 pt-6 flex flex-col md:flex-row justify-between items-center text-xs opacity-80 mt-12">
-                    <p>© 2025 <span className="gradient-text font-bold">Earn Halal</span>. All rights reserved. Made with love in Pakistan.</p>
-                    <div className="flex gap-6 mt-4 md:mt-0">
-                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-gold" /> 100% Halal</span>
-                        <span className="flex items-center gap-1"><LockIcon className="w-4 h-4 text-gold" /> SSL Secured</span>
-                        <span className="flex items-center gap-1"><InfoIcon className="w-4 h-4 text-gold" /> 24/7 Support</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-center md:text-left">
+                    <div>
+                        <h4 className="font-bold text-lg mb-6 text-emerald-400 border-b border-emerald-700 inline-block pb-2">Company</h4>
+                        <ul className="space-y-3 text-sm opacity-80">
+                            <li><button onClick={() => setActiveModal('about')} className="hover:text-emerald-300 transition-colors">About Us</button></li>
+                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-emerald-300 transition-colors">How It Works</button></li>
+                            <li><button onClick={() => setActiveModal('reviews')} className="hover:text-emerald-300 transition-colors">Success Stories</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-lg mb-6 text-emerald-400 border-b border-emerald-700 inline-block pb-2">Support</h4>
+                        <ul className="space-y-3 text-sm opacity-80">
+                            <li><button onClick={() => setActiveModal('support')} className="hover:text-emerald-300 transition-colors">Contact Us</button></li>
+                            <li><button onClick={() => setActiveModal('withdrawal')} className="hover:text-emerald-300 transition-colors">Withdrawal Policy</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-lg mb-6 text-emerald-400 border-b border-emerald-700 inline-block pb-2">Legal</h4>
+                        <ul className="space-y-3 text-sm opacity-80">
+                            <li><button onClick={() => setActiveModal('privacy')} className="hover:text-emerald-300 transition-colors">Privacy Policy</button></li>
+                            <li><button onClick={() => setActiveModal('terms')} className="hover:text-emerald-300 transition-colors">Terms & Conditions</button></li>
+                            <li><button onClick={() => setActiveModal('disclaimer')} className="hover:text-emerald-300 transition-colors">Disclaimer</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-lg mb-6 text-emerald-400 border-b border-emerald-700 inline-block pb-2">Payments</h4>
+                        <ul className="space-y-3 text-sm opacity-80">
+                            <li><button onClick={() => setActiveModal('deposit')} className="hover:text-emerald-300 transition-colors">Deposit Info</button></li>
+                            <li><button onClick={() => setActiveModal('refund')} className="hover:text-emerald-300 transition-colors">Refund Policy</button></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center text-xs opacity-70">
+                    <p>© 2025 <span className="text-emerald-400 font-bold">Earn Halal</span>. All rights reserved.</p>
+                    <div className="flex flex-wrap justify-center gap-6 mt-4 md:mt-0">
+                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-yellow-400" /> 100% Halal</span>
+                        <span className="flex items-center gap-1"><LockIcon className="w-4 h-4 text-yellow-400" /> SSL Secured</span>
+                        <span className="flex items-center gap-1"><InfoIcon className="w-4 h-4 text-yellow-400" /> 24/7 Support</span>
                     </div>
                 </div>
             </div>

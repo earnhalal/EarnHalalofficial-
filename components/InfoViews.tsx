@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CheckCircleIcon } from './icons';
 
@@ -53,7 +54,7 @@ export const AboutUsView = () => (
 export const ContactUsView = () => (
     <InfoCard title="Contact Us">
         <p>If you have any questions, concerns, or feedback, please don't hesitate to reach out to our support team.</p>
-        <p><strong>Email:</strong> <a href="mailto:support@earnhalal.com" className="text-primary-600 hover:underline">support@earnhalal.com</a></p>
+        <p><strong>Email:</strong> <a href="mailto:earnhalalofficial@gmail.com" className="text-primary-600 hover:underline">earnhalalofficial@gmail.com</a></p>
         <p>Our support team is available 24/7 to assist you with any issues you may encounter. We strive to respond to all inquiries within 24 hours.</p>
     </InfoCard>
 );
