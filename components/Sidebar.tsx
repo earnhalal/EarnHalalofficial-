@@ -28,15 +28,15 @@ const NavItem: React.FC<{
       isSubItem ? 'py-2 pl-10 pr-4' : 'py-2.5 px-4'
     } ${
       isActive
-        ? 'bg-emerald-100 text-emerald-700'
-        : 'text-gray-600 hover:text-emerald-700 hover:bg-emerald-50'
+        ? 'bg-secondary-50 text-secondary-800'
+        : 'text-gray-500 hover:text-secondary-700 hover:bg-secondary-50/50'
     }`}
   >
-    {isActive && !isSubItem && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-emerald-500 rounded-r-full"></div>}
-    <div className={`${isActive ? 'text-emerald-600' : 'text-gray-400 group-hover:text-emerald-600'}`}>{icon}</div>
+    {isActive && !isSubItem && <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-secondary-700 rounded-r-full"></div>}
+    <div className={`${isActive ? 'text-secondary-700' : 'text-gray-400 group-hover:text-secondary-600'}`}>{icon}</div>
     <span className="font-semibold text-sm flex-1 text-left">{label}</span>
     {badgeCount && badgeCount > 0 && (
-        <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{badgeCount}</span>
+        <span className="bg-primary-400 text-secondary-900 text-xs font-bold px-2 py-0.5 rounded-full">{badgeCount}</span>
     )}
   </button>
 );
@@ -65,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
 
   return (
     <aside
-      className={`bg-white border-r border-gray-200 text-gray-800 w-64 fixed top-0 left-0 h-full shadow-lg z-40 transform transition-transform duration-300 ease-in-out ${
+      className={`bg-white border-r border-neutral-200 text-accent-700 w-64 fixed top-0 left-0 h-full shadow-lg z-40 transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
@@ -73,16 +73,16 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
         <div className="flex items-center space-x-3 mb-8 px-2 pt-2">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="40" height="40" rx="8" fill="url(#paint0_linear_sidebar)"/>
-                <path d="M12 10H20C22.2091 10 24 11.7909 24 14V16C24 18.2091 22.2091 20 20 20H12V10Z" fill="white" fillOpacity="0.5"/>
+                <path d="M12 10H20C22.2091 10 24 11.7909 24 14V16C24 18.2091 22.2091 20 20 20H12V10Z" fill="white" fillOpacity="0.9"/>
                 <path d="M12 22H28V30H12V22Z" fill="white"/>
                 <defs>
                     <linearGradient id="paint0_linear_sidebar" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#10b981"/>
-                        <stop offset="1" stopColor="#059669"/>
+                        <stop stopColor="#4EF2C3"/>
+                        <stop offset="1" stopColor="#0F4C47"/>
                     </linearGradient>
                 </defs>
             </svg>
-          <span className="text-xl font-bold text-gray-800">TaskMint</span>
+          <span className="text-xl font-bold text-secondary-800 tracking-tight">TaskMint</span>
         </div>
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2">
           {mainViews.map(({ view, label, icon }) => (
@@ -96,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
             />
           ))}
         </nav>
-        <div className="mt-auto pt-2 border-t border-gray-200 space-y-1.5">
+        <div className="mt-auto pt-2 border-t border-neutral-200 space-y-1.5">
           <NavItem
             key="PROFILE_SETTINGS"
             icon={<SettingsIcon className="w-5 h-5" />}

@@ -5,48 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TaskMint – Earn Smart. TaskMint.</title>
   <meta name="description" content="Earn daily by completing simple tasks. Earn Smart. TaskMint. Instant payouts via JazzCash & EasyPaisa."/>
-  <meta name="theme-color" content="#2ECC71"/>
+  <meta name="theme-color" content="#0F4C47"/>
 
   <!-- Tailwind CSS + DaisyUI -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: { 
-            emerald: { 
-              DEFAULT: '#2ECC71', // User-specified Emerald Green
-              '50': '#eafaf1',
-              '100': '#d4f4e3',
-              '200': '#abe9c7',
-              '300': '#81dda9',
-              '400': '#57d28c',
-              '500': '#2ECC71',
-              '600': '#27b865',
-              '700': '#209a54',
-              '800': '#197c43',
-              '900': '#135e32'
+            primary: { 
+              DEFAULT: '#4EF2C3', // Mint Green (Brand Core)
+              '50': '#F0FFFA',
+              '100': '#E0FEF5',
+              '200': '#BFFDE9',
+              '300': '#9FFCDE',
+              '400': '#4EF2C3', 
+              '500': '#2EECAE',
+              '600': '#14C88E',
+              '700': '#0E8F65',
+              '800': '#096346',
+              '900': '#053828',
+              '950': '#021F16'
             }, 
-            gold: {
-              DEFAULT: '#FFD700', // User-specified Warm Gold
-              '500': '#FFD700',
-            },
-            purple: {
-              500: '#8b5cf6',
-              600: '#7c3aed',
-            },
-            primary: {
-              DEFAULT: '#2ECC71',
-              50: '#eafaf1', 100: '#d4f4e3', 200: '#abe9c7', 300: '#81dda9', 400: '#57d28c', 500: '#2ECC71', 600: '#27b865', 700: '#209a54', 800: '#197c43', 900: '#135e32', 950: '#0d3f21'
+            secondary: {
+              DEFAULT: '#0F4C47', // Deep Teal / Dark Cyan
+              '50': '#F2F7F7',
+              '100': '#E0EBEB',
+              '200': '#C2D6D5',
+              '300': '#A3C2C0',
+              '400': '#669996',
+              '500': '#3D7A77',
+              '600': '#24615E',
+              '700': '#154D4A',
+              '800': '#0F4C47',
+              '900': '#052926',
+              '950': '#021513'
             },
             accent: {
-               DEFAULT: '#FFD700',
-              50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f', 950: '#451a03'
+               DEFAULT: '#1A1A1A', // Soft Black
+              '50': '#F5F5F5',
+              '100': '#EBEBEB',
+              '200': '#D6D6D6',
+              '300': '#ADADAD',
+              '400': '#858585',
+              '500': '#5C5C5C',
+              '600': '#333333',
+              '700': '#1A1A1A',
+              '800': '#0F0F0F',
+              '900': '#050505'
             },
-            secondary: {
-               50: '#f5f3ff', 100: '#ede9fe', 200: '#ddd6fe', 300: '#c4b5fd', 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9', 800: '#5b21b6', 900: '#4c1d95', 950: '#2e1065'
+            neutral: {
+               DEFAULT: '#E8EBED', // Cool Grey
+               '50': '#FAFAFA',
+               '100': '#F5F5F5',
+               '200': '#E8EBED',
+               '300': '#D1D5DB',
+               '800': '#1F2937',
+               '900': '#111827'
             },
+            error: {
+              DEFAULT: '#FF6B6B',
+              '500': '#FF6B6B'
+            },
+            // Legacy mapping to ensure no breaks, mapped to new theme
+            emerald: { 
+              DEFAULT: '#4EF2C3',
+              '50': '#F0FFFA',
+              '100': '#E0FEF5',
+              '400': '#4EF2C3',
+              '500': '#2EECAE',
+              '600': '#14C88E',
+              '700': '#0F4C47', // Mapped to Teal for darker shades
+            }
           },
           fontFamily: { 
             sans: ['Inter', 'sans-serif'],
@@ -85,7 +118,7 @@
 </script>
 </head>
 
-<body class="min-h-screen bg-gray-100 text-gray-800">
+<body class="min-h-screen bg-neutral-50 text-accent-700">
   <div id="root"></div>
   <script type="module" src="index.tsx"></script>
 </body>

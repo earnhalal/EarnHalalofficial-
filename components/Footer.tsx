@@ -13,7 +13,7 @@ const NavItem: React.FC<{
     isActive: boolean;
     onClick: () => void;
 }> = ({ icon, label, isActive, onClick }) => (
-    <button onClick={onClick} className={`flex flex-col items-center justify-center gap-1 w-full transition-colors ${isActive ? 'text-emerald-600' : 'text-gray-500 hover:text-emerald-500'}`}>
+    <button onClick={onClick} className={`flex flex-col items-center justify-center gap-1 w-full transition-colors ${isActive ? 'text-secondary-700' : 'text-gray-500 hover:text-secondary-500'}`}>
         {icon}
         <span className="text-xs font-medium">{label}</span>
     </button>
@@ -39,7 +39,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
     };
 
     return (
-        <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30 md:hidden">
+        <footer className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-30 md:hidden border-t border-gray-200">
             <div className="flex justify-around items-center h-16 px-2">
                 {navItems.map(item => (
                     <NavItem 
