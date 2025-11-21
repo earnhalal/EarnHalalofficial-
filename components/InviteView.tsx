@@ -220,7 +220,7 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                     <div className="border-t border-white/5 pt-6 relative z-10">
                         <p className="text-center text-xs font-bold text-neutral-500 uppercase tracking-widest mb-4">Share Instanty</p>
                         <div className="flex justify-center gap-4 md:gap-6">
-                            <a href={`https://wa.me/?text=Join%20Earn%20Halal!%20Register%20here:%20${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-green-500/10 hover:bg-green-50 text-green-500 hover:text-white rounded-2xl transition-all border border-green-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(34,197,94,0.4)]">
+                            <a href={`https://wa.me/?text=Join%20TaskMint!%20Register%20here:%20${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-green-500/10 hover:bg-green-50 text-green-500 hover:text-white rounded-2xl transition-all border border-green-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(34,197,94,0.4)]">
                                 <WhatsAppIcon className="w-7 h-7" />
                             </a>
                             <a href={`fb-messenger://share/?link=${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white rounded-2xl transition-all border border-blue-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(59,130,246,0.4)]">
@@ -229,7 +229,7 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                             <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-500 hover:text-white rounded-2xl transition-all border border-indigo-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(99,102,241,0.4)]">
                                 <FacebookIcon className="w-7 h-7" />
                             </a>
-                            <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=Start%20Earning%20Halal%20Income!`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-sky-500/10 hover:bg-sky-500 text-sky-500 hover:text-white rounded-2xl transition-all border border-sky-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(14,165,233,0.4)]">
+                            <a href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=Start%20Earning%20Smart%20Income!`} target="_blank" rel="noopener noreferrer" className="group p-3.5 bg-sky-500/10 hover:bg-sky-500 text-sky-500 hover:text-white rounded-2xl transition-all border border-sky-500/20 hover:scale-110 hover:shadow-[0_0_15px_rgba(14,165,233,0.4)]">
                                 <TelegramIcon className="w-7 h-7" />
                             </a>
                         </div>

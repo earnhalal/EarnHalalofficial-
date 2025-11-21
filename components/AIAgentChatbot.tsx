@@ -52,7 +52,7 @@ const AIAgentChatbot: React.FC = () => {
                 return;
             }
             const ai = new GoogleGenAI({ apiKey });
-            const systemInstruction = `You are a friendly and respectful customer support agent for a web app called 'Earn Halal'. Your name is ${agentName}.
+            const systemInstruction = `You are a friendly and respectful customer support agent for a web app called 'TaskMint'. Your name is ${agentName}.
 
 **Core Instructions:**
 1.  **Language:** You MUST ALWAYS respond in Roman Urdu, naturally mixing in simple English words (like 'task', 'withdraw', 'balance').
@@ -90,7 +90,7 @@ const AIAgentChatbot: React.FC = () => {
             initializeChat();
             setMessages([{
                 id: 1,
-                text: `Assalam o Alaikum 😊 Main ${agentName} hoon, Earn Halal Support se. Kis cheez mein madad chahiye?`,
+                text: `Assalam o Alaikum 😊 Main ${agentName} hoon, TaskMint Support se. Kis cheez mein madad chahiye?`,
                 sender: 'bot'
             }]);
              setSuggestions(['Tasks kese karun?', 'Pese kese nikalun?', 'Referral ka system?']);
@@ -211,57 +211,75 @@ const AIAgentChatbot: React.FC = () => {
                         <h3 className="font-bold text-lg">{agentName}</h3>
                         <div className="flex items-center gap-2">
                              <div className="w-2 h-2 bg-green-300 rounded-full"></div>
-                             <p className="text-xs text-yellow-200">Online</p>
+                             <p className="text-xs text-yellow-100">Online</p>
                         </div>
                     </div>
-                    <button onClick={handleToggle} className="text-white hover:bg-white/20 rounded-full p-1 transition-colors">
-                       <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                    <button onClick={handleToggle} className="text-white hover:text-yellow-100 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
                 
-                <div className="flex-grow p-4 overflow-y-auto bg-gray-900/50 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900 custom-scrollbar">
                     {messages.map((msg) => (
                         <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`message-bubble max-w-xs md:max-w-md px-4 py-2 rounded-2xl shadow-sm ${msg.sender === 'user' ? 'bg-accent-500 text-white rounded-br-lg' : 'bg-gray-700 text-gray-200 rounded-bl-lg'}`}>
-                                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                            <div className={`max-w-[80%] px-4 py-2 rounded-2xl message-bubble text-sm ${
+                                msg.sender === 'user' 
+                                ? 'bg-accent-600 text-white rounded-br-none' 
+                                : 'bg-gray-700 text-gray-200 rounded-bl-none border border-gray-600'
+                            }`}>
+                                {msg.text}
                             </div>
                         </div>
                     ))}
                     {isLoading && <TypingIndicator />}
-                     <div ref={messagesEndRef} />
+                    <div ref={messagesEndRef} />
                 </div>
-                
-                <div className="flex-shrink-0 p-4 border-t border-gray-700 space-y-3">
-                    {suggestions.length > 0 && !isLoading && (
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            {suggestions.map(option => (
-                               <button key={option} onClick={() => handleSendMessage(option)} className="px-3 py-1.5 bg-gray-700 text-accent-300 rounded-full text-sm hover:bg-gray-600 transition-colors">
-                                   {option}
-                               </button>
+
+                <div className="p-3 bg-gray-800 border-t border-gray-700">
+                    {suggestions.length > 0 && (
+                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 custom-scrollbar">
+                            {suggestions.map((s, i) => (
+                                <button 
+                                    key={i} 
+                                    onClick={() => handleSendMessage(s)}
+                                    className="whitespace-nowrap px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-accent-300 rounded-full border border-gray-600 transition-colors"
+                                >
+                                    {s}
+                                </button>
                             ))}
                         </div>
                     )}
-                    <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputValue); }} className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <input
                             type="text"
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Aap ka sawal..."
-                            className="flex-1 w-full p-3 border-2 border-gray-600 rounded-full shadow-sm focus:ring-2 focus:ring-accent-500/80 focus:border-accent-500 bg-gray-700 text-gray-100 placeholder:text-gray-400"
+                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
+                            placeholder="Type a message..."
+                            className="flex-1 bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-full px-4 py-2 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 text-sm"
                         />
-                         <button type="submit" className="w-11 h-11 flex items-center justify-center bg-accent-500 text-white rounded-full hover:bg-accent-600 transition-colors shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                        <button 
+                            onClick={() => handleSendMessage(inputValue)}
+                            disabled={!inputValue.trim() || isLoading}
+                            className="p-2 bg-accent-600 text-white rounded-full hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                            </svg>
                         </button>
-                    </form>
+                    </div>
                 </div>
             </div>
 
             <button
                 onClick={handleToggle}
-                className={`chatbot-icon fixed bottom-4 right-4 sm:right-6 w-16 h-16 bg-gradient-to-br from-accent-500 to-yellow-500 text-white rounded-full shadow-2xl flex items-center justify-center z-50 animate-pulse-glow ${!isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}
-                aria-label="Open support chat"
+                className={`chatbot-icon fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-accent-600 to-yellow-500 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:scale-110 active:scale-95 animate-pulse-glow ${isOpen ? 'rotate-90 opacity-0 pointer-events-none' : 'rotate-0 opacity-100'}`}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
             </button>
         </>
     );

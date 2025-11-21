@@ -45,7 +45,7 @@ export const HowItWorksView = () => (
 
 export const AboutUsView = () => (
     <InfoCard title="About Us">
-        <p>Earn Halal is a platform dedicated to providing legitimate and ethical online earning opportunities. We believe in transparency, fairness, and upholding Halal principles in all our operations.</p>
+        <p>TaskMint is a platform dedicated to providing legitimate and ethical online earning opportunities. We believe in transparency, fairness, and upholding smart earning principles in all our operations.</p>
         <p>Our mission is to connect individuals looking for simple online work with businesses and creators who need to boost their online presence. We ensure that all tasks on our platform are vetted and that payments are processed securely and on time.</p>
         <p>Join our community today and become a part of a trusted and growing network committed to integrity and mutual success.</p>
     </InfoCard>
@@ -61,7 +61,7 @@ export const ContactUsView = () => (
 
 export const PrivacyPolicyView = () => (
     <InfoCard title="Privacy Policy">
-        <p>Your privacy is important to us. It is Earn Halal's policy to respect your privacy regarding any information we may collect from you across our website.</p>
+        <p>Your privacy is important to us. It is TaskMint's policy to respect your privacy regarding any information we may collect from you across our website.</p>
         <p>We only ask for personal information when we truly need it to provide a service to you. We collect it by fair and lawful means, with your knowledge and consent. We also let you know why we’re collecting it and how it will be used.</p>
         <p>We only retain collected information for as long as necessary to provide you with your requested service. What data we store, we’ll protect within commercially acceptable means to prevent loss and theft, as well as unauthorized access, disclosure, copying, use or modification.</p>
         <p>We don’t share any personally identifying information publicly or with third-parties, except when required to by law.</p>
@@ -72,7 +72,7 @@ export const TermsAndConditionsView = () => (
     <InfoCard title="Terms & Conditions">
         <p>By accessing this website, you are agreeing to be bound by these website Terms and Conditions of Use, all applicable laws and regulations, and agree that you are responsible for compliance with any applicable local laws.</p>
         <p>The materials contained in this website are protected by applicable copyright and trademark law.</p>
-        <p>Permission is granted to temporarily download one copy of the materials on Earn Halal's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.</p>
-        <p>This license shall automatically terminate if you violate any of these restrictions and may be terminated by Earn Halal at any time.</p>
+        <p>Permission is granted to temporarily download one copy of the materials on TaskMint's website for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.</p>
+        <p>This license shall automatically terminate if you violate any of these restrictions and may be terminated by TaskMint at any time.</p>
     </InfoCard>
 );

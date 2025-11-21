@@ -152,11 +152,11 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                     <div className="glass rounded-3xl p-8 shadow-2xl shadow-emerald-500/10">
                         <div className="text-center mb-8">
                             <div className="flex justify-center items-center gap-2 mb-3">
-                                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-xl">EH</div>
+                                <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-xl">TM</div>
                             </div>
-                            <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent font-heading">Earn<span className="text-emerald-500">Halal</span></h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">100% Halal • Verified by Scholars • Trusted by 100K+ Pakistanis</p>
-                            <div className="halal-badge inline-flex items-center gap-2 text-white px-4 py-1.5 rounded-full text-xs font-bold mt-3 shadow-lg">Verified by Islamic Scholars</div>
+                            <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent font-heading">Task<span className="text-emerald-500">Mint</span></h1>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">Earn Smart • Verified Tasks • Trusted by 100K+ Pakistanis</p>
+                            <div className="halal-badge inline-flex items-center gap-2 text-white px-4 py-1.5 rounded-full text-xs font-bold mt-3 shadow-lg">Earn Smart. TaskMint.</div>
                         </div>
 
                         <div className="flex justify-end mb-5">
@@ -180,7 +180,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                              <div className="text-center mb-6 animate-fade-in">
                                 <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-emerald-500 mx-auto mb-4"></div>
                                 <p className="text-emerald-600 dark:text-emerald-400 font-bold text-lg">Hold tight!</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your halal earnings journey is loading...</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your earning journey is loading...</p>
                             </div>
                         ) : (
                           <div>
@@ -200,7 +200,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                         <span className="text-xs text-gray-600 dark:text-gray-400">I agree to the <a href="#" className="text-emerald-600 font-medium hover:underline">Terms & Conditions</a> and <a href="#" className="text-emerald-600 font-medium hover:underline">Privacy Policy</a></span>
                                     </label>
                                     <div className="flex items-center gap-3 pt-2">
-                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Create Halal Account</button>
+                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Create Account</button>
                                         <button type="button" onClick={() => handleFingerprintAuth('signup')} aria-label="Use Fingerprint" className="btn btn-square h-14 w-14 bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-gray-700">
                                             <FingerprintIcon className="w-8 h-8"/>
                                         </button>
@@ -224,7 +224,7 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                             )}
                           </div>
                         )}
-                        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">© 2025 Earn Halal. All Rights Reserved.</p>
+                        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">© 2025 TaskMint. All Rights Reserved.</p>
                     </div>
                 </div>
             </div>

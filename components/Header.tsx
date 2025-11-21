@@ -40,7 +40,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveView }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(true);
-  const [notificationMessage, setNotificationMessage] = useState('🔔 Welcome to Earn Halal! See what others are earning.');
+  const [notificationMessage, setNotificationMessage] = useState('🔔 Welcome to TaskMint! See what others are earning.');
   const [isNotificationAnimating, setIsNotificationAnimating] = useState(true);
 
   useEffect(() => {
@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ username, setIsSidebarOpen, setActiveVi
                     </linearGradient>
                 </defs>
             </svg>
-            <span className="font-bold text-lg text-emerald-700">Earn Halal</span>
+            <span className="font-bold text-lg text-emerald-700">TaskMint</span>
         </div>
         <div className="flex items-center gap-3">
             <button onClick={() => setActiveView('SPIN_WHEEL')} className="text-gray-600 p-2 rounded-full hover:bg-gray-200">

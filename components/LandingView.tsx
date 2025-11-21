@@ -88,8 +88,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <a href="#" className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">EH</div>
-              <span className="font-bold text-lg text-emerald-600">Earn Halal</span>
+              <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm">TM</div>
+              <span className="font-bold text-lg text-emerald-600">TaskMint</span>
             </a>
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               <button onClick={() => setActiveModal('about')} className="nav-link text-gray-700">About</button>
@@ -126,11 +126,11 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             <section className="pt-24 pb-12 px-6 text-center">
               <div className="max-w-3xl mx-auto">
                 <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
-                  Earning Made <span className="text-emerald-600">Simple</span>,<br/>
-                  The <span className="text-emerald-600">Halal</span> Way
+                  Earn Smart.<br/>
+                  <span className="text-emerald-600">TaskMint.</span>
                 </h1>
                 <p className="text-lg text-gray-600 mb-8">
-                  Join thousands of Pakistanis earning daily rewards by completing simple online tasks. Secure, transparent, and 100% halal.
+                  Join thousands of Pakistanis earning daily rewards by completing simple online tasks. Secure, transparent, and 100% verified.
                 </p>
                 <button onClick={() => onGetStarted('signup')} className="inline-block cta-btn text-white font-bold py-4 px-8 rounded-full text-lg">
                   Get Started Now – Free!
@@ -148,11 +148,11 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             </section>
 
             <section id="features" className="px-6 py-12">
-                <h2 className="text-3xl font-bold text-center mb-10">Why Choose Earn Halal?</h2>
+                <h2 className="text-3xl font-bold text-center mb-10">Why Choose TaskMint?</h2>
                 <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
                     <div className="glass p-6 rounded-2xl text-center"><WalletIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Instant Rewards</h3><p className="text-sm text-gray-600">Balance updates instantly after task.</p></div>
                     <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Secure Payouts</h3><p className="text-sm text-gray-600">JazzCash, EasyPaisa, Bank.</p></div>
-                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">100% Halal</h3><p className="text-sm text-gray-600">Tasks vetted by scholars.</p></div>
+                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Earn Smart</h3><p className="text-sm text-gray-600">Tasks verified for quality.</p></div>
                     <div className="glass p-6 rounded-2xl text-center"><HomeIcon className="w-10 h-10 text-emerald-600 mb-3 mx-auto" /><h3 className="font-bold mb-2">Diverse Tasks</h3><p className="text-sm text-gray-600">Surveys, videos, referrals.</p></div>
                 </div>
             </section>
@@ -178,7 +178,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             <section id="reviews" className="px-6 py-12 bg-gray-50">
               <h2 className="text-3xl font-bold text-center mb-10">User Reviews</h2>
               <div className="max-w-2xl mx-auto space-y-6">
-                <div className="glass p-6 rounded-2xl"><p className="italic mb-3">"Best halal earning app in Pakistan! Withdrew Rs.5000 in 2 days."</p><p className="text-emerald-600 font-medium">— Ahmed, Lahore</p></div>
+                <div className="glass p-6 rounded-2xl"><p className="italic mb-3">"Best earning app in Pakistan! Withdrew Rs.5000 in 2 days."</p><p className="text-emerald-600 font-medium">— Ahmed, Lahore</p></div>
                 <div className="glass p-6 rounded-2xl"><p className="italic mb-3">"Easy tasks and instant payouts. 100% trusted!"</p><p className="text-emerald-600 font-medium">— Fatima, Karachi</p></div>
               </div>
             </section>
@@ -230,9 +230,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                 </div>
 
                 <div className="border-t border-white/20 pt-8 flex flex-col md:flex-row justify-between items-center text-xs opacity-70">
-                    <p>© 2025 <span className="text-emerald-400 font-bold">Earn Halal</span>. All rights reserved.</p>
+                    <p>© 2025 <span className="text-emerald-400 font-bold">TaskMint</span>. All rights reserved.</p>
                     <div className="flex flex-wrap justify-center gap-6 mt-4 md:mt-0">
-                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-yellow-400" /> 100% Halal</span>
+                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-yellow-400" /> Earn Smart</span>
                         <span className="flex items-center gap-1"><LockIcon className="w-4 h-4 text-yellow-400" /> SSL Secured</span>
                         <span className="flex items-center gap-1"><InfoIcon className="w-4 h-4 text-yellow-400" /> 24/7 Support</span>
                     </div>

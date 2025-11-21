@@ -82,7 +82,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
                     </linearGradient>
                 </defs>
             </svg>
-          <span className="text-xl font-bold text-gray-800">Earn Halal</span>
+          <span className="text-xl font-bold text-gray-800">TaskMint</span>
         </div>
         <nav className="flex-1 space-y-1.5 overflow-y-auto pr-2">
           {mainViews.map(({ view, label, icon }) => (

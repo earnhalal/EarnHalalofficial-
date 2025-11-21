@@ -33,7 +33,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
       {/* Welcome Message */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Welcome back, {username}!</h1>
-        <p className="text-gray-500">Your halal journey continues</p>
+        <p className="text-gray-500">Your earning journey continues</p>
       </div>
 
       {/* Balance Card */}
@@ -52,7 +52,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
             </button>
           </div>
           <div className="mt-4 text-center">
-            <span className="bg-white/90 text-emerald-700 text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">100% Halal Certified</span>
+            <span className="bg-white/90 text-emerald-700 text-xs font-bold px-4 py-1.5 rounded-full shadow-sm">Earn Smart. TaskMint.</span>
           </div>
         </div>
       </div>
