@@ -1,26 +1,11 @@
 // types.ts
 
-// FIX: The unnecessary top-level React import has been removed. It was causing a module resolution conflict
-// that prevented the application from loading. All component files that use JSX already import React
-// directly, which is the correct pattern.
-
-// FIX: Removed reference to 'vite/client' as it was not found, causing a compilation error.
-// /// <reference types="vite/client" />
-
 // FIX: Globally declare and augment types for JSX custom elements and import.meta.env
-// This fixes widespread "Property '...' does not exist on type 'JSX.IntrinsicElements'" errors
-// and also the 'import.meta.env' error which arose from removing 'vite/client' types.
 declare global {
   // For particles.js used in AuthView.tsx and LandingView.tsx
   interface Window {
     particlesJS: any;
   }
-
-  // FIX: Removed the faulty JSX.IntrinsicElements augmentation.
-  // The previous implementation was overwriting React's default types instead of merging with them,
-  // which caused all standard HTML and SVG elements to be unrecognized by TypeScript.
-  // Since the custom 'lottie-player' element is not used in the project, this entire block has been removed,
-  // allowing the project to fall back to the default JSX types from @types/react.
 }
 
 export type View =
@@ -46,7 +31,8 @@ export type View =
   | 'COIN_FLIP_GAME'
   | 'MINES_GAME'
   | 'SOCIAL_GROUPS'
-  | 'UPDATES_INBOX';
+  | 'UPDATES_INBOX'
+  | 'PREMIUM_HUB'; // Added PREMIUM_HUB
 
 export enum TransactionType {
   EARNING = 'Earning',

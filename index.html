@@ -2,10 +2,12 @@
 <html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>TaskMint – Earn Smart. TaskMint.</title>
   <meta name="description" content="Earn daily by completing simple tasks. Earn Smart. TaskMint. Instant payouts via JazzCash & EasyPaisa."/>
-  <meta name="theme-color" content="#0F172A"/>
+  <meta name="theme-color" content="#FFFFFF"/>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- Tailwind CSS + DaisyUI -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,22 +18,24 @@
       theme: {
         extend: {
           colors: { 
+            // LUXURY GOLD PALETTE
             primary: { 
-              DEFAULT: '#F59E0B', // Amber/Gold 500
-              '50': '#FFFBEB',
-              '100': '#FEF3C7',
-              '200': '#FDE68A',
-              '300': '#FCD34D',
-              '400': '#FBBF24', 
-              '500': '#F59E0B',
-              '600': '#D97706', // Deep Gold
-              '700': '#B45309',
-              '800': '#92400E',
-              '900': '#78350F',
-              '950': '#451A03'
+              DEFAULT: '#D4AF37', // Metallic Gold
+              '50': '#FCF9EE',
+              '100': '#F8F2D8',
+              '200': '#EEDFA6',
+              '300': '#E4CC74',
+              '400': '#D4AF37', // Base Gold
+              '500': '#B4901E', // Darker Gold
+              '600': '#927212',
+              '700': '#73580E',
+              '800': '#5F4911',
+              '900': '#513E13',
+              '950': '#2E2106'
             }, 
+            // DEEP BLACK PALETTE
             secondary: {
-              DEFAULT: '#0F172A', // Slate 900 (Luxury Black/Blue)
+              DEFAULT: '#0F172A', // Slate 900
               '50': '#F8FAFC',
               '100': '#F1F5F9',
               '200': '#E2E8F0',
@@ -45,35 +49,27 @@
               '950': '#020617'
             },
             accent: {
-               DEFAULT: '#111827', // Soft Black
+               DEFAULT: '#111827', 
               '50': '#F9FAFB',
               '100': '#F3F4F6',
-              '200': '#E5E7EB',
-              '300': '#D1D5DB',
-              '400': '#9CA3AF',
-              '500': '#6B7280',
-              '600': '#4B5563',
-              '700': '#374151',
-              '800': '#1F2937',
+              '500': '#D4AF37', 
+              '600': '#B4901E',
               '900': '#111827'
             },
-            neutral: {
-               DEFAULT: '#E8EBED', // Cool Grey
-               '50': '#FAFAFA',
-               '100': '#F5F5F5',
-               '200': '#E8EBED',
-               '300': '#D1D5DB',
-               '800': '#1F2937',
-               '900': '#111827'
-            },
-            error: {
-              DEFAULT: '#EF4444',
-              '500': '#EF4444'
-            }
+            // OVERRIDE SUCCESS/ERROR to prevent bright green/red clash with luxury theme
+            success: '#D4AF37', 
+            error: '#991B1B'
           },
           fontFamily: { 
             sans: ['Inter', 'sans-serif'],
             heading: ['Montserrat', 'sans-serif'],
+          },
+          boxShadow: {
+            'gold': '0 4px 14px 0 rgba(212, 175, 55, 0.39)',
+            'gold-hover': '0 6px 20px rgba(212, 175, 55, 0.23)',
+            'subtle': '0 2px 10px rgba(0,0,0,0.03)',
+            'subtle-md': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+            'card': '0 4px 20px rgba(0,0,0,0.05)'
           }
         }
       }
@@ -83,17 +79,11 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 
   <!-- Alpine.js (for landing page) -->
   <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
-
-  <!-- Lottie Player -->
-  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 
 <script type="importmap">
 {
@@ -108,7 +98,7 @@
 </script>
 </head>
 
-<body class="min-h-screen bg-gray-50 text-gray-900 selection:bg-amber-100 selection:text-amber-900">
+<body class="min-h-screen bg-[#F9FAFB] text-slate-900 selection:bg-primary-100 selection:text-primary-900 overscroll-none">
   <div id="root"></div>
   <script type="module" src="index.tsx"></script>
 </body>
