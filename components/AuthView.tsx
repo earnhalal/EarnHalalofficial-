@@ -1,5 +1,6 @@
+// components/AuthView.tsx
 import React, { useState, useEffect } from 'react';
-import { FingerprintIcon } from './icons';
+import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ArrowRight, SparklesIcon } from './icons';
 
 interface AuthViewProps {
     onSignup: (data: {username: string, email: string, phone: string, password: string, referralCode?: string}) => void;
@@ -7,222 +8,227 @@ interface AuthViewProps {
     initialView: 'login' | 'signup';
 }
 
+// Local Google Icon Component for this view
+const GoogleIcon = ({ className }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.2 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    </svg>
+);
+
 const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) => {
     const [isSignup, setIsSignup] = useState(initialView === 'signup');
-    const [darkMode, setDarkMode] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [agree, setAgree] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     
-    // Form state
+    // Form State
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [referralCode, setReferralCode] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [agree, setAgree] = useState(false);
     const [error, setError] = useState('');
-    const [fingerprintMessage, setFingerprintMessage] = useState('');
 
     useEffect(() => {
         setIsSignup(initialView === 'signup');
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) setReferralCode(ref);
     }, [initialView]);
 
-    useEffect(() => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setDarkMode(prefersDark);
-
-        // Check for referral code in URL on mount
-        const params = new URLSearchParams(window.location.search);
-        const refCode = params.get('ref');
-        if (refCode) {
-            setReferralCode(refCode);
-        }
-    }, []);
-
-    useEffect(() => {
-        document.documentElement.classList.toggle('dark', darkMode);
-        // We need to re-initialize particles on theme change if we want different colors
-        initializeParticles(darkMode);
-    }, [darkMode]);
-
-    const initializeParticles = (isDark: boolean) => {
-      if (window.particlesJS) {
-          const particleColors = isDark ? ['#4EF2C3', '#0F4C47'] : ['#2EECAE', '#14C88E'];
-          window.particlesJS('particles-js-auth', {
-            particles: {
-              number: { value: 50, density: { enable: true, value_area: 800 } },
-              color: { value: particleColors },
-              shape: { type: 'circle' },
-              opacity: { value: 0.4, random: true, anim: { enable: true, speed: 1 } },
-              size: { value: 5, random: true },
-              line_linked: { enable: false },
-              move: { enable: true, speed: 1.5, direction: 'none', random: true, straight: false, out_mode: 'out' }
-            },
-            interactivity: {
-              detect_on: 'canvas',
-              events: { 
-                onhover: { enable: true, mode: 'repulse' }, 
-                onclick: { enable: true, mode: 'push' }, 
-                resize: true 
-              },
-              modes: { repulse: { distance: 120, duration: 0.6 }, push: { particles_nb: 6 } }
-            },
-            retina_detect: true
-          });
-      }
-    };
-
-    useEffect(() => {
-      initializeParticles(darkMode);
-      return () => {
-        // Cleanup particles canvas on component unmount
-        const particlesEl = document.getElementById('particles-js-auth');
-        if (particlesEl && particlesEl.firstChild) {
-            particlesEl.innerHTML = '';
-        }
-      };
-    }, []);
-
-    const handleSignupSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
-        if (!agree) {
-            alert('Please agree to the Terms & Conditions and Privacy Policy.');
+        
+        if (isSignup && !agree) {
+            setError('You must agree to the Terms & Privacy Policy.');
             return;
         }
-        setSuccess(true);
-        setTimeout(() => {
+
+        setIsLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        if (isSignup) {
             onSignup({ username: name, email, phone, password, referralCode });
-        }, 2500);
-    };
-
-    const handleLoginSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setSuccess(true);
-        setTimeout(() => {
-            onLogin(email, password);
-        }, 2500);
-    };
-
-    const handleFingerprintAuth = (mode: 'login' | 'signup') => {
-        setFingerprintMessage('');
-        if (mode === 'signup') {
-            setFingerprintMessage("Complete registration first, then enable fingerprint login in your profile settings.");
         } else {
-            const lastUserEmail = localStorage.getItem('lastUserEmail');
-            if (lastUserEmail) {
-                setEmail(lastUserEmail);
-                setFingerprintMessage(`Fingerprint recognized for ${lastUserEmail}. Please enter your password to log in.`);
-            } else {
-                setFingerprintMessage("No fingerprint login found on this device. Set it up in settings after logging in.");
-            }
+            onLogin(email, password);
         }
-        setTimeout(() => setFingerprintMessage(''), 6000);
+        setTimeout(() => setIsLoading(false), 3000); 
     };
 
     return (
-        <>
-            <style>{`
-                :root { --primary: #4EF2C3; --accent: #0F4C47; --gold: #4EF2C3; --glow: 0 0 30px rgba(78, 242, 195, 0.4); }
-                .dark { --primary: #2EECAE; --accent: #14C88E; --gold: #2EECAE; }
-                .auth-container { font-family: 'Inter', sans-serif; }
-                .auth-container h1, .auth-container h2, .auth-container h3, .font-heading { font-family: 'Montserrat', sans-serif; }
-                .glass { backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.15); border: 1.5px solid rgba(255, 255, 255, 0.3); box-shadow: var(--glow), inset 0 0 15px rgba(78, 242, 195, 0.08); }
-                .input-glow:focus { outline: none; box-shadow: 0 0 0 4px rgba(78, 242, 195, 0.3), var(--glow); border-color: var(--primary); }
-                .halal-badge { background: linear-gradient(135deg, #0F4C47, #24615E); animation: pulse 2s infinite; }
-                @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-                #particles-js-auth { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; }
-                input::placeholder { font-family: 'Montserrat', sans-serif !important; font-weight: 500; color: #94a3b8 !important; }
-                input { font-family: 'Montserrat', sans-serif !important; font-weight: 500; }
-                @keyframes fade-in { 0% { opacity: 0; } 100% { opacity: 1; } }
-                .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-            `}</style>
-            <div
-                className={`auth-container min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-secondary-50 via-primary-50 to-white dark:from-secondary-950 dark:via-secondary-900 dark:to-black transition-all duration-700 overflow-auto py-8`}
-            >
-                <div id="particles-js-auth"></div>
+        <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-4 font-sans selection:bg-amber-100 selection:text-amber-900">
+            <div className="w-full max-w-md relative z-10">
+                <div className="text-center mb-8 animate-fade-in-up">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 text-white shadow-lg shadow-amber-500/30 mb-4">
+                        <SparklesIcon className="w-8 h-8" />
+                    </div>
+                    <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight font-heading">TaskMint</h1>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Earn Smart. TaskMint.</p>
+                </div>
 
-                <div className="relative w-full max-w-md mx-auto p-4">
-                    <div className="glass rounded-3xl p-8 shadow-2xl shadow-primary-500/10">
-                        <div className="text-center mb-8">
-                            <div className="flex justify-center items-center gap-2 mb-3">
-                                <div className="w-14 h-14 bg-gradient-to-br from-primary-400 to-secondary-600 rounded-xl flex items-center justify-center text-white font-black text-2xl shadow-xl">TM</div>
-                            </div>
-                            <h1 className="text-4xl font-black bg-gradient-to-r from-secondary-700 to-secondary-900 dark:from-primary-300 dark:to-primary-500 bg-clip-text text-transparent font-heading">Task<span className="text-primary-500">Mint</span></h1>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 font-medium">Earn Smart • Verified Tasks • Trusted by 100K+ Pakistanis</p>
-                            <div className="halal-badge inline-flex items-center gap-2 text-white px-4 py-1.5 rounded-full text-xs font-bold mt-3 shadow-lg">Earn Smart. TaskMint.</div>
+                <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-white/50 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                    <div className="p-2">
+                        <div className="flex bg-gray-100 rounded-2xl p-1 relative">
+                            <div 
+                                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out ${isSignup ? 'translate-x-[100%] left-1' : 'translate-x-0 left-1'}`}
+                            ></div>
+                            
+                            <button 
+                                onClick={() => { setIsSignup(false); setError(''); }}
+                                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${!isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Log In
+                            </button>
+                            <button 
+                                onClick={() => { setIsSignup(true); setError(''); }}
+                                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                            >
+                                Create Account
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="px-8 pb-8 pt-6">
+                        <div className="mb-8 text-center">
+                            <h2 className="text-2xl font-bold text-gray-900">
+                                {isSignup ? 'Start your earning journey' : 'Welcome back, Hustler!'}
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-2">
+                                {isSignup ? 'Create an account to unlock tasks & rewards.' : 'Enter your details to access your dashboard.'}
+                            </p>
                         </div>
 
-                        <div className="flex justify-end mb-5">
-                            <label className="swap swap-rotate">
-                                <input type="checkbox" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-                                <div className="swap-on text-xs dark:text-white">Dark</div>
-                                <div className="swap-off text-xs text-gray-800">Light</div>
-                            </label>
-                        </div>
-                        
-                        <div className="flex mb-6 relative overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800 p-1.5 shadow-inner">
-                            <div className="absolute inset-0 flex transition-transform duration-500 ease-out" style={{ transform: isSignup ? 'translateX(0%)' : 'translateX(100%)' }}>
-                                <div className="w-1/2 h-full bg-gradient-to-r from-secondary-600 to-secondary-800 rounded-xl shadow-lg"></div>
-                                <div className="w-1/2 h-full"></div>
-                            </div>
-                            <button onClick={() => { setIsSignup(true); setSuccess(false); }} className={`relative z-10 flex-1 py-3 text-sm font-bold transition-all ${isSignup ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>Sign Up</button>
-                            <button onClick={() => { setIsSignup(false); setSuccess(false); }} className={`relative z-10 flex-1 py-3 text-sm font-bold transition-all ${!isSignup ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>Log In</button>
-                        </div>
-
-                        {success ? (
-                             <div className="text-center mb-6 animate-fade-in">
-                                <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary-500 mx-auto mb-4"></div>
-                                <p className="text-secondary-800 dark:text-primary-400 font-bold text-lg">Hold tight!</p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Your earning journey is loading...</p>
-                            </div>
-                        ) : (
-                          <div>
-                            {fingerprintMessage && <p className="text-center text-sm font-semibold text-secondary-700 dark:text-primary-300 mb-4 p-2 bg-primary-100 dark:bg-secondary-900/50 rounded-lg">{fingerprintMessage}</p>}
-                            {isSignup ? (
-                                <form onSubmit={handleSignupSubmit} className="space-y-5">
-                                    <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full Name" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
-                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
-                                    <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone Number" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
-                                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Create Password" required minLength={6} className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {isSignup && (
+                                <div className="space-y-4 animate-fade-in">
                                     <div>
-                                        <input type="text" value={referralCode} onChange={e => setReferralCode(e.target.value)} placeholder="Referral Username (Optional)" readOnly={!!new URLSearchParams(window.location.search).get('ref')} className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500 read-only:bg-primary-50 dark:read-only:bg-secondary-900/50 read-only:font-bold read-only:text-secondary-700 dark:read-only:text-primary-300" />
-                                        <p className="text-xs text-center mt-2 text-gray-500 dark:text-gray-400">Have a referral? Enter your friend's username to get a <span className="font-bold text-primary-600 dark:text-primary-400">200 Rs</span> bonus!</p>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Full Name"
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            required
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                        />
                                     </div>
-                                    <label className="flex items-center gap-3 cursor-pointer mt-4">
-                                        <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="checkbox checkbox-success checkbox-sm" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">I agree to the <a href="#" className="text-secondary-700 font-medium hover:underline">Terms & Conditions</a> and <a href="#" className="text-secondary-700 font-medium hover:underline">Privacy Policy</a></span>
-                                    </label>
-                                    <div className="flex items-center gap-3 pt-2">
-                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-secondary-600 to-secondary-800 hover:from-secondary-700 hover:to-secondary-900 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Create Account</button>
-                                        <button type="button" onClick={() => handleFingerprintAuth('signup')} aria-label="Use Fingerprint" className="btn btn-square h-14 w-14 bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-secondary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700">
-                                            <FingerprintIcon className="w-8 h-8"/>
-                                        </button>
+                                    <div>
+                                        <input 
+                                            type="tel" 
+                                            placeholder="Phone Number"
+                                            value={phone}
+                                            onChange={e => setPhone(e.target.value)}
+                                            required
+                                            className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                        />
                                     </div>
-                                </form>
-                            ) : (
-                                <form onSubmit={handleLoginSubmit} className="space-y-5">
-                                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email Address" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
-                                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required className="input input-bordered w-full input-glow bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-white placeholder-gray-500" />
-                                    <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                                        <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" className="checkbox checkbox-sm checkbox-success" /><span>Remember me</span></label>
-                                        <a href="#" className="text-secondary-700 hover:underline font-medium">Forgot?</a>
-                                    </div>
-                                    <div className="flex items-center gap-3 pt-2">
-                                        <button type="submit" className="btn flex-grow h-14 bg-gradient-to-r from-secondary-600 to-secondary-800 hover:from-secondary-700 hover:to-secondary-900 text-white border-0 shadow-xl transform transition hover:scale-105 active:scale-100 font-bold text-lg">Login Securely</button>
-                                         <button type="button" onClick={() => handleFingerprintAuth('login')} aria-label="Use Fingerprint" className="btn btn-square h-14 w-14 bg-white/60 dark:bg-gray-800/60 border-gray-300 dark:border-gray-600 text-secondary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-gray-700">
-                                            <FingerprintIcon className="w-8 h-8"/>
-                                        </button>
-                                    </div>
-                                </form>
+                                </div>
                             )}
-                          </div>
-                        )}
-                        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">© 2025 TaskMint. All Rights Reserved.</p>
+
+                            <div>
+                                <input 
+                                    type="email" 
+                                    placeholder="Email Address"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    required
+                                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                />
+                            </div>
+                            <div className="relative">
+                                <input 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    required
+                                    minLength={6}
+                                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                >
+                                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                </button>
+                            </div>
+
+                            {isSignup ? (
+                                <div className="animate-fade-in space-y-4">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Referral Code (Optional)"
+                                        value={referralCode}
+                                        onChange={e => setReferralCode(e.target.value)}
+                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                    />
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${agree ? 'bg-amber-500 border-amber-500' : 'bg-white border-gray-300 group-hover:border-amber-400'}`}>
+                                            {agree && <CheckCircleIcon className="w-3.5 h-3.5 text-white" />}
+                                        </div>
+                                        <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="hidden" />
+                                        <span className="text-xs text-gray-500 font-medium">I agree to the <span className="text-gray-900 hover:underline">Terms</span> & <span className="text-gray-900 hover:underline">Privacy Policy</span></span>
+                                    </label>
+                                </div>
+                            ) : (
+                                <div className="flex justify-end animate-fade-in">
+                                    <button type="button" className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors">Forgot Password?</button>
+                                </div>
+                            )}
+
+                            {error && (
+                                <div className="bg-red-50 text-red-600 text-xs font-semibold px-4 py-3 rounded-xl text-center animate-pulse">
+                                    {error}
+                                </div>
+                            )}
+
+                            <button 
+                                type="submit" 
+                                disabled={isLoading}
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mt-4"
+                            >
+                                {isLoading ? (
+                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                ) : (
+                                    <>
+                                        {isSignup ? 'Create Account' : 'Login'}
+                                        <ArrowRight className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+                        </form>
+
+                        <div className="relative my-8">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-white px-4 text-gray-400 font-bold tracking-wider">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <button className="w-full py-3.5 rounded-2xl border-2 border-gray-100 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.99]">
+                            <GoogleIcon className="w-5 h-5" />
+                            Continue with Google
+                        </button>
                     </div>
                 </div>
             </div>
-        </>
+            <style>{`
+                @keyframes fade-in-up {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
+            `}</style>
+        </div>
     );
 };
 

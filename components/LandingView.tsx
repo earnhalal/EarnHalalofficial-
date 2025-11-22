@@ -1,9 +1,9 @@
 // components/LandingView.tsx
 import React, { useState, useEffect } from 'react';
 import { 
-    MenuIcon, CloseIcon, WalletIcon, CheckCircleIcon, HomeIcon, BankIcon, 
-    FacebookIcon, InstagramIcon, YoutubeIcon, LockIcon, MailIcon, PhoneIcon,
-    DocumentTextIcon, DocumentArrowUpIcon, InfoIcon, SparklesIcon
+    MenuIcon, CloseIcon, WalletIcon, CheckCircleIcon, BankIcon, 
+    FacebookIcon, InstagramIcon, YoutubeIcon, LockIcon,
+    SparklesIcon, UserGroupIcon, TrophyIcon, Globe, ShieldCheck, ArrowRight
 } from './icons';
 import { InfoModal, renderModalContent } from './LandingInfoViews';
 
@@ -14,34 +14,26 @@ interface LandingViewProps {
 const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    if (window.particlesJS) {
-      window.particlesJS('particles-js', {
-        particles: {
-          number: { value: 40 },
-          color: { value: '#4EF2C3' }, // Mint Green
-          shape: { type: 'circle' },
-          opacity: { value: 0.3 },
-          size: { value: 4 },
-          move: { enable: true, speed: 1 }
-        },
-        interactivity: { events: { onhover: { enable: true, mode: 'repulse' } } }
-      });
-    }
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const getModalTitle = (key: string) => {
       const titles: Record<string, string> = {
           'how-it-works': 'How It Works',
-          'about': 'About Us',
-          'support': 'Contact Support',
+          'about': 'About TaskMint',
+          'support': 'Support Center',
           'privacy': 'Privacy Policy',
-          'terms': 'Terms & Conditions',
+          'terms': 'Terms of Service',
           'withdrawal': 'Withdrawal Policy',
-          'deposit': 'Deposit Info',
+          'deposit': 'Deposit Instructions',
           'refund': 'Refund Policy',
-          'disclaimer': 'Disclaimer'
+          'disclaimer': 'Disclaimer',
+          'blog': 'TaskMint Blog'
       };
       return titles[key] || 'Information';
   };
@@ -49,25 +41,44 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   return (
     <>
       <style>{`
-        #particles-js { position: fixed; width: 100%; height: 100%; top: 0; left: 0; z-index: -1; opacity: 0.3; }
-        .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); }
-        .cta-btn {
-          background: linear-gradient(135deg, #4EF2C3, #2EECAE);
-          color: #0F4C47;
-          transition: all 0.3s ease;
-          box-shadow: 0 8px 20px rgba(78, 242, 195, 0.4);
+        .btn-gold {
+            background: linear-gradient(to right, #F59E0B, #D97706);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+            transition: all 0.3s ease;
         }
-        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(78, 242, 195, 0.6); }
-        .stat-card { animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        .nav-link { transition: color 0.3s; }
-        .nav-link:hover { color: #0F4C47; }
-        .mobile-menu { transition: transform 0.3s ease; }
-        .mobile-menu.open { transform: translateX(0); }
-        .link-card { transition: all 0.3s ease; backdrop-filter: blur(10px); }
-        .link-card:hover { transform: translateY(-8px); box-shadow: 0 15px 30px rgba(15, 76, 71, 0.2); }
-        .social-float { animation: float 4s ease-in-out infinite; }
-        .gradient-text { background: linear-gradient(135deg, #0F4C47, #24615E); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.4);
+            filter: brightness(1.1);
+        }
+        .btn-outline-gold {
+            background: white;
+            border: 2px solid #F59E0B;
+            color: #D97706;
+            transition: all 0.3s ease;
+        }
+        .btn-outline-gold:hover {
+            background: #FFFBEB;
+            transform: translateY(-2px);
+        }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
       `}</style>
 
       {activeModal && (
@@ -79,160 +90,254 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
           </InfoModal>
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-secondary-50 to-primary-50 text-gray-800 overflow-x-hidden">
-        <div id="particles-js"></div>
-
-        <header className="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-md z-50 shadow-sm border-b border-white/20">
-          <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="#" className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-gradient-to-br from-secondary-500 to-secondary-700 rounded-full flex items-center justify-center text-white font-bold text-sm">TM</div>
-              <span className="font-bold text-lg text-secondary-800">TaskMint</span>
-            </a>
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <button onClick={() => setActiveModal('about')} className="nav-link text-gray-700">About</button>
-              <button onClick={() => setActiveModal('how-it-works')} className="nav-link text-gray-700">How It Works</button>
-              <a href="#payouts" className="nav-link text-gray-700">Payouts</a>
-              <a href="#reviews" className="nav-link text-gray-700">Reviews</a>
-            </nav>
-            <div className="hidden md:flex items-center gap-3">
-              <button onClick={() => onGetStarted('login')} className="px-5 py-2 text-secondary-700 font-medium border border-secondary-700 rounded-full hover:bg-secondary-50 transition">Login</button>
-              <button onClick={() => onGetStarted('signup')} className="px-5 py-2 bg-primary-500 text-secondary-900 font-bold rounded-full cta-btn border border-transparent">Sign Up Free</button>
+      <div className="min-h-screen bg-white text-gray-900 font-sans overflow-x-hidden selection:bg-amber-100 selection:text-amber-900">
+        
+        {/* --- Header --- */}
+        <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-nav py-3' : 'bg-white/0 py-5'}`}>
+          <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+                <SparklesIcon className="w-6 h-6" />
+              </div>
+              <span className="font-extrabold text-xl tracking-tight font-heading text-gray-900">TaskMint</span>
             </div>
-            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2">
-                {mobileMenu ? <CloseIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+
+            <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
+              <button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-600 transition-colors">How it Works</button>
+              <button onClick={() => setActiveModal('about')} className="hover:text-amber-600 transition-colors">About</button>
+              <button onClick={() => setActiveModal('blog')} className="hover:text-amber-600 transition-colors">Blog</button>
+              <button onClick={() => setActiveModal('support')} className="hover:text-amber-600 transition-colors">Support</button>
+            </nav>
+
+            <div className="hidden md:flex items-center gap-4">
+              <button onClick={() => onGetStarted('login')} className="text-gray-900 hover:text-amber-600 font-bold transition-colors">Log In</button>
+              <button onClick={() => onGetStarted('signup')} className="btn-gold px-6 py-2.5 rounded-full font-bold text-sm">
+                Start Earning
+              </button>
+            </div>
+
+            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden text-gray-900">
+                {mobileMenu ? <CloseIcon className="w-7 h-7" /> : <MenuIcon className="w-7 h-7" />}
             </button>
           </div>
         </header>
-        
-        {mobileMenu && (
-             <div className="md:hidden fixed inset-0 bg-white z-40 pt-16 px-6" style={{ transform: mobileMenu ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.3s ease-in-out'}}>
-              <nav className="space-y-6 text-lg font-medium">
-                <button onClick={() => { setActiveModal('about'); setMobileMenu(false); }} className="block w-full text-left">About Us</button>
-                <button onClick={() => { setActiveModal('how-it-works'); setMobileMenu(false); }} className="block w-full text-left">How It Works</button>
-                <a href="#payouts" onClick={() => setMobileMenu(false)} className="block">Payouts</a>
-                <a href="#reviews" onClick={() => setMobileMenu(false)} className="block">Reviews</a>
-                <div className="pt-6 space-y-3">
-                  <button onClick={() => { onGetStarted('login'); setMobileMenu(false); }} className="block w-full text-center py-3 border border-secondary-700 text-secondary-700 rounded-full">Login</button>
-                  <button onClick={() => { onGetStarted('signup'); setMobileMenu(false); }} className="block w-full text-center py-3 bg-primary-500 text-secondary-900 font-bold rounded-full">Sign Up Free</button>
-                </div>
-              </nav>
+
+        {/* --- Mobile Menu --- */}
+        <div className={`fixed inset-0 bg-white z-40 pt-24 px-6 transition-transform duration-300 ${mobileMenu ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className="flex flex-col space-y-6 text-lg font-bold text-gray-800">
+                <button onClick={() => { setActiveModal('how-it-works'); setMobileMenu(false); }} className="text-left border-b border-gray-100 pb-4">How It Works</button>
+                <button onClick={() => { setActiveModal('about'); setMobileMenu(false); }} className="text-left border-b border-gray-100 pb-4">About Us</button>
+                <button onClick={() => { setActiveModal('blog'); setMobileMenu(false); }} className="text-left border-b border-gray-100 pb-4">Blog</button>
+                <button onClick={() => { onGetStarted('login'); setMobileMenu(false); }} className="text-left border-b border-gray-100 pb-4 text-amber-600">Log In</button>
+                <button onClick={() => { onGetStarted('signup'); setMobileMenu(false); }} className="btn-gold py-4 rounded-xl text-center mt-4 shadow-lg">Sign Up Free</button>
             </div>
-        )}
+        </div>
 
         <main>
-            <section className="pt-24 pb-12 px-6 text-center">
-              <div className="max-w-3xl mx-auto">
-                <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight text-secondary-900">
-                  Earn Smart.<br/>
-                  <span className="text-primary-500">TaskMint.</span>
-                </h1>
-                <p className="text-lg text-gray-600 mb-8">
-                  Join thousands of Pakistanis earning daily rewards by completing simple online tasks. Secure, transparent, and 100% verified.
-                </p>
-                <button onClick={() => onGetStarted('signup')} className="inline-block cta-btn text-secondary-900 font-bold py-4 px-8 rounded-full text-lg">
-                  Get Started Now – Free!
-                </button>
-                <p className="text-sm text-gray-500 mt-3">No credit card required. Start in 1 minute.</p>
-              </div>
+            {/* --- Hero Section --- */}
+            <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden bg-white">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gray-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+
+                <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-semibold mb-8 shadow-sm animate-fade-in-up">
+                        <span className="flex h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                        The #1 Earning App
+                    </div>
+                    
+                    <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight tracking-tight animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                        Turn Your Time Into <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600 drop-shadow-sm">Real Money.</span>
+                    </h1>
+                    
+                    <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                        TaskMint is the premium platform for smart earners. Complete simple digital tasks, get instant gold rewards, and withdraw directly to your wallet.
+                    </p>
+                    
+                    <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+                        <button onClick={() => onGetStarted('signup')} className="btn-gold px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 group">
+                            Start Earning Now 
+                            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                        <button onClick={() => setActiveModal('how-it-works')} className="btn-outline-gold px-8 py-4 rounded-full font-bold text-lg">
+                            How it Works
+                        </button>
+                    </div>
+
+                    <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16 text-gray-500 font-medium animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+                         <div className="flex items-center gap-2">
+                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
+                             <span>Verified Tasks</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
+                             <span>Instant Payouts</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
+                             <span>Secure Platform</span>
+                         </div>
+                    </div>
+                </div>
             </section>
 
-            <section className="px-6 py-10">
-                <div className="max-w-5xl mx-auto grid grid-cols-3 gap-4 text-center">
-                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-secondary-700">$1.5M+</p><p className="text-sm text-gray-600">Total Paid</p></div>
-                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-secondary-700">75K+</p><p className="text-sm text-gray-600">Active Users</p></div>
-                    <div className="stat-card glass p-5 rounded-2xl"><p className="text-3xl font-bold text-secondary-700">4.9</p><p className="text-sm text-gray-600">Rating</p></div>
+            {/* --- Stats Section --- */}
+            <section className="py-16 bg-[#F9FAFB] border-y border-gray-100">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        <div>
+                            <p className="text-4xl font-extrabold text-gray-900 mb-1">1.5M+</p>
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tasks Completed</p>
+                        </div>
+                        <div>
+                            <p className="text-4xl font-extrabold text-gray-900 mb-1">5M+</p>
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Paid Out (Rs)</p>
+                        </div>
+                        <div>
+                            <p className="text-4xl font-extrabold text-gray-900 mb-1">24h</p>
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Avg. Withdrawal</p>
+                        </div>
+                        <div>
+                            <p className="text-4xl font-extrabold text-gray-900 mb-1">4.9/5</p>
+                            <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">User Rating</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
-            <section id="features" className="px-6 py-12">
-                <h2 className="text-3xl font-bold text-center mb-10 text-secondary-900">Why Choose TaskMint?</h2>
-                <div className="max-w-6xl mx-auto grid md:grid-cols-4 gap-6">
-                    <div className="glass p-6 rounded-2xl text-center"><WalletIcon className="w-10 h-10 text-primary-500 mb-3 mx-auto" /><h3 className="font-bold mb-2">Instant Rewards</h3><p className="text-sm text-gray-600">Balance updates instantly after task.</p></div>
-                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-primary-500 mb-3 mx-auto" /><h3 className="font-bold mb-2">Secure Payouts</h3><p className="text-sm text-gray-600">JazzCash, EasyPaisa, Bank.</p></div>
-                    <div className="glass p-6 rounded-2xl text-center"><CheckCircleIcon className="w-10 h-10 text-primary-500 mb-3 mx-auto" /><h3 className="font-bold mb-2">Earn Smart</h3><p className="text-sm text-gray-600">Tasks verified for quality.</p></div>
-                    <div className="glass p-6 rounded-2xl text-center"><HomeIcon className="w-10 h-10 text-primary-500 mb-3 mx-auto" /><h3 className="font-bold mb-2">Diverse Tasks</h3><p className="text-sm text-gray-600">Surveys, videos, referrals.</p></div>
-                </div>
+            {/* --- Features Grid --- */}
+            <section className="py-24 px-6 bg-white relative">
+                 <div className="max-w-7xl mx-auto">
+                    <div className="text-center mb-16">
+                        <h2 className="text-amber-600 font-bold tracking-widest uppercase text-sm mb-3">The TaskMint Advantage</h2>
+                        <h3 className="text-3xl md:text-5xl font-extrabold text-gray-900">Designed for <br/> Maximum Earnings.</h3>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                                <WalletIcon className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-3">Fast Withdrawals</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Access your funds quickly. We process payouts via JazzCash, EasyPaisa, and Bank Transfer within 24-48 hours.
+                            </p>
+                        </div>
+
+                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                                <ShieldCheck className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-3">Bank-Grade Security</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Your data and earnings are protected with top-tier encryption. We prioritize user privacy above all else.
+                            </p>
+                        </div>
+
+                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                                <UserGroupIcon className="w-8 h-8" />
+                            </div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-3">Referral Rewards</h4>
+                            <p className="text-gray-500 leading-relaxed">
+                                Invite friends and build a passive income stream. Earn a bonus for every task your referrals complete.
+                            </p>
+                        </div>
+                        
+                        <div className="md:col-span-2 bg-gradient-to-br from-gray-900 to-gray-800 p-10 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-8 group relative overflow-hidden text-white">
+                             <div className="absolute right-0 top-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+                             <div className="flex-1 relative z-10">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                                        <SparklesIcon className="w-6 h-6" />
+                                    </div>
+                                    <span className="text-amber-400 font-bold uppercase tracking-wider text-sm">Daily Bonus</span>
+                                </div>
+                                <h4 className="text-3xl font-bold mb-3">Spin & Win Daily</h4>
+                                <p className="text-gray-300 leading-relaxed mb-8">
+                                    Log in every day to spin the wheel. Win free cash prizes, multipliers, and exclusive rewards just for being active.
+                                </p>
+                                <button onClick={() => onGetStarted('signup')} className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold hover:bg-amber-50 transition-colors">
+                                    Try Your Luck
+                                </button>
+                             </div>
+                             <div className="w-full md:w-1/3 flex justify-center">
+                                <div className="w-32 h-32 rounded-full border-4 border-amber-500 flex items-center justify-center bg-gray-800 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+                                    <SparklesIcon className="w-16 h-16 text-amber-400 animate-pulse" />
+                                </div>
+                             </div>
+                        </div>
+
+                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group flex flex-col justify-center items-center text-center">
+                            <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <TrophyIcon className="w-10 h-10 text-amber-600" />
+                            </div>
+                            <h4 className="text-xl font-bold text-gray-900 mb-1">Leaderboards</h4>
+                            <p className="text-gray-500 text-sm">Compete for weekly prizes.</p>
+                        </div>
+                    </div>
+                 </div>
             </section>
-            
-            <section id="how" className="px-6 py-12 bg-secondary-50">
-                <h2 className="text-3xl font-bold text-center mb-10 text-secondary-900">How It Works</h2>
-                <div className="max-w-4xl mx-auto space-y-8">
-                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-secondary-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">1</div><div><h3 className="font-bold text-lg">Sign Up Free</h3><p className="text-gray-600">Create account in 1 minute. No card needed.</p></div></div>
-                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-secondary-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">2</div><div><h3 className="font-bold text-lg">Complete Tasks</h3><p className="text-gray-600">Watch videos, answer surveys, grow balance.</p></div></div>
-                    <div className="flex items-center gap-6"><div className="w-12 h-12 bg-secondary-600 text-white rounded-full flex items-center justify-center font-bold text-xl flex-shrink-0">3</div><div><h3 className="font-bold text-lg">Get Paid</h3><p className="text-gray-600">Withdraw to JazzCash instantly.</p></div></div>
+
+            {/* --- Payment Methods --- */}
+            <section className="py-20 bg-[#F9FAFB] border-t border-gray-200">
+                <div className="max-w-7xl mx-auto px-6 text-center">
+                    <p className="text-gray-500 font-bold uppercase tracking-widest mb-10 text-xs">Trusted Payment Partners</p>
+                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0">
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-xs">JC</span> JazzCash</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">EP</span> EasyPaisa</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><BankIcon className="w-8 h-8 text-gray-700"/> Bank Transfer</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">NayaPay</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">SadaPay</div>
+                    </div>
                 </div>
             </section>
 
-            <section id="payouts" className="px-6 py-12">
-                <h2 className="text-3xl font-bold text-center mb-10 text-secondary-900">Trusted Payouts</h2>
-                <div className="flex flex-wrap justify-center items-center gap-8">
-                    <div className="text-center"><img src="https://upload.wikimedia.org/wikipedia/commons/5/55/JazzCash_Logo.png" alt="JazzCash" className="h-12 mx-auto mb-2" /><p className="text-sm font-medium">Instant via JazzCash</p></div>
-                    <div className="text-center"><img src="https://upload.wikimedia.org/wikipedia/commons/9/9d/EasyPaisa_Logo.png" alt="EasyPaisa" className="h-12 mx-auto mb-2" /><p className="text-sm font-medium">EasyPaisa Supported</p></div>
-                    <div className="text-center"><BankIcon className="w-12 h-12 text-primary-600 mx-auto mb-2" /><p className="text-sm font-medium">Bank Transfer</p></div>
-                </div>
-            </section>
-            
-            <section id="reviews" className="px-6 py-12 bg-white">
-              <h2 className="text-3xl font-bold text-center mb-10 text-secondary-900">User Reviews</h2>
-              <div className="max-w-2xl mx-auto space-y-6">
-                <div className="glass p-6 rounded-2xl bg-secondary-50 border border-secondary-100"><p className="italic mb-3 text-gray-700">"Best earning app in Pakistan! Withdrew Rs.5000 in 2 days."</p><p className="text-secondary-700 font-medium">— Ahmed, Lahore</p></div>
-                <div className="glass p-6 rounded-2xl bg-secondary-50 border border-secondary-100"><p className="italic mb-3 text-gray-700">"Easy tasks and instant payouts. 100% trusted!"</p><p className="text-secondary-700 font-medium">— Fatima, Karachi</p></div>
-              </div>
-            </section>
-            
-            <section id="signup" className="px-6 py-16 text-center bg-secondary-900 text-white">
-                <h2 className="text-4xl font-bold mb-4">Start Earning Today!</h2>
-                <p className="text-lg mb-8 max-w-xl mx-auto text-secondary-200">Join 75,000+ users earning daily. No risk, no fees.</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-                    <button onClick={() => onGetStarted('login')} className="py-3 px-6 border-2 border-primary-500 text-primary-400 rounded-full font-medium hover:bg-primary-500 hover:text-secondary-900 transition">Login</button>
-                    <button onClick={() => onGetStarted('signup')} className="py-3 px-6 bg-primary-500 text-secondary-900 rounded-full font-bold hover:bg-primary-400 transition">Sign Up Free</button>
+            {/* --- CTA Section --- */}
+            <section className="py-24 px-6 text-center bg-gray-50 border-t border-gray-200">
+                <div className="max-w-4xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">Ready to start minting?</h2>
+                    <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">Join the community today. No credit card required, just your phone and your ambition.</p>
+                    <button onClick={() => onGetStarted('signup')} className="btn-gold px-12 py-5 rounded-full font-bold text-xl shadow-xl flex items-center justify-center gap-3 mx-auto">
+                        Create Free Account <ArrowRight className="w-6 h-6" />
+                    </button>
                 </div>
             </section>
         </main>
-        
-        <footer className="bg-gradient-to-t from-secondary-900 to-secondary-800 text-white relative overflow-hidden">
-            <div className="absolute inset-0 opacity-5" style={{background: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E') repeat"}}></div>
-            <div className="relative max-w-7xl mx-auto px-6 py-16">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-center md:text-left">
+
+        {/* --- Footer --- */}
+        <footer className="bg-[#111827] text-white pt-20 pb-10">
+            <div className="max-w-7xl mx-auto px-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">
+                             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white">
+                                <SparklesIcon className="w-5 h-5" />
+                             </div>
+                             <span className="font-bold text-xl text-white">TaskMint</span>
+                        </div>
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                            The smartest way to earn online in Pakistan. We connect businesses with real users for authentic engagement.
+                        </p>
+                    </div>
                     <div>
-                        <h4 className="font-bold text-lg mb-6 text-primary-400 border-b border-secondary-600 inline-block pb-2">Company</h4>
-                        <ul className="space-y-3 text-sm opacity-80">
-                            <li><button onClick={() => setActiveModal('about')} className="hover:text-primary-300 transition-colors">About Us</button></li>
-                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-primary-300 transition-colors">How It Works</button></li>
-                            <li><button onClick={() => setActiveModal('reviews')} className="hover:text-primary-300 transition-colors">Success Stories</button></li>
+                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Platform</h4>
+                        <ul className="space-y-3 text-sm text-gray-400">
+                            <li><button onClick={() => setActiveModal('about')} className="hover:text-amber-400 transition-colors">About Us</button></li>
+                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-400 transition-colors">How it Works</button></li>
+                            <li><button onClick={() => onGetStarted('login')} className="hover:text-amber-400 transition-colors">Login / Sign Up</button></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 className="font-bold text-lg mb-6 text-primary-400 border-b border-secondary-600 inline-block pb-2">Support</h4>
-                        <ul className="space-y-3 text-sm opacity-80">
-                            <li><button onClick={() => setActiveModal('support')} className="hover:text-primary-300 transition-colors">Contact Us</button></li>
-                            <li><button onClick={() => setActiveModal('withdrawal')} className="hover:text-primary-300 transition-colors">Withdrawal Policy</button></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-lg mb-6 text-primary-400 border-b border-secondary-600 inline-block pb-2">Legal</h4>
-                        <ul className="space-y-3 text-sm opacity-80">
-                            <li><button onClick={() => setActiveModal('privacy')} className="hover:text-primary-300 transition-colors">Privacy Policy</button></li>
-                            <li><button onClick={() => setActiveModal('terms')} className="hover:text-primary-300 transition-colors">Terms & Conditions</button></li>
-                            <li><button onClick={() => setActiveModal('disclaimer')} className="hover:text-primary-300 transition-colors">Disclaimer</button></li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-lg mb-6 text-primary-400 border-b border-secondary-600 inline-block pb-2">Payments</h4>
-                        <ul className="space-y-3 text-sm opacity-80">
-                            <li><button onClick={() => setActiveModal('deposit')} className="hover:text-primary-300 transition-colors">Deposit Info</button></li>
-                            <li><button onClick={() => setActiveModal('refund')} className="hover:text-primary-300 transition-colors">Refund Policy</button></li>
+                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Legal</h4>
+                        <ul className="space-y-3 text-sm text-gray-400">
+                            <li><button onClick={() => setActiveModal('privacy')} className="hover:text-amber-400 transition-colors">Privacy Policy</button></li>
+                            <li><button onClick={() => setActiveModal('terms')} className="hover:text-amber-400 transition-colors">Terms of Service</button></li>
                         </ul>
                     </div>
                 </div>
-
-                <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center text-xs opacity-70">
-                    <p>© 2025 <span className="text-primary-400 font-bold">TaskMint</span>. All rights reserved.</p>
-                    <div className="flex flex-wrap justify-center gap-6 mt-4 md:mt-0">
-                        <span className="flex items-center gap-1"><CheckCircleIcon className="w-4 h-4 text-primary-500" /> Earn Smart</span>
-                        <span className="flex items-center gap-1"><LockIcon className="w-4 h-4 text-primary-500" /> SSL Secured</span>
-                        <span className="flex items-center gap-1"><InfoIcon className="w-4 h-4 text-primary-500" /> 24/7 Support</span>
-                    </div>
+                <div className="border-t border-gray-800 pt-8 flex justify-between items-center gap-4">
+                    <p className="text-gray-500 text-sm">© 2025 TaskMint. All rights reserved.</p>
                 </div>
             </div>
         </footer>

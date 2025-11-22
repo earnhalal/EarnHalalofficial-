@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BankIcon, NayaPayIcon, SadaPayIcon, UPaisaIcon, JazzCashIcon, EasyPaisaIcon, WalletIcon } from './icons';
 import { HowItWorksView, AboutUsView, ContactUsView, PrivacyPolicyView, TermsAndConditionsView } from './InfoViews';
@@ -10,32 +11,39 @@ interface InfoModalProps {
 }
 
 export const InfoModal: React.FC<InfoModalProps> = ({ title, onClose, children }) => (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in">
-        <div className="relative w-full max-w-2xl h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col text-gray-800 animate-fade-in-up">
-            <header className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                <h3 className="text-xl font-bold text-gray-900">{title}</h3>
-                <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors text-2xl">&times;</button>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 animate-fade-in backdrop-blur-sm">
+        <div className="relative w-full max-w-3xl h-[85vh] bg-white rounded-3xl shadow-2xl flex flex-col text-gray-800 animate-scale-up overflow-hidden">
+            <header className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50/50 flex-shrink-0">
+                <h3 className="text-2xl font-bold text-gray-900 font-heading">{title}</h3>
+                <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 transition-colors text-xl font-bold">&times;</button>
             </header>
-            <div className="p-6 overflow-y-auto">
-                 <div className="text-gray-700 max-w-none">
+            <div className="p-8 overflow-y-auto">
+                 <div className="prose prose-lg max-w-none text-gray-600">
                     {children}
                 </div>
             </div>
         </div>
+        <style>{`
+            @keyframes scale-up {
+                from { transform: scale(0.95); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .animate-scale-up { animation: scale-up 0.3s ease-out forwards; }
+        `}</style>
     </div>
 );
 
 // Specific Info Content Components
 const InfoSection: React.FC<{ title: string; children: React.ReactNode; }> = ({ title, children }) => (
-    <div className="mb-8">
-        <h4 className="text-2xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-200">{title}</h4>
-        <div className="space-y-4 prose prose-lg text-gray-700 max-w-none">{children}</div>
+    <div className="mb-10">
+        <h4 className="text-xl font-bold text-[#0F4C47] mb-4 pb-2 border-b border-gray-100">{title}</h4>
+        <div className="space-y-4 leading-relaxed">{children}</div>
     </div>
 );
 
 const PaymentMethod: React.FC<{ name: string; icon: React.ReactNode; }> = ({ name, icon }) => (
-    <div className="flex items-center gap-4 p-3 bg-gray-100 rounded-lg border border-gray-200">
-        <div className="w-10 h-10 text-primary-600 flex-shrink-0">{icon}</div>
+    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-[#4EF2C3] transition-colors">
+        <div className="w-10 h-10 text-[#0F4C47] flex-shrink-0">{icon}</div>
         <span className="font-semibold text-lg text-gray-800">{name}</span>
     </div>
 );
@@ -43,17 +51,18 @@ const PaymentMethod: React.FC<{ name: string; icon: React.ReactNode; }> = ({ nam
 export const WithdrawalInfo = () => (
     <>
         <InfoSection title="Withdrawal Policy">
-            <p>You can withdraw your earnings once you reach the minimum threshold. All withdrawals are processed within 24-48 business hours.</p>
+            <p>At TaskMint, we pride ourselves on speed. You can withdraw your earnings immediately once you reach the minimum threshold. All withdrawals are processed by our finance team within <strong>24-48 business hours</strong>.</p>
         </InfoSection>
-        <InfoSection title="Limits">
-            <ul className="list-disc list-inside space-y-2">
+        <InfoSection title="Limits & Fees">
+            <ul className="list-disc list-inside space-y-2 marker:text-[#4EF2C3]">
                 <li><strong>Minimum Withdrawal:</strong> 100 Rs</li>
                 <li><strong>Maximum Withdrawal:</strong> 25,000 Rs per day</li>
+                <li><strong>Processing Fee:</strong> 0% (We cover the transaction costs)</li>
             </ul>
         </InfoSection>
         <InfoSection title="Supported Methods">
-            <p>We support a wide range of local payment methods for your convenience:</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 not-prose">
+            <p className="mb-4">We support all major Pakistani payment gateways:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 not-prose">
                 <PaymentMethod name="JazzCash" icon={<JazzCashIcon />} />
                 <PaymentMethod name="EasyPaisa" icon={<EasyPaisaIcon />} />
                 <PaymentMethod name="NayaPay" icon={<NayaPayIcon />} />
@@ -67,20 +76,23 @@ export const WithdrawalInfo = () => (
 
 export const DepositInfo = () => (
     <>
-        <InfoSection title="Deposit Process">
-            <p>To create tasks for other users, you can either use your earnings or deposit funds directly into your Earn Halal wallet. Follow the simple steps in the 'Deposit' section of your dashboard.</p>
-            <p>All deposits are manually verified for security, which can take up to 1-2 hours. Once verified, the funds will be available in your account.</p>
+        <InfoSection title="How to Deposit">
+            <p>TaskMint allows you to become an advertiser. Use your earnings or deposit external funds to create task campaigns (e.g., get subscribers for your YouTube channel).</p>
+            <p>Go to the <strong>Deposit</strong> section in your dashboard, select your method (EasyPaisa/JazzCash), send the amount to the displayed account, and upload the Transaction ID.</p>
+        </InfoSection>
+        <InfoSection title="Verification Time">
+            <p>Security is our priority. All deposits are manually verified by our team. This usually takes <strong>1-2 hours</strong> during business hours (9 AM - 9 PM PKT).</p>
         </InfoSection>
     </>
 );
 
 export const RefundPolicyInfo = () => (
     <>
-        <InfoSection title="One-Time Joining Fee">
-            <p>The one-time joining fee is non-refundable. This policy is in place to maintain a community of genuine users and cover administrative costs for account verification.</p>
+        <InfoSection title="Joining Fee">
+            <p>The one-time joining fee (50 Rs) is <strong>non-refundable</strong>. This nominal fee ensures that our community consists of verified, serious users and covers the administrative costs of account setup.</p>
         </InfoSection>
-        <InfoSection title="Deposited Funds">
-            <p>Funds deposited for creating tasks are non-refundable once a task campaign has been launched and funds have been allocated. If you wish to cancel a campaign that has not yet started, please contact support to discuss a potential wallet credit.</p>
+        <InfoSection title="Campaign Funds">
+            <p>Funds deposited for task campaigns are non-refundable once the campaign is live and tasks have been completed by other users. If you wish to cancel a pending campaign, please contact support immediately for a wallet credit.</p>
         </InfoSection>
     </>
 );
@@ -88,12 +100,42 @@ export const RefundPolicyInfo = () => (
 export const DisclaimerInfo = () => (
     <>
         <InfoSection title="Earnings Disclaimer">
-            <p>Earn Halal provides a platform for users to earn rewards, but we do not guarantee any specific level of income. Earnings are dependent on the number of tasks available, the user's activity, and the rewards set by task creators.</p>
-            <p>The platform is intended for supplementary income and should not be considered a primary source of employment or a "get rich quick" scheme.</p>
+            <p>TaskMint provides a platform for supplementary income. We do not guarantee any specific daily or monthly income. Earnings depend entirely on user activity, task availability, and market demand.</p>
+            <p>This is not a "get rich quick" scheme. We strictly prohibit the use of bots, VPNs, or multiple accounts to manipulate earnings.</p>
         </InfoSection>
-        <InfoSection title="Third-Party Links">
-            <p>Tasks may involve visiting third-party websites, channels, or social media pages. Earn Halal is not responsible for the content on these external sites. Users should proceed with caution and at their own discretion.</p>
+        <InfoSection title="Third-Party Responsibility">
+            <p>Tasks often involve visiting third-party websites. TaskMint is not responsible for the content, privacy policies, or practices of any third-party sites linked to from our platform.</p>
         </InfoSection>
+    </>
+);
+
+export const BlogView = () => (
+    <>
+        <div className="text-center mb-10">
+            <p className="text-sm font-bold text-[#4EF2C3] uppercase tracking-wider mb-2">Latest Articles</p>
+            <h2 className="text-3xl font-bold text-gray-900">TaskMint Insights</h2>
+        </div>
+
+        <article className="mb-12 border-b border-gray-100 pb-12">
+            <span className="text-xs font-bold text-gray-400">Oct 24, 2024 • Guides</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-2 mb-3 hover:text-[#0F4C47] cursor-pointer">How to Maximize Your Earnings on TaskMint</h3>
+            <p className="text-gray-600 mb-4">Discover the top strategies used by our "Pro Level" users to earn over 1000 Rs daily. From timing your tasks to mastering the referral system...</p>
+            <button className="text-[#0F4C47] font-bold hover:underline">Read More &rarr;</button>
+        </article>
+
+        <article className="mb-12 border-b border-gray-100 pb-12">
+             <span className="text-xs font-bold text-gray-400">Oct 20, 2024 • Updates</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-2 mb-3 hover:text-[#0F4C47] cursor-pointer">Introducing Ludo & Mines: Play to Earn</h3>
+            <p className="text-gray-600 mb-4">We've just launched our new gaming section. Learn how to play responsibly and turn your gaming skills into wallet balance.</p>
+            <button className="text-[#0F4C47] font-bold hover:underline">Read More &rarr;</button>
+        </article>
+
+        <article>
+             <span className="text-xs font-bold text-gray-400">Oct 15, 2024 • Security</span>
+            <h3 className="text-2xl font-bold text-gray-900 mt-2 mb-3 hover:text-[#0F4C47] cursor-pointer">Why We Introduced the Joining Fee</h3>
+            <p className="text-gray-600 mb-4">Transparency is key. Here is why we added a nominal verification fee and how it helps keep the platform spam-free and profitable for everyone.</p>
+            <button className="text-[#0F4C47] font-bold hover:underline">Read More &rarr;</button>
+        </article>
     </>
 );
 
@@ -109,6 +151,7 @@ export const renderModalContent = (modalKey: string) => {
         case 'deposit': return <DepositInfo />;
         case 'refund': return <RefundPolicyInfo />;
         case 'disclaimer': return <DisclaimerInfo />;
+        case 'blog': return <BlogView />;
         default: return null;
     }
 };

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TaskMint – Earn Smart. TaskMint.</title>
   <meta name="description" content="Earn daily by completing simple tasks. Earn Smart. TaskMint. Instant payouts via JazzCash & EasyPaisa."/>
-  <meta name="theme-color" content="#0F4C47"/>
+  <meta name="theme-color" content="#0F172A"/>
 
   <!-- Tailwind CSS + DaisyUI -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -17,45 +17,45 @@
         extend: {
           colors: { 
             primary: { 
-              DEFAULT: '#4EF2C3', // Mint Green (Brand Core)
-              '50': '#F0FFFA',
-              '100': '#E0FEF5',
-              '200': '#BFFDE9',
-              '300': '#9FFCDE',
-              '400': '#4EF2C3', 
-              '500': '#2EECAE',
-              '600': '#14C88E',
-              '700': '#0E8F65',
-              '800': '#096346',
-              '900': '#053828',
-              '950': '#021F16'
+              DEFAULT: '#F59E0B', // Amber/Gold 500
+              '50': '#FFFBEB',
+              '100': '#FEF3C7',
+              '200': '#FDE68A',
+              '300': '#FCD34D',
+              '400': '#FBBF24', 
+              '500': '#F59E0B',
+              '600': '#D97706', // Deep Gold
+              '700': '#B45309',
+              '800': '#92400E',
+              '900': '#78350F',
+              '950': '#451A03'
             }, 
             secondary: {
-              DEFAULT: '#0F4C47', // Deep Teal / Dark Cyan
-              '50': '#F2F7F7',
-              '100': '#E0EBEB',
-              '200': '#C2D6D5',
-              '300': '#A3C2C0',
-              '400': '#669996',
-              '500': '#3D7A77',
-              '600': '#24615E',
-              '700': '#154D4A',
-              '800': '#0F4C47',
-              '900': '#052926',
-              '950': '#021513'
+              DEFAULT: '#0F172A', // Slate 900 (Luxury Black/Blue)
+              '50': '#F8FAFC',
+              '100': '#F1F5F9',
+              '200': '#E2E8F0',
+              '300': '#CBD5E1',
+              '400': '#94A3B8',
+              '500': '#64748B',
+              '600': '#475569',
+              '700': '#334155',
+              '800': '#1E293B',
+              '900': '#0F172A',
+              '950': '#020617'
             },
             accent: {
-               DEFAULT: '#1A1A1A', // Soft Black
-              '50': '#F5F5F5',
-              '100': '#EBEBEB',
-              '200': '#D6D6D6',
-              '300': '#ADADAD',
-              '400': '#858585',
-              '500': '#5C5C5C',
-              '600': '#333333',
-              '700': '#1A1A1A',
-              '800': '#0F0F0F',
-              '900': '#050505'
+               DEFAULT: '#111827', // Soft Black
+              '50': '#F9FAFB',
+              '100': '#F3F4F6',
+              '200': '#E5E7EB',
+              '300': '#D1D5DB',
+              '400': '#9CA3AF',
+              '500': '#6B7280',
+              '600': '#4B5563',
+              '700': '#374151',
+              '800': '#1F2937',
+              '900': '#111827'
             },
             neutral: {
                DEFAULT: '#E8EBED', // Cool Grey
@@ -67,18 +67,8 @@
                '900': '#111827'
             },
             error: {
-              DEFAULT: '#FF6B6B',
-              '500': '#FF6B6B'
-            },
-            // Legacy mapping to ensure no breaks, mapped to new theme
-            emerald: { 
-              DEFAULT: '#4EF2C3',
-              '50': '#F0FFFA',
-              '100': '#E0FEF5',
-              '400': '#4EF2C3',
-              '500': '#2EECAE',
-              '600': '#14C88E',
-              '700': '#0F4C47', // Mapped to Teal for darker shades
+              DEFAULT: '#EF4444',
+              '500': '#EF4444'
             }
           },
           fontFamily: { 
@@ -118,7 +108,7 @@
 </script>
 </head>
 
-<body class="min-h-screen bg-neutral-50 text-accent-700">
+<body class="min-h-screen bg-gray-50 text-gray-900 selection:bg-amber-100 selection:text-amber-900">
   <div id="root"></div>
   <script type="module" src="index.tsx"></script>
 </body>
