@@ -30,6 +30,8 @@ import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
 import NotificationToast from './NotificationToast';
 import PremiumView from './PremiumView';
+import LeaderboardView from './LeaderboardView'; // Added
+import LevelsInfoView from './LevelsInfoView'; // Added
 import { GameControllerIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral } from '../types';
@@ -69,6 +71,12 @@ const appUpdates: AppUpdate[] = [
         icon: <GameControllerIcon className="w-5 h-5" />,
         color: 'text-purple-400'
     },
+];
+
+const LEVEL_NAMES = [
+    "Starter", "Rookie", "Bronze", "Silver", "Gold", 
+    "Platinum", "Diamond", "Master", "Grandmaster", "Elite", 
+    "Champion", "Legend", "Titan", "Immortal", "God Mode"
 ];
 
 interface UpdatesViewProps {
@@ -208,7 +216,9 @@ const App: React.FC = () => {
             uid: userCredential.user.uid, username: data.username, username_lowercase: data.username.toLowerCase(), email: data.email, phone: data.phone,
             photoURL: null, // Initial photoURL
             joinedAt: serverTimestamp(), paymentStatus: 'VERIFIED', balance: 100, referralCode: userCredential.user.uid.substring(0, 8), tasksCompletedCount: 0, invitedCount: 0,
-            totalReferralEarnings: 0, completedTaskIds: [], savedWithdrawalDetails: null, walletPin: null, isFingerprintEnabled: false, jobSubscription: null
+            totalReferralEarnings: 0, completedTaskIds: [], savedWithdrawalDetails: null, walletPin: null, isFingerprintEnabled: false, jobSubscription: null,
+            // Level System Init
+            level: 1, levelName: "Starter", totalTasks: 0, levelProgress: 0, tasksForNextLevel: 10
         };
         batch.set(userDocRef, newUserProfile);
         batch.set(doc(collection(userDocRef, "transactions")), { type: TransactionType.JOINING_FEE, description: "Joining Bonus", amount: 100, date: serverTimestamp() });
@@ -243,9 +253,32 @@ const App: React.FC = () => {
     if (!user || !userProfile || userProfile.completedTaskIds.includes(taskId)) return;
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
+    
+    // Level Logic Calculation
+    const currentTasks = userProfile.tasksCompletedCount || 0;
+    const newTotalTasks = currentTasks + 1;
+    
+    // Logic: Lvl 1 (0-10), Lvl 2 (11-20), etc.
+    // Formula: if tasks <= 10, lvl 1. else ceil((tasks - 10) / 10) + 1.
+    let newLevel = 1;
+    if (newTotalTasks > 10) {
+        newLevel = Math.ceil((newTotalTasks - 10) / 10) + 1;
+    }
+    if (newLevel > 15) newLevel = 15; // Max level cap
+    
+    const levelName = LEVEL_NAMES[newLevel - 1] || "God Mode";
+
     const batch = writeBatch(db);
     const userRef = doc(db, "users", user.uid);
-    batch.update(userRef, { balance: increment(task.reward), completedTaskIds: arrayUnion(taskId), tasksCompletedCount: increment(1) });
+    batch.update(userRef, { 
+        balance: increment(task.reward), 
+        completedTaskIds: arrayUnion(taskId), 
+        tasksCompletedCount: increment(1),
+        // Add Level System fields
+        level: newLevel,
+        levelName: levelName,
+        totalTasks: newTotalTasks // Keeping redundant field as requested
+    });
     batch.update(doc(db, "tasks", taskId), { completions: increment(1) });
     batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.EARNING, description: `Completed: ${task.title}`, amount: task.reward, date: serverTimestamp() });
     await batch.commit();
@@ -323,7 +356,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    const views: Record<View | 'PREMIUM_HUB', React.ReactNode> = {
+    const views: Record<View | 'PREMIUM_HUB' | 'LEADERBOARD' | 'LEVELS_INFO', React.ReactNode> = {
       DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
@@ -337,6 +370,8 @@ const App: React.FC = () => {
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
+      LEADERBOARD: <LeaderboardView />,
+      LEVELS_INFO: <LevelsInfoView />,
       JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
       SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
       

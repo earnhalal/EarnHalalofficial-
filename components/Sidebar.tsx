@@ -1,8 +1,9 @@
+
 import React from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
   ClipboardListIcon, GiftIcon, GameControllerIcon,
-  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, UserGroupIcon, MailIcon, SparklesIcon
+  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, UserGroupIcon, MailIcon, SparklesIcon, ChartBarIcon
 } from './icons';
 import type { View } from '../types';
 
@@ -44,6 +45,7 @@ const NavItem: React.FC<{
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose, unreadUpdatesCount }) => {
   const mainViews: { view: View; label: string; icon: React.ReactNode }[] = [
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-5 h-5" /> },
+    { view: 'LEADERBOARD', label: 'Leaderboard', icon: <ChartBarIcon className="w-5 h-5" /> }, // Added
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-5 h-5" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
     { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-5 h-5" /> },

@@ -33,7 +33,9 @@ export type View =
   | 'MINES_GAME'
   | 'SOCIAL_GROUPS'
   | 'UPDATES_INBOX'
-  | 'PREMIUM_HUB'; // Added PREMIUM_HUB
+  | 'PREMIUM_HUB'
+  | 'LEADERBOARD' // Added
+  | 'LEVELS_INFO'; // Added
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -140,6 +142,13 @@ export interface UserProfile {
   referralCode: string; // Made non-optional
   referredBy?: string; // Storing only referrerId
   tasksCompletedCount: number;
+  
+  // --- NEW LEVEL SYSTEM FIELDS ---
+  level?: number;
+  levelName?: string;
+  totalTasks?: number; // Redundant with tasksCompletedCount but added per request
+  tasksForNextLevel?: number;
+  levelProgress?: number;
 }
 
 export interface Job {
