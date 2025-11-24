@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView }) => {
       )}
       <div className="flex items-center justify-center px-4 py-4 relative">
         {/* Centered Logo */}
-        <div className="flex items-center gap-2" onClick={() => setActiveView('DASHBOARD')}>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveView('DASHBOARD')}>
             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
                 <SparklesIcon className="w-5 h-5" />
             </div>

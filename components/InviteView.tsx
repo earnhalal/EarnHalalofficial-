@@ -1,8 +1,10 @@
+
 // components/InviteView.tsx
 import React, { useState } from 'react';
 import { 
     ClipboardCopyIcon, WhatsAppIcon, FacebookIcon, CheckCircleIcon, 
-    TrophyIcon, InviteIcon, TelegramIcon, MessengerIcon, UserGroupIcon
+    TrophyIcon, InviteIcon, TelegramIcon, MessengerIcon, UserGroupIcon,
+    ChevronDownIcon
 } from './icons';
 import type { UserProfile, Referral } from '../types';
 
@@ -104,7 +106,10 @@ const ReferralCard: React.FC<{ referral: Referral; globalUserTasksCompleted: num
 
 const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
     const [copied, setCopied] = useState(false);
-    const baseUrl = "https://earn-halalofficial.vercel.app";
+    const [showReferralHistory, setShowReferralHistory] = useState(false);
+    
+    // Dynamic base URL to support production domain
+    const baseUrl = "https://taskmint-pro.vercel.app"; 
     const referralLink = userProfile?.username ? `${baseUrl}/signup?ref=${userProfile.username}` : 'Generating link...';
 
     const handleCopy = () => {
@@ -170,27 +175,41 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                     </div>
                 </div>
 
-                {/* Referrals List */}
+                {/* Referrals List Section */}
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-4 px-2">Referral Tracking</h2>
-                    {referrals.length === 0 ? (
-                        <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center shadow-subtle">
-                            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
-                                <InviteIcon className="w-8 h-8" />
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900">No Referrals Yet</h3>
-                            <p className="text-sm text-gray-500 mt-1">Share your link to start building your team.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {referrals.map((referral, index) => (
-                                <ReferralCard 
-                                    key={referral.id} 
-                                    referral={referral} 
-                                    globalUserTasksCompleted={userProfile?.tasksCompletedCount || 0} 
-                                    index={index}
-                                />
-                            ))}
+                    <div className="flex items-center justify-between mb-4 px-2">
+                        <h2 className="text-xl font-bold text-gray-900">Referral Tracking</h2>
+                        <button 
+                            onClick={() => setShowReferralHistory(!showReferralHistory)}
+                            className="text-sm font-semibold text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                        >
+                            {showReferralHistory ? 'Hide List' : 'View List'}
+                            <ChevronDownIcon className={`w-4 h-4 transition-transform ${showReferralHistory ? 'rotate-180' : ''}`} />
+                        </button>
+                    </div>
+
+                    {showReferralHistory && (
+                        <div className="animate-fade-in">
+                            {referrals.length === 0 ? (
+                                <div className="bg-white p-8 rounded-2xl border border-gray-100 text-center shadow-subtle">
+                                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                                        <InviteIcon className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-gray-900">No Referrals Yet</h3>
+                                    <p className="text-sm text-gray-500 mt-1">Share your link to start building your team.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {referrals.map((referral, index) => (
+                                        <ReferralCard 
+                                            key={referral.id} 
+                                            referral={referral} 
+                                            globalUserTasksCompleted={userProfile?.tasksCompletedCount || 0} 
+                                            index={index}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

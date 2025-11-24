@@ -1,3 +1,4 @@
+
 // types.ts
 
 // FIX: Globally declare and augment types for JSX custom elements and import.meta.env
@@ -81,6 +82,11 @@ export enum TaskType {
   FACEBOOK_LIKE = 'Facebook Like Page',
   INSTAGRAM_FOLLOW = 'Instagram Follow',
   TIKTOK_FOLLOW = 'TikTok Follow',
+  TWITTER_FOLLOW = 'Twitter Follow',
+  LINKEDIN_FOLLOW = 'LinkedIn Follow',
+  DISCORD_JOIN = 'Discord Join',
+  TELEGRAM_JOIN = 'Telegram Join',
+  SNAPCHAT_FOLLOW = 'Snapchat Follow',
 }
 
 export interface Task {
@@ -119,6 +125,7 @@ export interface UserProfile {
   username_lowercase: string;
   email: string;
   phone: string;
+  photoURL: string | null; // Added photoURL
   joinedAt: any; // Firestore Timestamp
   paymentStatus: PaymentStatus;
   jobSubscription: JobSubscription | null;

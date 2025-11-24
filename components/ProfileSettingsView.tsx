@@ -4,18 +4,23 @@ import type { UserProfile, View } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, PlusCircleIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
     userProfile: UserProfile | null;
     onUpdateProfile: (updatedData: { name: string; email: string; password?: string }) => Promise<void>;
+    onUpdatePhoto: (file: File | null, avatarUrl?: string) => Promise<void>;
     onLogout: () => void;
     showChatbot: boolean;
     onToggleChatbot: (isVisible: boolean) => void;
     onSetFingerprintEnabled: () => Promise<void>;
     onNavigate: (view: View) => void;
 }
+
+// Avatar Seeds for Dicebear
+const BOY_AVATARS = ['Felix', 'Joshua', 'Aidan', 'Jake', 'Ryan', 'Liam'];
+const GIRL_AVATARS = ['Annie', 'Sophia', 'Kylie', 'Jessica', 'Mila', 'Eliza'];
 
 const MenuRow: React.FC<{ 
     icon: React.ReactNode; 
@@ -39,15 +44,17 @@ const MenuRow: React.FC<{
 );
 
 const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ 
-    userProfile, onUpdateProfile, onLogout, showChatbot, onToggleChatbot, onSetFingerprintEnabled, onNavigate 
+    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, showChatbot, onToggleChatbot, onSetFingerprintEnabled, onNavigate 
 }) => {
     const [isEditing, setIsEditing] = useState(false);
+    const [isEditingPhoto, setIsEditingPhoto] = useState(false);
     
     // Local state for edit form
     const [name, setName] = useState(userProfile?.username || '');
     const [email, setEmail] = useState(userProfile?.email || '');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPhotoUploading, setIsPhotoUploading] = useState(false);
 
     if (!userProfile) return null;
 
@@ -64,10 +71,27 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
         }
     };
 
+    const handleAvatarSelect = async (seed: string) => {
+        setIsPhotoUploading(true);
+        const url = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`;
+        await onUpdatePhoto(null, url);
+        setIsEditingPhoto(false);
+        setIsPhotoUploading(false);
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setIsPhotoUploading(true);
+            await onUpdatePhoto(e.target.files[0]);
+            setIsEditingPhoto(false);
+            setIsPhotoUploading(false);
+        }
+    };
+
     if (isEditing) {
         return (
-            <div className="bg-white p-6 rounded-2xl shadow-sm">
-                <h2 className="text-xl font-bold mb-6">Edit Profile</h2>
+            <div className="bg-white p-6 rounded-2xl shadow-sm animate-fade-in">
+                <h2 className="text-xl font-bold mb-6">Edit Profile Info</h2>
                 <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
@@ -92,20 +116,82 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
         );
     }
 
+    if (isEditingPhoto) {
+        return (
+            <div className="bg-white p-6 rounded-2xl shadow-sm animate-fade-in space-y-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-xl font-bold text-gray-900">Choose Avatar</h2>
+                    <button onClick={() => setIsEditingPhoto(false)} className="text-gray-500 hover:text-gray-800">Cancel</button>
+                </div>
+
+                {/* Upload Section */}
+                <div>
+                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            {isPhotoUploading ? (
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
+                            ) : (
+                                <>
+                                    <PlusCircleIcon className="w-8 h-8 text-gray-400 mb-2" />
+                                    <p className="text-sm text-gray-500"><span className="font-semibold">Click to upload</span> custom photo</p>
+                                </>
+                            )}
+                        </div>
+                        <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isPhotoUploading} />
+                    </label>
+                </div>
+
+                {/* Avatars */}
+                <div>
+                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Boys</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                        {BOY_AVATARS.map(seed => (
+                            <button key={seed} onClick={() => handleAvatarSelect(seed)} disabled={isPhotoUploading} className="rounded-full border-2 border-transparent hover:border-amber-400 hover:scale-110 transition-all p-1">
+                                <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`} alt="avatar" className="w-full h-full rounded-full bg-slate-100" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div>
+                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Girls</h3>
+                    <div className="grid grid-cols-4 gap-3">
+                        {GIRL_AVATARS.map(seed => (
+                             <button key={seed} onClick={() => handleAvatarSelect(seed)} disabled={isPhotoUploading} className="rounded-full border-2 border-transparent hover:border-amber-400 hover:scale-110 transition-all p-1">
+                                <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`} alt="avatar" className="w-full h-full rounded-full bg-slate-100" />
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="max-w-2xl mx-auto pb-24 space-y-6 animate-fade-in">
             
             {/* Header Card */}
-            <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5">
-                <div className="relative">
+            <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden">
+                <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
                     <div className="w-20 h-20 rounded-full border-2 border-amber-100 p-1">
-                        <img src={`https://api.dicebear.com/8.x/initials/svg?seed=${userProfile.username}`} alt="Profile" className="w-full h-full rounded-full bg-gray-100" />
+                        <img 
+                            src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
+                            alt="Profile" 
+                            className="w-full h-full rounded-full bg-gray-100 object-cover" 
+                        />
+                    </div>
+                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <PencilSquareIcon className="w-6 h-6 text-white" />
                     </div>
                     <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900">{userProfile.username}</h2>
-                    <p className="text-slate-500 text-sm mb-2">{userProfile.email}</p>
+                <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-2xl font-bold text-slate-900">{userProfile.username}</h2>
+                            <p className="text-slate-500 text-sm mb-2">{userProfile.email}</p>
+                        </div>
+                        <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700">Edit Info</button>
+                    </div>
                     <div className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100">
                         <CheckCircleIcon className="w-3 h-3" /> Verified Member
                     </div>
@@ -118,8 +204,8 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <MenuRow 
                         icon={<BriefcaseIcon className="w-5 h-5" />} 
-                        label="Edit Personal Details" 
-                        onClick={() => setIsEditing(true)} 
+                        label="Profile Picture" 
+                        onClick={() => setIsEditingPhoto(true)} 
                     />
                     <MenuRow 
                         icon={<WalletIcon className="w-5 h-5" />} 
@@ -204,7 +290,7 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 </div>
             </div>
 
-            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.2.0 • Built for Hustlers</p>
+            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.2.5 • Built for Hustlers</p>
         </div>
     );
 };

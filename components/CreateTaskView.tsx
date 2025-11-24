@@ -1,7 +1,12 @@
+
 import React, { useState, useMemo } from 'react';
 import type { Task, TaskType as TaskTypeEnum } from '../types';
 import { TaskType } from '../types';
-import { CheckCircleIcon } from './icons';
+import { 
+    CheckCircleIcon, InfoIcon, YoutubeIcon, FacebookIcon, 
+    InstagramIcon, TikTokIcon, TwitterIcon, LinkedInIcon, 
+    DiscordIcon, TelegramIcon, SnapchatIcon, Globe 
+} from './icons';
 
 
 interface CreateTaskViewProps {
@@ -27,6 +32,20 @@ const initialFormState: FormState = {
     quantity: ''
 };
 
+// Map TaskType to Icon and Label for the visual selector
+const TASK_CATEGORIES = [
+    { id: TaskType.VISIT_WEBSITE, label: 'Website', icon: <Globe className="w-6 h-6"/>, color: 'text-blue-500' },
+    { id: TaskType.YOUTUBE_SUBSCRIBE, label: 'YouTube', icon: <YoutubeIcon className="w-6 h-6"/>, color: 'text-red-600' },
+    { id: TaskType.FACEBOOK_LIKE, label: 'Facebook', icon: <FacebookIcon className="w-6 h-6"/>, color: 'text-blue-700' },
+    { id: TaskType.INSTAGRAM_FOLLOW, label: 'Instagram', icon: <InstagramIcon className="w-6 h-6"/>, color: 'text-pink-600' },
+    { id: TaskType.TIKTOK_FOLLOW, label: 'TikTok', icon: <TikTokIcon className="w-6 h-6"/>, color: 'text-black' },
+    { id: TaskType.TWITTER_FOLLOW, label: 'Twitter', icon: <TwitterIcon className="w-6 h-6"/>, color: 'text-sky-500' },
+    { id: TaskType.LINKEDIN_FOLLOW, label: 'LinkedIn', icon: <LinkedInIcon className="w-6 h-6"/>, color: 'text-blue-800' },
+    { id: TaskType.DISCORD_JOIN, label: 'Discord', icon: <DiscordIcon className="w-6 h-6"/>, color: 'text-indigo-600' },
+    { id: TaskType.TELEGRAM_JOIN, label: 'Telegram', icon: <TelegramIcon className="w-6 h-6"/>, color: 'text-sky-500' },
+    { id: TaskType.SNAPCHAT_FOLLOW, label: 'Snapchat', icon: <SnapchatIcon className="w-6 h-6"/>, color: 'text-yellow-500' },
+];
+
 const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }) => {
   const [form, setForm] = useState<FormState>(initialFormState);
   const [error, setError] = useState('');
@@ -46,6 +65,10 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
     setForm(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleCategorySelect = (type: TaskTypeEnum) => {
+      setForm(prev => ({ ...prev, taskType: type }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,21 +148,30 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
       <form onSubmit={handleSubmit} className="space-y-6">
         <fieldset disabled={isSubmitting}>
             <div className="p-6 border rounded-lg border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">1. Task Details</h3>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">1. Select Platform</h3>
+                
+                {/* Visual Grid Selector */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
+                    {TASK_CATEGORIES.map((cat) => (
+                        <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => handleCategorySelect(cat.id)}
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 ${
+                                form.taskType === cat.id 
+                                    ? 'border-primary-500 bg-primary-50 shadow-sm' 
+                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
+                            }`}
+                        >
+                            <div className={`mb-2 ${cat.color}`}>{cat.icon}</div>
+                            <span className={`text-xs font-bold ${form.taskType === cat.id ? 'text-primary-700' : 'text-gray-600'}`}>
+                                {cat.label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
                 <div className="space-y-4">
-                    <div>
-                      <label htmlFor="taskType" className="block text-sm font-medium text-gray-700">Task Type</label>
-                      <select 
-                        id="taskType" 
-                        value={form.taskType} 
-                        onChange={handleChange}
-                        className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50"
-                      >
-                        {Object.values(TaskType).map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
                     <div>
                       <label htmlFor="title" className="block text-sm font-medium text-gray-700">Task Title</label>
                       <input type="text" id="title" value={form.title} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Visit my new blog post" required />
@@ -155,7 +187,7 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                 </div>
             </div>
 
-            <div className="p-6 border rounded-lg border-gray-200">
+            <div className="p-6 border rounded-lg border-gray-200 mt-6">
                  <h3 className="text-lg font-semibold text-gray-800 mb-4">2. Budget</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
@@ -172,9 +204,20 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
         </fieldset>
 
         <div className="bg-gray-100 p-6 rounded-lg text-center border border-gray-200">
-            <p className="font-medium text-lg text-gray-700">Total Campaign Cost</p>
+            <div className="flex items-center justify-center gap-2 mb-2">
+                 <p className="font-medium text-lg text-gray-700">Total Campaign Cost</p>
+                 <div className="group relative">
+                    <InfoIcon className="w-4 h-4 text-gray-400 cursor-help" />
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-gray-800 text-white text-xs rounded p-2 shadow-lg z-10">
+                        This amount will be immediately deducted from your wallet balance.
+                    </div>
+                 </div>
+            </div>
             <p className="text-4xl font-bold font-numeric text-primary-600 my-2">{totalCost.toFixed(2)} Rs</p>
-            <p className="text-sm text-gray-500">Your current balance: {balance.toFixed(2)} Rs</p>
+            <div className="flex flex-col gap-1">
+                 <p className="text-sm text-gray-500">Your current balance: {balance.toFixed(2)} Rs</p>
+                 <p className="text-xs text-amber-600 font-bold">(Deducted from Main Balance)</p>
+            </div>
         </div>
 
         {error && (

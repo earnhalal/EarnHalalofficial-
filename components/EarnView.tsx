@@ -1,7 +1,13 @@
+
 // components/EarnView.tsx
 import React, { useState, useMemo } from 'react';
-import type { UserCreatedTask } from '../types';
-import { CheckCircleIcon } from './icons';
+import type { UserCreatedTask, TaskType as TaskTypeEnum } from '../types';
+import { TaskType } from '../types';
+import { 
+    CheckCircleIcon, YoutubeIcon, FacebookIcon, InstagramIcon, 
+    TikTokIcon, TwitterIcon, LinkedInIcon, DiscordIcon, 
+    TelegramIcon, SnapchatIcon, Globe 
+} from './icons';
 
 interface ProofSubmissionModalProps {
   task: UserCreatedTask;
@@ -114,6 +120,21 @@ interface EarnViewProps {
   completedTaskIds: string[];
 }
 
+const getTaskIcon = (type: TaskTypeEnum) => {
+    switch (type) {
+        case TaskType.YOUTUBE_SUBSCRIBE: return { icon: <YoutubeIcon className="w-6 h-6 text-red-600" />, bg: 'bg-red-50' };
+        case TaskType.FACEBOOK_LIKE: return { icon: <FacebookIcon className="w-6 h-6 text-blue-700" />, bg: 'bg-blue-50' };
+        case TaskType.INSTAGRAM_FOLLOW: return { icon: <InstagramIcon className="w-6 h-6 text-pink-600" />, bg: 'bg-pink-50' };
+        case TaskType.TIKTOK_FOLLOW: return { icon: <TikTokIcon className="w-6 h-6 text-black" />, bg: 'bg-gray-100' };
+        case TaskType.TWITTER_FOLLOW: return { icon: <TwitterIcon className="w-6 h-6 text-sky-500" />, bg: 'bg-sky-50' };
+        case TaskType.LINKEDIN_FOLLOW: return { icon: <LinkedInIcon className="w-6 h-6 text-blue-800" />, bg: 'bg-blue-50' };
+        case TaskType.DISCORD_JOIN: return { icon: <DiscordIcon className="w-6 h-6 text-indigo-600" />, bg: 'bg-indigo-50' };
+        case TaskType.TELEGRAM_JOIN: return { icon: <TelegramIcon className="w-6 h-6 text-sky-500" />, bg: 'bg-sky-50' };
+        case TaskType.SNAPCHAT_FOLLOW: return { icon: <SnapchatIcon className="w-6 h-6 text-yellow-500" />, bg: 'bg-yellow-50' };
+        default: return { icon: <Globe className="w-6 h-6 text-primary-600" />, bg: 'bg-primary-50' };
+    }
+};
+
 const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, completedTaskIds }) => {
   const [taskForProof, setTaskForProof] = useState<UserCreatedTask | null>(null);
 
@@ -154,6 +175,7 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
       <h2 className="text-3xl font-bold text-gray-900">Available Tasks</h2>
       {approvedTasks.map((task, index) => {
         const isCompletedByUser = completedTaskIds.includes(task.id);
+        const { icon, bg } = getTaskIcon(task.type);
 
         return (
             <div 
@@ -162,12 +184,17 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
                 style={{ animationDelay: `${index * 75}ms`}}
             >
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <div>
-                  <span className="text-xs font-semibold uppercase text-primary-600">{task.type}</span>
-                  <h3 className="text-xl font-bold text-gray-900">{task.title}</h3>
-                  <p className="text-gray-600 mt-1">{task.description}</p>
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-xl ${bg} flex-shrink-0 mt-1`}>
+                      {icon}
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold uppercase text-gray-400">{task.type}</span>
+                    <h3 className="text-xl font-bold text-gray-900 leading-tight">{task.title}</h3>
+                    <p className="text-gray-600 mt-1 text-sm line-clamp-2">{task.description}</p>
+                  </div>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-right flex-shrink-0 self-end sm:self-center">
                   <p className="text-2xl font-bold font-numeric text-accent-600">{task.reward.toFixed(2)} Rs</p>
                 </div>
               </div>

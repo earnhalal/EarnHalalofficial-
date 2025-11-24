@@ -1,6 +1,6 @@
+
 // components/App.tsx
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-// ... existing imports ...
 import Header from './Header';
 import DashboardView from './DashboardView';
 import EarnView from './EarnView';
@@ -13,8 +13,6 @@ import { HowItWorksView, AboutUsView, ContactUsView, PrivacyPolicyView, TermsAnd
 import JobsView from './JobsView';
 import BottomNav from './Footer';
 import AuthView from './AuthView';
-import PaymentView from './PaymentView';
-import PendingVerificationView from './PendingVerificationView';
 import LandingView from './LandingView';
 import NotificationBanner from './NotificationBanner';
 import DepositView from './DepositView';
@@ -31,17 +29,17 @@ import MinesGame from './games/MinesGame';
 import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
 import NotificationToast from './NotificationToast';
-import PremiumView from './PremiumView'; // Import New Component
-import { TagIcon, ArrowUpCircleIcon, GameControllerIcon } from './icons';
+import PremiumView from './PremiumView';
+import { GameControllerIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral } from '../types';
 import { TransactionType } from '../types';
 
-import { auth, db, serverTimestamp, increment, arrayUnion } from '../firebase';
+import { auth, db, serverTimestamp, increment, arrayUnion, storage } from '../firebase';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword, sendEmailVerification, User } from 'firebase/auth';
 import { doc, getDoc, getDocs, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, where, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// ... AppUpdate interface and data ...
 export interface AppUpdate {
     id: string;
     version: string;
@@ -102,7 +100,6 @@ const UpdatesView: React.FC<UpdatesViewProps> = ({ updates, seenIds, onMarkAsRea
 };
 
 const App: React.FC = () => {
-  // ... state definitions ...
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -123,8 +120,6 @@ const App: React.FC = () => {
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
   const [showChatbot, setShowChatbot] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const prevTransactionsRef = useRef<Transaction[]>([]);
-  const prevUserCreatedTasksRef = useRef<UserCreatedTask[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
 
   useEffect(() => {
@@ -133,7 +128,6 @@ const App: React.FC = () => {
 
   const transactions = useMemo(() => baseTransactions, [baseTransactions]);
 
-  // ... useEffects for auth and firestore subscriptions ...
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -144,7 +138,6 @@ const App: React.FC = () => {
             const profileData = docSnap.data() as UserProfile;
             if (!profileData.referralCode) updateDoc(userDocRef, { referralCode: firebaseUser.uid.substring(0, 8) });
             setUserProfile(profileData);
-            if (profileData.paymentStatus === 'VERIFIED' && userProfile?.paymentStatus === 'UNPAID') setShowWelcomeModal(true);
           }
         });
 
@@ -197,7 +190,6 @@ const App: React.FC = () => {
 
   useEffect(() => { if ((user && userProfile) || !user) setIsLoading(false); }, [user, userProfile]);
 
-  // ... Handler functions (handleSignup, handleLogin, etc.) ...
   const handleAuthNavigation = useCallback((view: 'login' | 'signup') => setAuthAction(view), []);
   const setActiveView = (view: View) => { if (view !== activeView) setActiveViewInternal(view); };
 
@@ -214,7 +206,8 @@ const App: React.FC = () => {
         const userDocRef = doc(db, "users", userCredential.user.uid);
         const newUserProfile = {
             uid: userCredential.user.uid, username: data.username, username_lowercase: data.username.toLowerCase(), email: data.email, phone: data.phone,
-            joinedAt: serverTimestamp(), paymentStatus: 'UNPAID', balance: 100, referralCode: userCredential.user.uid.substring(0, 8), tasksCompletedCount: 0, invitedCount: 0,
+            photoURL: null, // Initial photoURL
+            joinedAt: serverTimestamp(), paymentStatus: 'VERIFIED', balance: 100, referralCode: userCredential.user.uid.substring(0, 8), tasksCompletedCount: 0, invitedCount: 0,
             totalReferralEarnings: 0, completedTaskIds: [], savedWithdrawalDetails: null, walletPin: null, isFingerprintEnabled: false, jobSubscription: null
         };
         batch.set(userDocRef, newUserProfile);
@@ -239,14 +232,12 @@ const App: React.FC = () => {
             }
         }
         await batch.commit();
-        // Redirect to dashboard handled by auth state change, but explicitly setting view safely
         setActiveViewInternal('DASHBOARD');
     } catch (error: any) { alert(`Signup failed: ${error.message}`); }
   };
 
   const handleLogin = async (email: string, password: string) => { try { await signInWithEmailAndPassword(auth, email, password); setAuthAction(null); } catch (error: any) { alert(`Login failed: ${error.message}`); } };
   const handleLogout = () => signOut(auth).catch(console.error);
-  const handlePaymentSubmit = async () => { if(user) await updateDoc(doc(db, "users", user.uid), { paymentStatus: 'PENDING_VERIFICATION' }); };
 
   const handleCompleteTask = useCallback(async (taskId: string) => {
     if (!user || !userProfile || userProfile.completedTaskIds.includes(taskId)) return;
@@ -309,9 +300,31 @@ const App: React.FC = () => {
   const handleUpdateProfile = async (data: any) => { if(!user) return; if(data.name !== user.displayName) await updateProfile(user, { displayName: data.name }); if(data.email !== user.email) await updateEmail(user, data.email); if(data.password) await updatePassword(user, data.password); await updateDoc(doc(db, "users", user.uid), { username: data.name, email: data.email }); };
   const handleCreateSocialGroup = async (groupData: any) => { if (!user) return; await addDoc(collection(db, "social_groups"), { ...groupData, submittedBy: user.uid, submittedAt: serverTimestamp(), status: 'pending' }); };
 
+  // New function to handle profile picture upload or avatar set
+  const handleUploadProfilePicture = async (file: File | null, avatarUrl?: string) => {
+    if (!user) return;
+    try {
+        let photoURL = avatarUrl || '';
+        if (file) {
+             const storageRef = ref(storage, `profile_pictures/${user.uid}`);
+             await uploadBytes(storageRef, file);
+             photoURL = await getDownloadURL(storageRef);
+        }
+        
+        if (photoURL) {
+            await updateProfile(user, { photoURL });
+            await updateDoc(doc(db, "users", user.uid), { photoURL });
+            setUserProfile(prev => prev ? { ...prev, photoURL } : null);
+        }
+    } catch (error) {
+        console.error("Error updating profile picture:", error);
+        alert("Failed to update profile picture.");
+    }
+  };
+
   const renderContent = () => {
     const views: Record<View | 'PREMIUM_HUB', React.ReactNode> = {
-      DASHBOARD: <DashboardView balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
+      DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
@@ -320,11 +333,10 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={(v) => { setShowChatbot(v); localStorage.setItem('showChatbot', JSON.stringify(v)); }} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={(v) => { setShowChatbot(v); localStorage.setItem('showChatbot', JSON.stringify(v)); }} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       
-      // Premium Features
-      PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />, // Map the new view
+      PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
       JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
       SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
       
@@ -342,8 +354,6 @@ const App: React.FC = () => {
   if (isLoading) return <LoadingScreen />;
   if (!user) { if (authAction) return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />; return <LandingView onGetStarted={handleAuthNavigation} />; }
   if (!userProfile) return <LoadingScreen />;
-  if (userProfile.paymentStatus === 'UNPAID') return <PaymentView onSubmit={handlePaymentSubmit} />;
-  if (userProfile.paymentStatus === 'PENDING_VERIFICATION') return <PendingVerificationView />;
 
   return (
     <>

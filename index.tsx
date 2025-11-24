@@ -1,4 +1,3 @@
-// The vite/client types are now referenced globally in types.ts for better project-wide consistency.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
