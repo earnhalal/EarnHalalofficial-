@@ -31,13 +31,14 @@ import NotificationToast from './NotificationToast';
 import PremiumView from './PremiumView';
 import LeaderboardView from './LeaderboardView';
 import LevelsInfoView from './LevelsInfoView';
-import { GameControllerIcon } from './icons';
+import MailboxView from './MailboxView';
+import { GameControllerIcon, CloseIcon } from './icons';
 
-import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral } from '../types';
+import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog } from '../types';
 import { TransactionType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion, storage } from '../firebase';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword, sendEmailVerification, User } from 'firebase/auth';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, updateEmail, updatePassword, sendEmailVerification, sendPasswordResetEmail, User } from 'firebase/auth';
 import { doc, getDoc, getDocs, updateDoc, collection, addDoc, onSnapshot, query, orderBy, runTransaction, where, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -129,7 +130,12 @@ const App: React.FC = () => {
       return 'DASHBOARD';
   });
 
+  // Mailbox Overlay State (Global Modal)
+  const [isMailboxOpen, setIsMailboxOpen] = useState(false);
+
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
+  const [withdrawalStatuses, setWithdrawalStatuses] = useState<Record<string, string>>({});
+
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -145,52 +151,99 @@ const App: React.FC = () => {
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
 
   useEffect(() => {
     if (window.location.pathname === '/signup') setAuthAction('signup');
   }, []);
 
-  const transactions = useMemo(() => baseTransactions, [baseTransactions]);
+  const transactions = useMemo(() => {
+      return baseTransactions.map(tx => {
+          if (tx.withdrawalRequestId && withdrawalStatuses[tx.withdrawalRequestId]) {
+              return { ...tx, status: withdrawalStatuses[tx.withdrawalRequestId] as any };
+          }
+          return tx;
+      });
+  }, [baseTransactions, withdrawalStatuses]);
+  
+  const unreadEmailCount = useMemo(() => emailLogs.filter(email => email.status !== 'Opened').length, [emailLogs]);
 
-  // --- History Navigation Handling ---
   useEffect(() => {
     if (!user) return;
-
-    // 1. Ensure the initial/current page has a state entry.
-    // This fixes the "first back click exits app" issue.
-    if (!window.history.state) {
-        window.history.replaceState({ view: activeView }, '', '');
-    }
-
-    // 2. Handle Browser Back Button
+    if (!window.history.state) window.history.replaceState({ view: activeView }, '', '');
     const handlePopState = (event: PopStateEvent) => {
         if (event.state && event.state.view) {
-            // Navigate back internally
             setActiveViewInternal(event.state.view);
         } else {
-            // Fallback if state is lost or we returned to the initial entry
             setActiveViewInternal('DASHBOARD');
         }
     };
-
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [user]); 
-  // Dependency on [user] ensures we re-bind correctly after login/logout
 
-  // --- Enhanced Navigation Function ---
   const setActiveView = useCallback((view: View) => {
-      setActiveViewInternal((currentView) => {
-          if (currentView !== view) {
-              // Push new state to history stack
-              window.history.pushState({ view }, '', '');
-              // Scroll to top for better UX
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              return view;
-          }
-          return currentView;
-      });
+      if (view === 'MAILBOX') {
+          setIsMailboxOpen(true); // Open modal instead of changing view
+      } else {
+          setActiveViewInternal((currentView) => {
+              if (currentView !== view) {
+                  window.history.pushState({ view }, '', '');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  return view;
+              }
+              return currentView;
+          });
+      }
   }, []);
+
+  const sendSystemEmail = async (userId: string, userEmail: string, type: EmailLog['type'], subject: string, htmlContent: string) => {
+      try {
+          const batch = writeBatch(db);
+          const logRef = doc(collection(db, `users/${userId}/email_logs`));
+          const logData: Omit<EmailLog, 'id'> = {
+              type: type,
+              subject: subject,
+              recipient: userEmail,
+              date: serverTimestamp(),
+              status: 'Sent',
+              bodyPreview: htmlContent
+          };
+          batch.set(logRef, logData);
+          await batch.commit();
+      } catch (e) {
+          console.error("Failed to send system email:", e);
+      }
+  };
+  
+  const handleMarkEmailAsRead = async (emailId: string) => {
+      if (!user) return;
+      try {
+          const emailRef = doc(db, `users/${user.uid}/email_logs`, emailId);
+          await updateDoc(emailRef, { status: 'Opened' });
+      } catch (e) {
+          console.error("Error marking email as read:", e);
+      }
+  };
+
+  // --- NEW: Verification OTP Handler ---
+  const handleSendVerificationOTP = async (type: 'email' | 'phone', destination: string, otp: string) => {
+      if (!user) return;
+      const subject = `Verify your ${type === 'email' ? 'Email Address' : 'Phone Number'}`;
+      const htmlContent = `
+        <div style="font-family: sans-serif; color: #333;">
+            <h2 style="color: #0F4C47;">Verification Code</h2>
+            <p>You requested to verify your ${type}.</p>
+            <div style="background: #f0f9f6; padding: 15px; border-radius: 10px; text-align: center; margin: 20px 0; font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #0F4C47;">
+                ${otp}
+            </div>
+            <p>If you did not request this, please ignore this message.</p>
+        </div>
+      `;
+      await sendSystemEmail(user.uid, destination, 'Verification', subject, htmlContent);
+      // Show a toast/notification that OTP is sent
+      setNotifications(prev => [...prev, { id: Date.now().toString(), title: 'Code Sent', message: `Verification code sent to your System Mailbox.`, type: 'info' }]);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -212,6 +265,15 @@ const App: React.FC = () => {
           setBaseTransactions(trans);
         });
 
+        const withdrawalsQuery = query(collection(db, "withdrawal_requests"), where("userId", "==", firebaseUser.uid));
+        const unsubscribeWithdrawals = onSnapshot(withdrawalsQuery, (snapshot) => {
+            const statusMap: Record<string, string> = {};
+            snapshot.forEach(doc => {
+                statusMap[doc.id] = doc.data().status;
+            });
+            setWithdrawalStatuses(statusMap);
+        });
+
         const userTasksQuery = query(collection(db, "tasks"), where("createdBy", "==", firebaseUser.uid), orderBy("submittedAt", "desc"));
         const unsubscribeUserTasks = onSnapshot(userTasksQuery, (snapshot) => {
             const uTasks: UserCreatedTask[] = [];
@@ -231,10 +293,19 @@ const App: React.FC = () => {
         
         const referralsQuery = query(collection(db, 'referrals'), where('referrerId', '==', firebaseUser.uid), orderBy('createdAt', 'desc'));
         const unsubscribeReferrals = onSnapshot(referralsQuery, (snapshot) => setReferrals(snapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as Referral))));
+        
+        const emailsQuery = query(collection(db, `users/${firebaseUser.uid}/email_logs`), orderBy('date', 'desc'));
+        const unsubscribeEmails = onSnapshot(emailsQuery, (snapshot) => {
+            const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EmailLog));
+            setEmailLogs(logs);
+        });
 
-        return () => { unsubscribeProfile(); unsubscribeTransactions(); unsubscribeUserTasks(); unsubscribeApplications(); unsubscribeUserGroups(); unsubscribeReferrals(); };
+        return () => { 
+            unsubscribeProfile(); unsubscribeTransactions(); unsubscribeWithdrawals(); unsubscribeUserTasks(); 
+            unsubscribeApplications(); unsubscribeUserGroups(); unsubscribeReferrals(); unsubscribeEmails();
+        };
       } else {
-        setUser(null); setUserProfile(null); setBaseTransactions([]); setActiveViewInternal('DASHBOARD'); setIsLoading(false); setAuthAction(null);
+        setUser(null); setUserProfile(null); setBaseTransactions([]); setActiveViewInternal('DASHBOARD'); setIsLoading(false); setAuthAction(null); setEmailLogs([]);
       }
     });
 
@@ -259,20 +330,24 @@ const App: React.FC = () => {
   const handleSignup = async (data: any) => {
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        
-        // Send Verification Email
-        await sendEmailVerification(userCredential.user);
-        alert("Tasdeeqi (Verification) Email Bheja Gaya! Inbox check karein.");
-
+        const welcomeTemplate = `
+            <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                <h1 style="color: #D4AF37;">Welcome to TaskMint, ${data.username}!</h1>
+                <p>You have successfully created your account. Start earning by completing tasks today.</p>
+                <p><strong>Username:</strong> ${data.username}</p>
+                <br/>
+                <p>Earn Smart. TaskMint.</p>
+            </div>
+        `;
+        await sendSystemEmail(userCredential.user.uid, data.email, 'Welcome', 'Welcome to TaskMint!', welcomeTemplate);
         await updateProfile(userCredential.user, { displayName: data.username });
         const batch = writeBatch(db);
         const userDocRef = doc(db, "users", userCredential.user.uid);
         const newUserProfile = {
             uid: userCredential.user.uid, username: data.username, username_lowercase: data.username.toLowerCase(), email: data.email, phone: data.phone,
-            photoURL: null, // Initial photoURL
+            photoURL: null, 
             joinedAt: serverTimestamp(), paymentStatus: 'VERIFIED', balance: 100, referralCode: userCredential.user.uid.substring(0, 8), tasksCompletedCount: 0, invitedCount: 0,
             totalReferralEarnings: 0, completedTaskIds: [], savedWithdrawalDetails: null, walletPin: null, isFingerprintEnabled: false, jobSubscription: null,
-            // Level System Init
             level: 1, levelName: "Starter", totalTasks: 0, levelProgress: 0, tasksForNextLevel: 10
         };
         batch.set(userDocRef, newUserProfile);
@@ -297,43 +372,53 @@ const App: React.FC = () => {
             }
         }
         await batch.commit();
+        const deviceId = Math.random().toString(36).substring(7);
+        localStorage.setItem('taskmint_device_id', deviceId);
         setActiveViewInternal('DASHBOARD');
     } catch (error: any) { alert(`Signup failed: ${error.message}`); }
   };
 
-  const handleLogin = async (email: string, password: string) => { try { await signInWithEmailAndPassword(auth, email, password); setAuthAction(null); } catch (error: any) { alert(`Login failed: ${error.message}`); } };
+  const handleLogin = async (email: string, password: string) => { 
+      try { 
+          const userCredential = await signInWithEmailAndPassword(auth, email, password); 
+          const user = userCredential.user;
+          const storedDeviceId = localStorage.getItem('taskmint_device_id');
+          if (!storedDeviceId) {
+               const newDeviceId = Math.random().toString(36).substring(7);
+               localStorage.setItem('taskmint_device_id', newDeviceId);
+               const alertTemplate = `
+                   <div style="color: #333; font-family: sans-serif;">
+                       <h2 style="color: #d32f2f;">New Login Detected</h2>
+                       <p>Your TaskMint account was accessed from a new device or browser.</p>
+                       <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+                       <p>If this wasn't you, please change your password immediately.</p>
+                   </div>
+               `;
+               await sendSystemEmail(user.uid, user.email || email, 'Security Alert', 'New Login Detected', alertTemplate);
+          }
+          setAuthAction(null); 
+      } catch (error: any) { alert(`Login failed: ${error.message}`); } 
+  };
+  
+  const handleForgotPassword = async (email: string) => {
+      try { await sendPasswordResetEmail(auth, email); alert("Password Reset Email sent!"); } catch (error: any) { alert(`Error: ${error.message}`); }
+  };
+
   const handleLogout = () => signOut(auth).catch(console.error);
 
   const handleCompleteTask = useCallback(async (taskId: string) => {
     if (!user || !userProfile || userProfile.completedTaskIds.includes(taskId)) return;
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-    
-    // Level Logic Calculation
     const currentTasks = userProfile.tasksCompletedCount || 0;
     const newTotalTasks = currentTasks + 1;
-    
-    // Logic: Lvl 1 (0-10), Lvl 2 (11-20), etc.
-    // Formula: if tasks <= 10, lvl 1. else ceil((tasks - 10) / 10) + 1.
     let newLevel = 1;
-    if (newTotalTasks > 10) {
-        newLevel = Math.ceil((newTotalTasks - 10) / 10) + 1;
-    }
-    if (newLevel > 15) newLevel = 15; // Max level cap
-    
+    if (newTotalTasks > 10) newLevel = Math.ceil((newTotalTasks - 10) / 10) + 1;
+    if (newLevel > 15) newLevel = 15; 
     const levelName = LEVEL_NAMES[newLevel - 1] || "God Mode";
-
     const batch = writeBatch(db);
     const userRef = doc(db, "users", user.uid);
-    batch.update(userRef, { 
-        balance: increment(task.reward), 
-        completedTaskIds: arrayUnion(taskId), 
-        tasksCompletedCount: increment(1),
-        // Add Level System fields
-        level: newLevel,
-        levelName: levelName,
-        totalTasks: newTotalTasks // Keeping redundant field as requested
-    });
+    batch.update(userRef, { balance: increment(task.reward), completedTaskIds: arrayUnion(taskId), tasksCompletedCount: increment(1), level: newLevel, levelName: levelName, totalTasks: newTotalTasks });
     batch.update(doc(db, "tasks", taskId), { completions: increment(1) });
     batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.EARNING, description: `Completed: ${task.title}`, amount: task.reward, date: serverTimestamp() });
     await batch.commit();
@@ -349,19 +434,25 @@ const App: React.FC = () => {
       batch.update(userRef, { balance: increment(-totalCost) });
       batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.TASK_CREATION, description: `Campaign: ${task.title}`, amount: -totalCost, date: serverTimestamp() });
       await batch.commit();
+      const campaignEmail = `<h3>Campaign Submitted</h3><p>Your task "<strong>${task.title}</strong>" has been submitted for approval.</p><p>Cost: ${totalCost} Rs</p><p>Status: Pending</p>`;
+      await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Campaign Created', campaignEmail);
   };
   
   const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
     if (!user || !userProfile) return;
     const action = async () => {
-      try { await runTransaction(db, async (transaction) => {
+      try { 
+        const reqRef = doc(collection(db, "withdrawal_requests"));
+        await runTransaction(db, async (transaction) => {
           const userDoc = await transaction.get(doc(db, "users", user.uid));
           if (!userDoc.exists() || userDoc.data().balance < amount) throw new Error("Insufficient balance.");
-          const reqRef = doc(collection(db, "withdrawal_requests"));
           transaction.update(doc(db, "users", user.uid), { balance: increment(-amount), savedWithdrawalDetails: details });
           transaction.set(doc(collection(db, "users", user.uid, "transactions")), { type: TransactionType.WITHDRAWAL, description: `Withdrawal to ${details.method}`, amount: -amount, date: serverTimestamp(), withdrawalDetails: details, status: 'Pending', withdrawalRequestId: reqRef.id });
           transaction.set(reqRef, { userId: user.uid, username: userDoc.data().username, amount, withdrawalDetails: details, status: 'Pending', createdAt: serverTimestamp() });
-        }); } catch (error) { console.error(error); }
+        }); 
+        const withdrawEmail = `<div style="font-family: sans-serif; color: #333;"><h2 style="color: #0F4C47;">Withdrawal Request Received</h2><p>Your withdrawal request has been successfully submitted.</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" /><p><strong>Amount:</strong> ${amount} Rs</p><p><strong>Method:</strong> ${details.method}</p><p><strong>Account:</strong> ${details.accountNumber}</p><p><strong>Transaction ID:</strong> ${reqRef.id}</p><p><strong>Status:</strong> Pending</p><br/><p style="font-size: 12px; color: #666;">Processing usually takes 24-48 hours. You will be notified once approved.</p></div>`;
+        await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Withdrawal Receipt', withdrawEmail);
+      } catch (error: any) { console.error(error); alert(`Withdrawal failed: ${error.message}`); }
     };
     if (userProfile.walletPin) { setPinLockMode('enter'); setShowPinLock(true); setPinAction(() => action); } else { await action(); }
   };
@@ -374,6 +465,8 @@ const App: React.FC = () => {
     batch.set(reqRef, { userId: user.uid, username: userProfile?.username, amount, transactionId, method, status: 'Pending', createdAt: serverTimestamp() });
     batch.set(doc(collection(db, "users", user.uid, "transactions")), { type: TransactionType.PENDING_DEPOSIT, description: `Deposit via ${method}`, amount, date: serverTimestamp(), status: 'Pending', depositDetails: { method, transactionId }, depositRequestId: reqRef.id });
     await batch.commit();
+    const depositEmail = `<h3>Deposit Verification Pending</h3><p>We have received your deposit request.</p><p>Amount: ${amount} Rs</p><p>TID: ${transactionId}</p><p>Please allow 1-2 hours for verification.</p>`;
+    await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Deposit Request Submitted', depositEmail);
   };
 
   const handleBuySpin = async (cost: number): Promise<boolean> => {
@@ -383,12 +476,22 @@ const App: React.FC = () => {
   
   const handleGameWin = async (amount: number, gameName: string) => { if (!user) return; const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { balance: increment(amount) }); batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.GAME_WIN, description: `Won in ${gameName}`, amount, date: serverTimestamp() }); await batch.commit(); };
   const handleGameLoss = async (amount: number, gameName: string) => { if (!user || !userProfile) return; const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { balance: increment(-amount) }); batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.GAME_LOSS, description: `Bet in ${gameName}`, amount: -amount, date: serverTimestamp() }); await batch.commit(); };
-  const handleSubscribe = async (plan: JobSubscriptionPlan, cost: number) => { if(!user || !userProfile || userProfile.balance < cost) return; const expiry = new Date(); expiry.setDate(expiry.getDate() + 30); const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { balance: increment(-cost), jobSubscription: { plan, expiryDate: expiry.toISOString().split('T')[0], applicationsToday: 0, lastApplicationDate: new Date().toISOString().split('T')[0] } }); batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.JOB_SUBSCRIPTION, description: `${plan} Plan Subscription`, amount: -cost, date: serverTimestamp() }); await batch.commit(); };
+  
+  const handleSubscribe = async (plan: JobSubscriptionPlan, cost: number) => { 
+      if(!user || !userProfile || userProfile.balance < cost) return; 
+      const expiry = new Date(); expiry.setDate(expiry.getDate() + 30); 
+      const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); 
+      batch.update(userRef, { balance: increment(-cost), jobSubscription: { plan, expiryDate: expiry.toISOString().split('T')[0], applicationsToday: 0, lastApplicationDate: new Date().toISOString().split('T')[0] } }); 
+      batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.JOB_SUBSCRIPTION, description: `${plan} Plan Subscription`, amount: -cost, date: serverTimestamp() }); 
+      await batch.commit(); 
+      const subEmail = `<h2 style="color:#0F4C47;">Subscription Activated</h2><p>You are now a member of the <strong>${plan}</strong> Plan.</p><p>Validity: 30 Days</p><p>Enjoy premium access to jobs and features.</p>`;
+      await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Subscription Activated', subEmail);
+  };
+
   const handleApply = async (jobId: string) => { if (!user || !userProfile) return; const job = jobs.find(j => j.id === jobId); if(!job) return; const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { 'jobSubscription.applicationsToday': increment(1), 'jobSubscription.lastApplicationDate': new Date().toISOString().split('T')[0] }); batch.set(doc(collection(userRef, "applications")), { jobId, jobTitle: job.title, date: serverTimestamp(), status: 'Submitted' }); await batch.commit(); };
   const handleUpdateProfile = async (data: any) => { if(!user) return; if(data.name !== user.displayName) await updateProfile(user, { displayName: data.name }); if(data.email !== user.email) await updateEmail(user, data.email); if(data.password) await updatePassword(user, data.password); await updateDoc(doc(db, "users", user.uid), { username: data.name, email: data.email }); };
   const handleCreateSocialGroup = async (groupData: any) => { if (!user) return; await addDoc(collection(db, "social_groups"), { ...groupData, submittedBy: user.uid, submittedAt: serverTimestamp(), status: 'pending' }); };
 
-  // New function to handle profile picture upload or avatar set
   const handleUploadProfilePicture = async (file: File | null, avatarUrl?: string) => {
     if (!user) return;
     try {
@@ -398,38 +501,33 @@ const App: React.FC = () => {
              await uploadBytes(storageRef, file);
              photoURL = await getDownloadURL(storageRef);
         }
-        
         if (photoURL) {
             await updateProfile(user, { photoURL });
             await updateDoc(doc(db, "users", user.uid), { photoURL });
             setUserProfile(prev => prev ? { ...prev, photoURL } : null);
         }
-    } catch (error) {
-        console.error("Error updating profile picture:", error);
-        alert("Failed to update profile picture.");
-    }
+    } catch (error) { console.error("Error updating profile picture:", error); alert("Failed to update profile picture."); }
   };
 
   const renderContent = () => {
     const views: Record<View | 'PREMIUM_HUB' | 'LEADERBOARD' | 'LEVELS_INFO', React.ReactNode> = {
       DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
-      WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} />,
+      WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
       INVITE: <InviteView userProfile={userProfile} referrals={referrals} />,
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} />,
+      // Passed verification callback to ProfileSettingsView
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
-      
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
       LEADERBOARD: <LeaderboardView />,
       LEVELS_INFO: <LevelsInfoView />,
       JOBS: <JobsView userProfile={userProfile} balance={userProfile?.balance ?? 0} jobs={jobs} onSubscribe={handleSubscribe} onApply={handleApply} applications={applications} />,
       SOCIAL_GROUPS: <SocialGroupsView allGroups={socialGroups} myGroups={userSocialGroups} onSubmitGroup={handleCreateSocialGroup} />,
-      
       MY_APPLICATIONS: <MyApplicationsView applications={applications} />,
       PRIVACY_POLICY: <PrivacyPolicyView />, TERMS_CONDITIONS: <TermsAndConditionsView />,
       LUDO_GAME: <LudoGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
@@ -437,12 +535,14 @@ const App: React.FC = () => {
       COIN_FLIP_GAME: <CoinFlipGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       MINES_GAME: <MinesGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={(id) => { if(!seenUpdateIds.includes(id)) setSeenUpdateIds([...seenUpdateIds, id]); }} onMarkAllAsRead={() => setSeenUpdateIds(appUpdates.map(u => u.id))} />,
+      // Mailbox is now global, this view might be deprecated if fully switched to modal, but kept for safety.
+      MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} />,
     };
     return views[activeView] || views['DASHBOARD'];
   };
 
   if (isLoading) return <LoadingScreen />;
-  if (!user) { if (authAction) return <AuthView onSignup={handleSignup} onLogin={handleLogin} initialView={authAction} />; return <LandingView onGetStarted={handleAuthNavigation} />; }
+  if (!user) { if (authAction) return <AuthView onSignup={handleSignup} onLogin={handleLogin} onForgotPassword={handleForgotPassword} initialView={authAction} />; return <LandingView onGetStarted={handleAuthNavigation} />; }
   if (!userProfile) return <LoadingScreen />;
 
   return (
@@ -450,12 +550,35 @@ const App: React.FC = () => {
       {notificationPermission === 'default' && <NotificationBanner onRequestPermission={() => Notification.requestPermission().then(setNotificationPermission)} onDismiss={() => setNotificationPermission('dismissed')} />}
       {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
       <div className="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm"> {notifications.map(n => (<NotificationToast key={n.id} title={n.title} message={n.message} type={n.type} onClose={() => setNotifications(prev => prev.filter(i => i.id !== n.id))} />))} </div>
+      
+      {/* GLOBAL MAILBOX OVERLAY */}
+      {isMailboxOpen && (
+          <div className="fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in">
+              <div className="bg-white w-full h-[85vh] sm:max-w-2xl sm:h-auto sm:max-h-[85vh] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-slide-up relative">
+                  <button onClick={() => setIsMailboxOpen(false)} className="absolute top-4 right-4 z-20 bg-white/50 p-2 rounded-full hover:bg-white transition-colors">
+                      <CloseIcon className="w-6 h-6 text-slate-900" />
+                  </button>
+                  <div className="overflow-y-auto flex-1">
+                      <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} />
+                  </div>
+              </div>
+          </div>
+      )}
+
       <div className="flex flex-col bg-[#F9FAFB] min-h-screen font-sans pb-[80px]">
-          <Header username={userProfile.username} setActiveView={setActiveView} />
+          {/* Header now toggles modal for Mailbox */}
+          <Header username={userProfile.username} setActiveView={setActiveView} unreadEmailCount={unreadEmailCount} />
           <main className="flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full">{renderContent()}</main>
           <BottomNav activeView={activeView} setActiveView={setActiveView} />
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={() => { setShowPinLock(false); pinAction && pinAction(); setPinAction(null); }} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
+      <style>{`
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+      `}</style>
     </>
   );
 };

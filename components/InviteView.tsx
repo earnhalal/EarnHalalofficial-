@@ -207,14 +207,15 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
                         </button>
                     </div>
 
+                    {/* Official Brand Colored Social Icons */}
                     <div className="grid grid-cols-4 gap-4 max-w-xs mx-auto">
                         {[
-                            { icon: <WhatsAppIcon className="w-6 h-6"/>, color: 'bg-green-50 text-green-600 hover:bg-green-100', link: `https://wa.me/?text=${encodeURIComponent(referralLink)}` },
-                            { icon: <FacebookIcon className="w-6 h-6"/>, color: 'bg-blue-50 text-blue-600 hover:bg-blue-100', link: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}` },
-                            { icon: <MessengerIcon className="w-6 h-6"/>, color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100', link: `fb-messenger://share/?link=${encodeURIComponent(referralLink)}` },
-                            { icon: <TelegramIcon className="w-6 h-6"/>, color: 'bg-sky-50 text-sky-500 hover:bg-sky-100', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}` }
+                            { icon: <WhatsAppIcon className="w-6 h-6 text-white"/>, color: 'bg-[#25D366] hover:bg-[#128C7E]', link: `https://wa.me/?text=${encodeURIComponent(referralLink)}` },
+                            { icon: <FacebookIcon className="w-6 h-6 text-white"/>, color: 'bg-[#1877F2] hover:bg-[#165dbb]', link: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}` },
+                            { icon: <MessengerIcon className="w-6 h-6 text-white"/>, color: 'bg-[#00B2FF] hover:bg-[#0099db]', link: `fb-messenger://share/?link=${encodeURIComponent(referralLink)}` },
+                            { icon: <TelegramIcon className="w-6 h-6 text-white"/>, color: 'bg-[#24A1DE] hover:bg-[#208bbd]', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}` }
                         ].map((social, i) => (
-                            <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`p-3 rounded-xl flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-gray-100 ${social.color}`}>
+                            <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`p-3 rounded-xl flex items-center justify-center transition-all hover:scale-110 shadow-md ${social.color}`}>
                                 {social.icon}
                             </a>
                         ))}

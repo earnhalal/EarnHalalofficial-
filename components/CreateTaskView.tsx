@@ -5,7 +5,8 @@ import { TaskType } from '../types';
 import { 
     CheckCircleIcon, InfoIcon, YoutubeIcon, FacebookIcon, 
     InstagramIcon, TikTokIcon, TwitterIcon, LinkedInIcon, 
-    DiscordIcon, TelegramIcon, SnapchatIcon, Globe, ChevronDownIcon
+    DiscordIcon, TelegramIcon, SnapchatIcon, Globe, ChevronDownIcon,
+    EyeIcon
 } from './icons';
 
 
@@ -186,6 +187,9 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
     );
   }
 
+  // Get category details for the preview based on current form selection
+  const previewCategory = TASK_CATEGORIES.find(c => c.id === form.taskType) || TASK_CATEGORIES[0];
+
   return (
     <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto pb-24">
       <div className="mb-8 text-center">
@@ -295,6 +299,39 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                 </div>
             </div>
         </fieldset>
+
+        {/* Live Preview Section */}
+        <div className="mt-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <EyeIcon className="w-5 h-5 text-gray-500" /> 
+                Live Listing Preview
+            </h3>
+            <div className="bg-gray-50 p-4 sm:p-6 rounded-xl border border-gray-200 border-dashed">
+                <div className="bg-white p-4 sm:p-6 rounded-xl shadow-subtle border border-gray-200 w-full">
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                        <div className="flex items-start gap-4">
+                            <div className={`p-3 rounded-xl ${previewCategory.color} flex-shrink-0 mt-1`}>
+                                {React.cloneElement(previewCategory.icon as React.ReactElement, { className: "w-6 h-6" })}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <span className="text-xs font-semibold uppercase text-gray-400">{form.taskType}</span>
+                                <h3 className="text-xl font-bold text-gray-900 leading-tight truncate">{form.title || "Task Title"}</h3>
+                                <p className="text-gray-600 mt-1 text-sm line-clamp-2">{form.description || "Task description will appear here..."}</p>
+                            </div>
+                        </div>
+                        <div className="text-right flex-shrink-0 self-end sm:self-center">
+                            <p className="text-2xl font-bold font-numeric text-accent-600">{(parseFloat(form.reward) || 0).toFixed(2)} Rs</p>
+                        </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end sm:items-center gap-4">
+                        <button className="bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm opacity-50 cursor-default w-full sm:w-auto">
+                            Complete Task
+                        </button>
+                    </div>
+                </div>
+                <p className="text-center text-xs text-gray-400 mt-3">This is how your task will appear to other users in the Earn section.</p>
+            </div>
+        </div>
 
         <div className="bg-gray-100 p-6 rounded-lg text-center border border-gray-200">
             <div className="flex items-center justify-center gap-2 mb-2">

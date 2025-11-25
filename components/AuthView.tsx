@@ -1,3 +1,4 @@
+
 // components/AuthView.tsx
 import React, { useState, useEffect } from 'react';
 import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ArrowRight, SparklesIcon } from './icons';
@@ -5,6 +6,7 @@ import { EyeIcon, EyeSlashIcon, CheckCircleIcon, ArrowRight, SparklesIcon } from
 interface AuthViewProps {
     onSignup: (data: {username: string, email: string, phone: string, password: string, referralCode?: string}) => void;
     onLogin: (email: string, password: string) => void;
+    onForgotPassword: (email: string) => void; // Added prop
     initialView: 'login' | 'signup';
 }
 
@@ -18,8 +20,9 @@ const GoogleIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
-const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) => {
+const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, onForgotPassword, initialView }) => {
     const [isSignup, setIsSignup] = useState(initialView === 'signup');
+    const [isResetMode, setIsResetMode] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     
     // Form State
@@ -43,15 +46,23 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
         e.preventDefault();
         setError('');
         
-        if (isSignup && !agree) {
-            setError('You must agree to the Terms & Privacy Policy.');
-            return;
-        }
-
         setIsLoading(true);
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        if (isSignup) {
+        if (isResetMode) {
+             if (!email) {
+                 setError("Please enter your email.");
+                 setIsLoading(false);
+                 return;
+             }
+             onForgotPassword(email);
+             setIsResetMode(false); // Go back to login after sending
+        } else if (isSignup) {
+            if (!agree) {
+                setError('You must agree to the Terms & Privacy Policy.');
+                setIsLoading(false);
+                return;
+            }
             onSignup({ username: name, email, phone, password, referralCode });
         } else {
             onLogin(email, password);
@@ -72,38 +83,40 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
 
                 <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-white/50 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                     <div className="p-2">
-                        <div className="flex bg-gray-100 rounded-2xl p-1 relative">
-                            <div 
-                                className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out ${isSignup ? 'translate-x-[100%] left-1' : 'translate-x-0 left-1'}`}
-                            ></div>
-                            
-                            <button 
-                                onClick={() => { setIsSignup(false); setError(''); }}
-                                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${!isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Log In
-                            </button>
-                            <button 
-                                onClick={() => { setIsSignup(true); setError(''); }}
-                                className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
-                            >
-                                Create Account
-                            </button>
-                        </div>
+                        {!isResetMode && (
+                            <div className="flex bg-gray-100 rounded-2xl p-1 relative">
+                                <div 
+                                    className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out ${isSignup ? 'translate-x-[100%] left-1' : 'translate-x-0 left-1'}`}
+                                ></div>
+                                
+                                <button 
+                                    onClick={() => { setIsSignup(false); setError(''); }}
+                                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${!isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Log In
+                                </button>
+                                <button 
+                                    onClick={() => { setIsSignup(true); setError(''); }}
+                                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors relative z-10 ${isSignup ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Create Account
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="px-8 pb-8 pt-6">
                         <div className="mb-8 text-center">
                             <h2 className="text-2xl font-bold text-gray-900">
-                                {isSignup ? 'Start your earning journey' : 'Welcome back, Hustler!'}
+                                {isResetMode ? 'Reset Password' : isSignup ? 'Start your earning journey' : 'Welcome back, Hustler!'}
                             </h2>
                             <p className="text-sm text-gray-500 mt-2">
-                                {isSignup ? 'Create an account to unlock tasks & rewards.' : 'Enter your details to access your dashboard.'}
+                                {isResetMode ? 'Enter your email to receive a reset link.' : isSignup ? 'Create an account to unlock tasks & rewards.' : 'Enter your details to access your dashboard.'}
                             </p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            {isSignup && (
+                            {isSignup && !isResetMode && (
                                 <div className="space-y-4 animate-fade-in">
                                     <div>
                                         <input 
@@ -138,26 +151,29 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                     className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
                                 />
                             </div>
-                            <div className="relative">
-                                <input 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder="Password"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
-                                />
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                                >
-                                    {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
-                                </button>
-                            </div>
+                            
+                            {!isResetMode && (
+                                <div className="relative">
+                                    <input 
+                                        type={showPassword ? "text" : "password"} 
+                                        placeholder="Password"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        className="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all font-medium"
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                    >
+                                        {showPassword ? <EyeSlashIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            )}
 
-                            {isSignup ? (
+                            {isSignup && !isResetMode ? (
                                 <div className="animate-fade-in space-y-4">
                                     <input 
                                         type="text" 
@@ -174,11 +190,17 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                         <span className="text-xs text-gray-500 font-medium">I agree to the <span className="text-gray-900 hover:underline">Terms</span> & <span className="text-gray-900 hover:underline">Privacy Policy</span></span>
                                     </label>
                                 </div>
-                            ) : (
+                            ) : !isResetMode ? (
                                 <div className="flex justify-end animate-fade-in">
-                                    <button type="button" className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors">Forgot Password?</button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setIsResetMode(true)}
+                                        className="text-xs font-bold text-amber-600 hover:text-amber-700 transition-colors"
+                                    >
+                                        Forgot Password?
+                                    </button>
                                 </div>
-                            )}
+                            ) : null}
 
                             {error && (
                                 <div className="bg-red-50 text-red-600 text-xs font-semibold px-4 py-3 rounded-xl text-center animate-pulse">
@@ -198,26 +220,40 @@ const AuthView: React.FC<AuthViewProps> = ({ onSignup, onLogin, initialView }) =
                                     </svg>
                                 ) : (
                                     <>
-                                        {isSignup ? 'Create Account' : 'Login'}
+                                        {isResetMode ? 'Send Reset Link' : isSignup ? 'Create Account' : 'Login'}
                                         <ArrowRight className="w-5 h-5" />
                                     </>
                                 )}
                             </button>
+                            
+                            {isResetMode && (
+                                <button 
+                                    type="button"
+                                    onClick={() => { setIsResetMode(false); setError(''); }}
+                                    className="w-full py-2 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                                >
+                                    Back to Login
+                                </button>
+                            )}
                         </form>
 
-                        <div className="relative my-8">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-white px-4 text-gray-400 font-bold tracking-wider">Or continue with</span>
-                            </div>
-                        </div>
+                        {!isResetMode && (
+                            <>
+                                <div className="relative my-8">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-gray-200"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-xs uppercase">
+                                        <span className="bg-white px-4 text-gray-400 font-bold tracking-wider">Or continue with</span>
+                                    </div>
+                                </div>
 
-                        <button className="w-full py-3.5 rounded-2xl border-2 border-gray-100 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.99]">
-                            <GoogleIcon className="w-5 h-5" />
-                            Continue with Google
-                        </button>
+                                <button className="w-full py-3.5 rounded-2xl border-2 border-gray-100 bg-white text-gray-700 font-bold text-sm hover:bg-gray-50 hover:border-gray-200 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.99]">
+                                    <GoogleIcon className="w-5 h-5" />
+                                    Continue with Google
+                                </button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

@@ -3,7 +3,7 @@ import React from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
   ClipboardListIcon, GiftIcon, GameControllerIcon,
-  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, UserGroupIcon, MailIcon, SparklesIcon, ChartBarIcon
+  PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, UserGroupIcon, MailIcon, SparklesIcon, ChartBarIcon, InboxIcon
 } from './icons';
 import type { View } from '../types';
 
@@ -58,6 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'SOCIAL_GROUPS', label: 'Social Groups', icon: <UserGroupIcon className="w-5 h-5" /> },
     { view: 'MY_APPLICATIONS', label: 'My Applications', icon: <DocumentCheckIcon className="w-5 h-5" /> },
     { view: 'UPDATES_INBOX', label: 'Inbox', icon: <MailIcon className="w-5 h-5" /> },
+    { view: 'MAILBOX', label: 'System Mailbox', icon: <InboxIcon className="w-5 h-5" /> }, // Added Mailbox
   ];
   
   const handleItemClick = (view: View) => {

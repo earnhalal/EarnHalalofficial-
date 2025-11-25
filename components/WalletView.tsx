@@ -18,6 +18,7 @@ interface WalletViewProps {
   savedDetails: WithdrawalDetails | null;
   hasPin: boolean;
   onSetupPin: () => void;
+  joinedAt?: any; // Passed from App.tsx
 }
 
 type Method = 'JazzCash' | 'EasyPaisa' | 'Bank Transfer' | 'NayaPay' | 'SadaPay' | 'UPaisa';
@@ -31,7 +32,7 @@ const paymentMethods: { id: Method; name: string; icon: React.ReactNode; color: 
     { id: 'Bank Transfer', name: 'Bank Transfer', icon: <BankIcon className="w-10 h-10"/>, color: 'bg-blue-50 border-blue-100 text-blue-600 hover:border-blue-300' },
 ];
 
-const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin }) => {
+const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin, joinedAt }) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<Method | null>(savedDetails?.method || null);
   const [accountName, setAccountName] = useState('');
@@ -47,6 +48,9 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
           setAccountNumber(savedDetails.accountNumber);
           setBankName(savedDetails.bankName || '');
       } else if (isEditingDetails) {
+          // Do NOT clear form state immediately on edit toggle to preserve UX, 
+          // or keep as is if you want fresh inputs. 
+          // Keeping it fresh for new entry.
           setAccountName('');
           setAccountNumber('');
           setBankName('');
@@ -87,46 +91,82 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
     setAmount('');
     setIsEditingDetails(false); 
   };
+
+  // --- Card Display Logic ---
+  const displayMethod = selectedMethod || (savedDetails?.method);
+  const methodIcon = paymentMethods.find(m => m.id === displayMethod)?.icon || <SparklesIcon className="w-8 h-8 text-amber-400" />;
   
+  // Format Joined Date for Card "Expiry"
+  const formatJoinedDate = (date: any) => {
+      if (!date) return "01/24"; // Fallback
+      // Handle Firestore Timestamp
+      const d = date.toDate ? date.toDate() : new Date(date);
+      if (isNaN(d.getTime())) return "01/24";
+      return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
+  };
+
   return (
     <div className="space-y-8 pb-24 font-sans">
       
-      {/* Digital Card Design */}
-      <div className="relative w-full aspect-[1.8/1] sm:h-56 bg-[#0F172A] rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden transform transition-all hover:scale-[1.01] group">
-          {/* Card Aesthetics */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:bg-white/10 transition-colors duration-500"></div>
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-500/10 rounded-full -ml-10 -mb-10 blur-2xl group-hover:bg-amber-500/20 transition-colors duration-500"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-          <div className="absolute top-6 right-8 opacity-20 pointer-events-none">
-              <SparklesIcon className="w-20 h-20 text-white rotate-12" />
-          </div>
+      {/* Premium Credit Card Design */}
+      <div className="perspective-1000 w-full max-w-md mx-auto relative group">
+          <div className="relative w-full aspect-[1.6/1] bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#000000] rounded-[24px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-gold/20">
+              
+              {/* Decorative Texture & Glare */}
+              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
 
-          <div className="relative z-10 flex flex-col justify-between h-full">
-              <div className="flex justify-between items-start">
-                  <div>
-                      <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Available Funds</p>
-                      <div className="flex items-baseline gap-2">
-                          <span className="text-3xl sm:text-4xl font-black text-white tracking-tight">{balance.toFixed(2)}</span>
-                          <span className="text-lg font-bold text-amber-500">PKR</span>
-                      </div>
+              {/* Top Row: Chip & Method Logo */}
+              <div className="relative z-10 flex justify-between items-start mb-8">
+                  <div className="w-12 h-9 bg-gradient-to-r from-[#fbbf24] to-[#d97706] rounded-md relative overflow-hidden shadow-sm border border-yellow-300/50">
+                      <div className="absolute top-1/2 left-0 w-full h-[1px] bg-black/20"></div>
+                      <div className="absolute top-0 left-1/3 w-[1px] h-full bg-black/20"></div>
+                      <div className="absolute top-0 right-1/3 w-[1px] h-full bg-black/20"></div>
+                      <div className="absolute top-1/3 left-1/2 w-4 h-4 border border-black/20 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
                   </div>
-                  {/* EMV Chip Style */}
-                  <div className="w-12 h-9 bg-gradient-to-br from-amber-200 to-amber-500 rounded-md border border-amber-300 shadow-sm relative overflow-hidden hidden sm:block">
-                      <div className="absolute top-1/2 left-0 w-full h-[1px] bg-amber-600/50"></div>
-                      <div className="absolute top-0 left-1/3 w-[1px] h-full bg-amber-600/50"></div>
-                      <div className="absolute top-0 right-1/3 w-[1px] h-full bg-amber-600/50"></div>
-                      <div className="absolute top-1/3 left-1/2 w-3 h-3 border border-amber-600/50 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
+                  <div className="opacity-90 scale-90 origin-top-right filter drop-shadow-lg">
+                      {methodIcon}
                   </div>
               </div>
 
-              <div className="flex justify-between items-end mt-auto">
-                  <div>
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Account Holder</p>
-                      <p className="text-base sm:text-lg font-bold text-white font-mono tracking-wide uppercase truncate max-w-[150px] sm:max-w-none">{username || 'USER'}</p>
+              {/* User Name (Fancy Corner Branding) */}
+              <div className="absolute top-6 right-6 text-[10px] font-bold text-amber-500 tracking-widest uppercase opacity-80 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                  {username}
+              </div>
+
+              {/* Available Balance (In-Card) */}
+              <div className="relative z-10 mb-6 text-center">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Available Limit</p>
+                  <p className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-500 tracking-tight drop-shadow-sm font-mono">
+                      {balance.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+              </div>
+
+              {/* Card Number & Details */}
+              <div className="relative z-10 mt-auto space-y-4">
+                  <div className="flex justify-between items-end">
+                      <div className="flex-1">
+                          <p className="text-lg sm:text-xl text-white font-mono tracking-widest drop-shadow-md truncate">
+                              {accountNumber || savedDetails?.accountNumber || "**** **** **** ****"}
+                          </p>
+                      </div>
                   </div>
-                  <div className="text-right">
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Pending</p>
-                      <p className="text-sm font-bold text-amber-400 font-mono">{pendingRewards.toFixed(2)} PKR</p>
+
+                  <div className="flex justify-between items-end">
+                      <div>
+                          <p className="text-[8px] text-gray-400 uppercase tracking-wider mb-0.5 ml-0.5">Card Holder</p>
+                          <p className="text-sm sm:text-lg text-white font-serif italic tracking-wide drop-shadow-md capitalize">
+                              {accountName || savedDetails?.accountName || username || "VALUED MEMBER"}
+                          </p>
+                      </div>
+                      <div className="text-right">
+                          <p className="text-[8px] text-gray-400 uppercase tracking-wider mb-0.5 mr-0.5">Member Since</p>
+                          <p className="text-sm font-bold text-white font-mono drop-shadow-md">
+                              {formatJoinedDate(joinedAt)}
+                          </p>
+                      </div>
                   </div>
               </div>
           </div>
@@ -265,14 +305,16 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                               <div key={tx.id} className="p-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
                                   <div className="flex items-center gap-3">
                                       <div className={`p-2.5 rounded-xl transition-colors ${
-                                          tx.amount >= 0 
-                                            ? 'bg-green-50 text-green-600 group-hover:bg-green-100' 
-                                            : 'bg-red-50 text-red-500 group-hover:bg-red-100'
+                                          tx.type === TransactionType.WITHDRAWAL
+                                            ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-200' // Amber for withdrawals
+                                            : tx.amount >= 0 
+                                                ? 'bg-green-50 text-green-600 group-hover:bg-green-100' 
+                                                : 'bg-red-50 text-red-500 group-hover:bg-red-100'
                                         }`}>
-                                          {tx.amount >= 0 ? <ArrowUpCircleIcon className="w-5 h-5 rotate-180" /> : <ArrowUpCircleIcon className="w-5 h-5" />}
+                                          {tx.type === TransactionType.WITHDRAWAL ? <WalletIcon className="w-5 h-5" /> : (tx.amount >= 0 ? <ArrowUpCircleIcon className="w-5 h-5 rotate-180" /> : <ArrowUpCircleIcon className="w-5 h-5" />)}
                                       </div>
                                       <div>
-                                          <p className="font-bold text-slate-900 text-sm">{tx.type}</p>
+                                          <p className={`font-bold text-sm ${tx.type === TransactionType.WITHDRAWAL ? 'text-amber-700' : 'text-slate-900'}`}>{tx.type}</p>
                                           <p className="text-xs text-gray-500 truncate max-w-[120px]">{tx.description}</p>
                                       </div>
                                   </div>
@@ -282,9 +324,9 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                                       </p>
                                       {tx.status && (
                                           <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wide ${
-                                              tx.status === 'Completed' ? 'bg-green-100 text-green-700' : 
+                                              tx.status === 'Completed' || tx.status === 'Approved' ? 'bg-green-100 text-green-700' : 
                                               tx.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' : 
-                                              'bg-gray-100 text-gray-600'
+                                              'bg-red-100 text-red-600'
                                           }`}>
                                               {tx.status}
                                           </span>

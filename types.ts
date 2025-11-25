@@ -34,8 +34,9 @@ export type View =
   | 'SOCIAL_GROUPS'
   | 'UPDATES_INBOX'
   | 'PREMIUM_HUB'
-  | 'LEADERBOARD' // Added
-  | 'LEVELS_INFO'; // Added
+  | 'LEADERBOARD'
+  | 'LEVELS_INFO'
+  | 'MAILBOX'; // Added for Email System
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -193,4 +194,15 @@ export interface Referral {
     status: ReferralStatus;
     bonusAmount: number;
     createdAt: any; // Firestore timestamp
+}
+
+// --- NEW EMAIL SYSTEM TYPES ---
+export interface EmailLog {
+    id: string;
+    type: 'Welcome' | 'Security Alert' | 'Verification' | 'Notification' | 'Password Reset';
+    subject: string;
+    recipient: string;
+    date: any; // Firestore timestamp
+    status: 'Sent' | 'Delivered' | 'Opened';
+    bodyPreview?: string;
 }

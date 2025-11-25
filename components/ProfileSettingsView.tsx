@@ -4,7 +4,7 @@ import type { UserProfile, View } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
@@ -14,6 +14,7 @@ interface ProfileSettingsViewProps {
     onLogout: () => void;
     onSetFingerprintEnabled: () => Promise<void>;
     onNavigate: (view: View) => void;
+    onSendVerificationOTP: (type: 'email' | 'phone', destination: string, otp: string) => void;
 }
 
 // --- Professional Avatar System Configuration ---
@@ -49,7 +50,7 @@ const MenuRow: React.FC<{
         className="w-full flex items-center justify-between p-4 bg-white border-b border-gray-50 last:border-none active:bg-gray-50 transition-colors group"
     >
         <div className="flex items-center gap-4">
-            <div className={`p-2 rounded-xl ${isDestructive ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-600 group-hover:bg-amber-50 group-hover:text-amber-600'} transition-colors`}>
+            <div className={`p-2 rounded-xl ${isDestructive ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-660 group-hover:bg-amber-50 group-hover:text-amber-600'} transition-colors`}>
                 {icon}
             </div>
             <span className={`font-semibold text-sm ${isDestructive ? 'text-red-600' : 'text-slate-700'}`}>{label}</span>
@@ -59,7 +60,7 @@ const MenuRow: React.FC<{
 );
 
 const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ 
-    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate 
+    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate, onSendVerificationOTP 
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -67,20 +68,54 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     // Local state for edit form
     const [name, setName] = useState(userProfile?.username || '');
     const [email, setEmail] = useState(userProfile?.email || '');
+    const [phone, setPhone] = useState(userProfile?.phone || '');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
+    // Verification State
+    const [verifyingField, setVerifyingField] = useState<'email' | 'phone' | null>(null);
+    const [generatedOTP, setGeneratedOTP] = useState('');
+    const [enteredOTP, setEnteredOTP] = useState('');
+    const [isVerified, setIsVerified] = useState({ email: true, phone: true }); // Assuming current profile is verified initially or check actual status
+
     // Avatar Selection State
     const [activeCollection, setActiveCollection] = useState<CollectionKey>('Basic');
     const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(userProfile?.photoURL || '');
 
     if (!userProfile) return null;
 
+    const handleStartVerification = (field: 'email' | 'phone', value: string) => {
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        setGeneratedOTP(otp);
+        setVerifyingField(field);
+        onSendVerificationOTP(field, value, otp);
+    };
+
+    const handleVerifyOTP = () => {
+        if (enteredOTP === generatedOTP) {
+            setIsVerified(prev => ({ ...prev, [verifyingField!]: true }));
+            setVerifyingField(null);
+            setEnteredOTP('');
+            alert(`${verifyingField === 'email' ? 'Email' : 'Phone'} verified successfully!`);
+        } else {
+            alert("Incorrect OTP. Please check your System Mailbox.");
+        }
+    };
+
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Simple check: if user changed email/phone, force verification
+        if (email !== userProfile.email && !isVerified.email) {
+            alert("Please verify your new email address first.");
+            return;
+        }
+        // Assuming phone is stored in profile but not used for auth directly here, logic similar
+        
         setIsSubmitting(true);
         try {
             await onUpdateProfile({ name, email, password: password || undefined });
+            // Also update phone if your backend supports it (User profile object needs update)
             setIsEditing(false);
         } catch (error) {
             alert("Failed to update profile.");
@@ -164,10 +199,79 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
                         <input value={name} onChange={e => setName(e.target.value)} className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
                     </div>
+                    
+                    {/* Email Field with Verification */}
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-                        <input value={email} onChange={e => setEmail(e.target.value)} className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
+                        <div className="flex gap-2">
+                            <input 
+                                value={email} 
+                                onChange={e => { setEmail(e.target.value); setIsVerified(prev => ({...prev, email: false})); }} 
+                                className="flex-1 p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" 
+                            />
+                            {email !== userProfile.email && !isVerified.email && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleStartVerification('email', email)}
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+                                >
+                                    Verify
+                                </button>
+                            )}
+                        </div>
+                        {verifyingField === 'email' && (
+                            <div className="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100 animate-fade-in">
+                                <p className="text-xs text-blue-600 mb-2">Code sent to System Mailbox. Check the inbox icon in header.</p>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter OTP" 
+                                        value={enteredOTP}
+                                        onChange={e => setEnteredOTP(e.target.value)}
+                                        className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"
+                                    />
+                                    <button type="button" onClick={handleVerifyOTP} className="px-3 bg-blue-600 text-white rounded-lg text-xs font-bold">Confirm</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Phone Field with Verification */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                        <div className="flex gap-2">
+                            <input 
+                                value={phone} 
+                                onChange={e => { setPhone(e.target.value); setIsVerified(prev => ({...prev, phone: false})); }} 
+                                className="flex-1 p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" 
+                            />
+                            {phone !== userProfile.phone && !isVerified.phone && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => handleStartVerification('phone', phone)}
+                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+                                >
+                                    Verify
+                                </button>
+                            )}
+                        </div>
+                        {verifyingField === 'phone' && (
+                            <div className="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100 animate-fade-in">
+                                <p className="text-xs text-blue-600 mb-2">Code sent to System Mailbox.</p>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter OTP" 
+                                        value={enteredOTP}
+                                        onChange={e => setEnteredOTP(e.target.value)}
+                                        className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"
+                                    />
+                                    <button type="button" onClick={handleVerifyOTP} className="px-3 bg-blue-600 text-white rounded-lg text-xs font-bold">Confirm</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">New Password</label>
                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Optional" className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
@@ -269,9 +373,11 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Change Avatar" onClick={() => setIsEditingPhoto(true)} />
                     <MenuRow icon={<WalletIcon className="w-5 h-5" />} label="Manage Wallet & PIN" onClick={() => onNavigate('WALLET')} />
+                    {/* Mailbox is now primarily via Header, but kept here for redundancy */}
+                    <MenuRow icon={<InboxIcon className="w-5 h-5" />} label="System Mailbox" onClick={() => onNavigate('MAILBOX')} />
                     <div className="p-4 flex items-center justify-between bg-white border-b border-gray-50">
                         <div className="flex items-center gap-4">
-                            <div className="p-2 rounded-xl bg-slate-50 text-slate-600"><FingerprintIcon className="w-5 h-5" /></div>
+                            <div className="p-2 rounded-xl bg-slate-50 text-slate-660"><FingerprintIcon className="w-5 h-5" /></div>
                             <span className="font-semibold text-sm text-slate-700">Biometric Login</span>
                         </div>
                         <button onClick={() => !userProfile.isFingerprintEnabled && onSetFingerprintEnabled()} className={`w-11 h-6 rounded-full transition-colors relative ${userProfile.isFingerprintEnabled ? 'bg-green-500' : 'bg-gray-200'}`}>
