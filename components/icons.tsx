@@ -452,16 +452,21 @@ export const DocumentArrowUpIcon: React.FC<IconProps> = (props) => (
 // --- Payment & Extra UI Icons ---
 
 export const JazzCashIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" {...props}>
-        <rect width="32" height="32" rx="6" fill="#EF4136"/>
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">JC</text>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="none" {...props}>
+        <rect width="200" height="100" rx="20" fill="#FFFFFF"/>
+        {/* Jazz */}
+        <text x="85" y="65" fontSize="60" fontWeight="900" fill="#BE0027" fontFamily="Arial, sans-serif" letterSpacing="-2" textAnchor="end">Jazz</text>
+        {/* Yellow dot accent commonly found in Jazz branding */}
+        <circle cx="90" cy="35" r="8" fill="#FFC629"/>
+        {/* Cash */}
+        <text x="95" y="65" fontSize="35" fontWeight="bold" fill="#000000" fontFamily="Arial, sans-serif" textAnchor="start">Cash</text>
     </svg>
 );
 
 export const EasyPaisaIcon: React.FC<IconProps> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" {...props}>
-        <rect width="32" height="32" rx="6" fill="#43A047"/>
-        <text x="50%" y="50%" dominantBaseline="middle" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">EP</text>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" fill="none" {...props}>
+        <rect width="200" height="100" rx="20" fill="#008F3F"/>
+        <text x="100" y="65" fontSize="50" fontWeight="bold" fill="#FFFFFF" fontFamily="Arial, sans-serif" textAnchor="middle" fontStyle="italic">easypaisa</text>
     </svg>
 );
 

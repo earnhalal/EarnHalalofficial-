@@ -32,6 +32,31 @@ const paymentMethods: { id: Method; name: string; icon: React.ReactNode; color: 
     { id: 'Bank Transfer', name: 'Bank Transfer', icon: <BankIcon className="w-10 h-10"/>, color: 'bg-blue-50 border-blue-100 text-blue-600 hover:border-blue-300' },
 ];
 
+// --- Realistic Card Assets ---
+
+const ContactlessIcon = ({ className }: { className?: string }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M8.5 10a7.5 7.5 0 0 1 7 0" strokeLinecap="round"/>
+        <path d="M7 8.5a9.5 9.5 0 0 1 10 0" strokeLinecap="round"/>
+        <path d="M10 11.5a3.5 3.5 0 0 1 4 0" strokeLinecap="round"/>
+        <path d="M11 13a1 1 0 0 1 2 0" strokeLinecap="round"/>
+    </svg>
+);
+
+const CardChip = () => (
+    <div className="w-12 h-9 rounded-md relative overflow-hidden shadow-sm bg-gradient-to-br from-[#e6cfa3] via-[#d4af37] to-[#bfa15f]">
+        {/* Circuit lines */}
+        <div className="absolute inset-0 border-[0.5px] border-[#8a6d1b] opacity-60">
+            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#8a6d1b]"></div>
+            <div className="absolute top-0 left-1/3 w-[1px] h-full bg-[#8a6d1b]"></div>
+            <div className="absolute top-0 right-1/3 w-[1px] h-full bg-[#8a6d1b]"></div>
+            <div className="absolute top-1/2 left-1/2 w-3 h-4 border border-[#8a6d1b] rounded-sm -translate-x-1/2 -translate-y-1/2 bg-[#d4af37]/30"></div>
+        </div>
+        {/* Shine */}
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50"></div>
+    </div>
+);
+
 const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin, joinedAt }) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<Method | null>(savedDetails?.method || null);
@@ -48,9 +73,6 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
           setAccountNumber(savedDetails.accountNumber);
           setBankName(savedDetails.bankName || '');
       } else if (isEditingDetails) {
-          // Do NOT clear form state immediately on edit toggle to preserve UX, 
-          // or keep as is if you want fresh inputs. 
-          // Keeping it fresh for new entry.
           setAccountName('');
           setAccountNumber('');
           setBankName('');
@@ -96,74 +118,76 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
   const displayMethod = selectedMethod || (savedDetails?.method);
   const methodIcon = paymentMethods.find(m => m.id === displayMethod)?.icon || <SparklesIcon className="w-8 h-8 text-amber-400" />;
   
-  // Format Joined Date for Card "Expiry"
   const formatJoinedDate = (date: any) => {
-      if (!date) return "01/24"; // Fallback
-      // Handle Firestore Timestamp
+      if (!date) return "01/24";
       const d = date.toDate ? date.toDate() : new Date(date);
       if (isNaN(d.getTime())) return "01/24";
       return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
   };
 
+  // Format card number blocks of 4
+  const formattedCardNumber = (accountNumber || savedDetails?.accountNumber || "0000 0000 0000 0000").replace(/\D/g, '').match(/.{1,4}/g)?.join(' ') || "0000 0000 0000 0000";
+
   return (
     <div className="space-y-8 pb-24 font-sans">
       
-      {/* Premium Credit Card Design */}
+      {/* REALISTIC CREDIT CARD */}
       <div className="perspective-1000 w-full max-w-md mx-auto relative group">
-          <div className="relative w-full aspect-[1.6/1] bg-gradient-to-br from-[#1a1a1a] via-[#2d2d2d] to-[#000000] rounded-[24px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10 overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-gold/20">
+          <div className="relative w-full aspect-[1.586/1] bg-[#111] rounded-[16px] p-6 sm:p-8 shadow-2xl overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-gold/20 border border-white/10">
               
-              {/* Decorative Texture & Glare */}
-              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-              <div className="absolute bottom-0 left-0 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl -ml-10 -mb-10 pointer-events-none"></div>
-              <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+              {/* 1. Background Texture (Matte Metal) */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#2a2a2a] via-[#1a1a1a] to-[#000]"></div>
+              <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+              
+              {/* 2. Holographic Glare Effect */}
+              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-45 pointer-events-none transform translate-x-[-100%] transition-transform duration-1000 group-hover:translate-x-[100%]"></div>
 
-              {/* Top Row: Chip & Method Logo */}
-              <div className="relative z-10 flex justify-between items-start mb-8">
-                  <div className="w-12 h-9 bg-gradient-to-r from-[#fbbf24] to-[#d97706] rounded-md relative overflow-hidden shadow-sm border border-yellow-300/50">
-                      <div className="absolute top-1/2 left-0 w-full h-[1px] bg-black/20"></div>
-                      <div className="absolute top-0 left-1/3 w-[1px] h-full bg-black/20"></div>
-                      <div className="absolute top-0 right-1/3 w-[1px] h-full bg-black/20"></div>
-                      <div className="absolute top-1/3 left-1/2 w-4 h-4 border border-black/20 rounded-full -translate-x-1/2 -translate-y-1/2"></div>
-                  </div>
-                  <div className="opacity-90 scale-90 origin-top-right filter drop-shadow-lg">
+              {/* 3. Logo Top Right */}
+              <div className="absolute top-6 right-6 flex flex-col items-end opacity-90">
+                  <div className="scale-75 origin-top-right filter drop-shadow-lg grayscale-[0.3] group-hover:grayscale-0 transition-all">
                       {methodIcon}
                   </div>
               </div>
 
-              {/* User Name (Fancy Corner Branding) */}
-              <div className="absolute top-6 right-6 text-[10px] font-bold text-amber-500 tracking-widest uppercase opacity-80 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                  {username}
-              </div>
+              {/* 4. Layout Content */}
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                  
+                  {/* Header: Chip & Contactless */}
+                  <div className="flex items-center gap-4">
+                      <CardChip />
+                      <ContactlessIcon className="w-6 h-6 text-white/60 rotate-90" />
+                  </div>
 
-              {/* Available Balance (In-Card) */}
-              <div className="relative z-10 mb-6 text-center">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-1">Available Limit</p>
-                  <p className="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 to-amber-500 tracking-tight drop-shadow-sm font-mono">
-                      {balance.toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </p>
-              </div>
-
-              {/* Card Number & Details */}
-              <div className="relative z-10 mt-auto space-y-4">
-                  <div className="flex justify-between items-end">
-                      <div className="flex-1">
-                          <p className="text-lg sm:text-xl text-white font-mono tracking-widest drop-shadow-md truncate">
-                              {accountNumber || savedDetails?.accountNumber || "**** **** **** ****"}
+                  {/* Middle: Card Number (Embossed Effect) */}
+                  <div className="mt-2">
+                      <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.15em] text-gray-200 drop-shadow-[1px_2px_1px_rgba(0,0,0,0.8)]" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.8), 0px -1px 0px rgba(255,255,255,0.1)' }}>
+                          {formattedCardNumber}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 opacity-90">
+                          <p className="text-[6px] text-amber-500 font-bold uppercase tracking-widest">Available Balance</p>
+                          <p className="text-sm font-bold text-amber-400 font-mono drop-shadow-md">
+                              {balance.toLocaleString('en-PK', { minimumFractionDigits: 2 })} PKR
                           </p>
                       </div>
                   </div>
 
+                  {/* Bottom: Details */}
                   <div className="flex justify-between items-end">
-                      <div>
-                          <p className="text-[8px] text-gray-400 uppercase tracking-wider mb-0.5 ml-0.5">Card Holder</p>
-                          <p className="text-sm sm:text-lg text-white font-serif italic tracking-wide drop-shadow-md capitalize">
+                      <div className="relative">
+                          <p className="text-[6px] text-gray-400 uppercase tracking-widest mb-0.5 ml-0.5">Card Holder</p>
+                          <p className="text-sm sm:text-base text-gray-200 font-heading font-medium tracking-widest uppercase drop-shadow-md truncate max-w-[180px]">
                               {accountName || savedDetails?.accountName || username || "VALUED MEMBER"}
                           </p>
+                          
+                          {/* Signature Layer */}
+                          <p className="absolute -top-6 -right-10 text-2xl text-white/20 font-signature -rotate-3 pointer-events-none whitespace-nowrap pr-4">
+                              {accountName || username || "Signature"}
+                          </p>
                       </div>
+
                       <div className="text-right">
-                          <p className="text-[8px] text-gray-400 uppercase tracking-wider mb-0.5 mr-0.5">Member Since</p>
-                          <p className="text-sm font-bold text-white font-mono drop-shadow-md">
+                          <p className="text-[6px] text-gray-400 uppercase tracking-widest mb-0.5 mr-0.5">Valid Thru</p>
+                          <p className="text-sm font-mono text-gray-200 font-bold tracking-widest drop-shadow-md">
                               {formatJoinedDate(joinedAt)}
                           </p>
                       </div>
