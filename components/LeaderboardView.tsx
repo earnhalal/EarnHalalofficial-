@@ -1,7 +1,7 @@
 
 // components/LeaderboardView.tsx
 import React, { useEffect, useState } from 'react';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { TrophyIcon, StarIcon, MedalIcon, CrownIcon, DiamondIcon } from './icons';
 
@@ -20,11 +20,12 @@ const LeaderboardView: React.FC = () => {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                // Fetch top 30 users based on balance (common metric for earning apps)
+                // Fetch top 10 users with balance greater than 1000
                 const q = query(
                     collection(db, "users"),
+                    where("balance", ">", 1000),
                     orderBy("balance", "desc"),
-                    limit(30)
+                    limit(10)
                 );
                 
                 const snapshot = await getDocs(q);
@@ -79,9 +80,9 @@ const LeaderboardView: React.FC = () => {
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-extrabold text-gray-900 flex items-center justify-center gap-3">
                     <TrophyIcon className="w-8 h-8 text-primary-500" />
-                    Top 30 Earners
+                    Elite Leaderboard
                 </h2>
-                <p className="text-gray-500">The highest performing users on TaskMint.</p>
+                <p className="text-gray-500">Top 10 high rollers with over 1000 Rs balance.</p>
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
@@ -96,37 +97,45 @@ const LeaderboardView: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {users.map((user, index) => (
-                                <tr key={user.id} className="hover:bg-mint-500/5 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${
-                                            index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                                            index === 1 ? 'bg-gray-100 text-gray-700' :
-                                            index === 2 ? 'bg-orange-100 text-orange-800' :
-                                            'text-gray-500'
-                                        }`}>
-                                            {index + 1}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="flex items-center">
-                                            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-mint-500 to-mint-900 flex items-center justify-center text-white font-bold text-xs mr-3">
-                                                {user.username.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="font-semibold text-gray-900">{user.username}</div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-mint-500/10 text-mint-900 border border-mint-500/20">
-                                            {getLevelIcon(user.level)}
-                                            Lvl {user.level}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">
-                                        {user.balance.toFixed(2)} Rs
+                            {users.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                        No users found with balance > 1000 Rs.
                                     </td>
                                 </tr>
-                            ))}
+                            ) : (
+                                users.map((user, index) => (
+                                    <tr key={user.id} className="hover:bg-mint-500/5 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className={`w-8 h-8 flex items-center justify-center rounded-full font-bold ${
+                                                index === 0 ? 'bg-yellow-100 text-yellow-700' :
+                                                index === 1 ? 'bg-gray-100 text-gray-700' :
+                                                index === 2 ? 'bg-orange-100 text-orange-800' :
+                                                'text-gray-500'
+                                            }`}>
+                                                {index + 1}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-mint-500 to-mint-900 flex items-center justify-center text-white font-bold text-xs mr-3">
+                                                    {user.username.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className="font-semibold text-gray-900">{user.username}</div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-mint-500/10 text-mint-900 border border-mint-500/20">
+                                                {getLevelIcon(user.level)}
+                                                Lvl {user.level}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-gray-900">
+                                            {user.balance.toFixed(2)} Rs
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

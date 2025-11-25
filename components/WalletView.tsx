@@ -44,16 +44,14 @@ const ContactlessIcon = ({ className }: { className?: string }) => (
 );
 
 const CardChip = () => (
-    <div className="w-12 h-9 rounded-md relative overflow-hidden shadow-sm bg-gradient-to-br from-[#e6cfa3] via-[#d4af37] to-[#bfa15f]">
+    <div className="w-11 h-8 rounded-md relative overflow-hidden shadow-sm bg-gradient-to-br from-[#fcd34d] via-[#d97706] to-[#b45309]">
         {/* Circuit lines */}
-        <div className="absolute inset-0 border-[0.5px] border-[#8a6d1b] opacity-60">
-            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#8a6d1b]"></div>
-            <div className="absolute top-0 left-1/3 w-[1px] h-full bg-[#8a6d1b]"></div>
-            <div className="absolute top-0 right-1/3 w-[1px] h-full bg-[#8a6d1b]"></div>
-            <div className="absolute top-1/2 left-1/2 w-3 h-4 border border-[#8a6d1b] rounded-sm -translate-x-1/2 -translate-y-1/2 bg-[#d4af37]/30"></div>
+        <div className="absolute inset-0 border-[0.5px] border-[#78350f] opacity-60">
+            <div className="absolute top-1/2 left-0 w-full h-[1px] bg-[#78350f]"></div>
+            <div className="absolute top-0 left-1/3 w-[1px] h-full bg-[#78350f]"></div>
+            <div className="absolute top-0 right-1/3 w-[1px] h-full bg-[#78350f]"></div>
+            <div className="absolute top-1/2 left-1/2 w-3 h-4 border border-[#78350f] rounded-sm -translate-x-1/2 -translate-y-1/2 bg-[#fbbf24]/30"></div>
         </div>
-        {/* Shine */}
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-50"></div>
     </div>
 );
 
@@ -131,63 +129,61 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
   return (
     <div className="space-y-8 pb-24 font-sans">
       
-      {/* REALISTIC CREDIT CARD */}
+      {/* PREMIUM CREDIT CARD */}
       <div className="perspective-1000 w-full max-w-md mx-auto relative group">
-          <div className="relative w-full aspect-[1.586/1] bg-[#111] rounded-[16px] p-6 sm:p-8 shadow-2xl overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-gold/20 border border-white/10">
+          {/* Card Container */}
+          <div className="relative w-full aspect-[1.586/1] rounded-[20px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-amber-500/20 border border-amber-500/20 bg-[#0a0a0a]">
               
-              {/* 1. Background Texture (Matte Metal) */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#2a2a2a] via-[#1a1a1a] to-[#000]"></div>
-              <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+              {/* 1. Background - Premium Matte Black with Gold Sheen */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#050505] to-[#000000]"></div>
               
-              {/* 2. Holographic Glare Effect */}
-              <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-45 pointer-events-none transform translate-x-[-100%] transition-transform duration-1000 group-hover:translate-x-[100%]"></div>
-
-              {/* 3. Logo Top Right */}
-              <div className="absolute top-6 right-6 flex flex-col items-end opacity-90">
-                  <div className="scale-75 origin-top-right filter drop-shadow-lg grayscale-[0.3] group-hover:grayscale-0 transition-all">
-                      {methodIcon}
-                  </div>
-              </div>
+              {/* 2. Gold Noise Texture Overlay */}
+              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+              
+              {/* 3. Abstract Gold Glows */}
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px]"></div>
+              <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-[50px]"></div>
 
               {/* 4. Layout Content */}
               <div className="relative z-10 h-full flex flex-col justify-between">
                   
-                  {/* Header: Chip & Contactless */}
-                  <div className="flex items-center gap-4">
-                      <CardChip />
-                      <ContactlessIcon className="w-6 h-6 text-white/60 rotate-90" />
-                  </div>
-
-                  {/* Middle: Card Number (Embossed Effect) */}
-                  <div className="mt-2">
-                      <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.15em] text-gray-200 drop-shadow-[1px_2px_1px_rgba(0,0,0,0.8)]" style={{ textShadow: '0px 1px 2px rgba(0,0,0,0.8), 0px -1px 0px rgba(255,255,255,0.1)' }}>
-                          {formattedCardNumber}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2 opacity-90">
-                          <p className="text-[6px] text-amber-500 font-bold uppercase tracking-widest">Available Balance</p>
-                          <p className="text-sm font-bold text-amber-400 font-mono drop-shadow-md">
-                              {balance.toLocaleString('en-PK', { minimumFractionDigits: 2 })} PKR
-                          </p>
+                  {/* Top Row: Logo and Bank/Icon */}
+                  <div className="flex justify-between items-start">
+                      <div className="flex flex-col">
+                          {/* TaskMint Logo Text inside Card */}
+                          <span className="font-black text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 tracking-tighter font-heading italic">
+                              TaskMint
+                          </span>
+                          <span className="text-[8px] text-amber-500/70 tracking-[0.2em] uppercase font-bold">Premium Member</span>
+                      </div>
+                      <div className="scale-75 origin-top-right opacity-90 filter drop-shadow-lg grayscale-[0.2] brightness-125">
+                          {methodIcon}
                       </div>
                   </div>
 
-                  {/* Bottom: Details */}
+                  {/* Middle Row: Chip & Number */}
+                  <div className="mt-2">
+                      <div className="flex items-center gap-4 mb-4">
+                          <CardChip />
+                          <ContactlessIcon className="w-6 h-6 text-white/40 rotate-90" />
+                      </div>
+                      <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.12em] text-gray-100 drop-shadow-md" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                          {formattedCardNumber}
+                      </p>
+                  </div>
+
+                  {/* Bottom Row: Holder & Expiry */}
                   <div className="flex justify-between items-end">
-                      <div className="relative">
-                          <p className="text-[6px] text-gray-400 uppercase tracking-widest mb-0.5 ml-0.5">Card Holder</p>
-                          <p className="text-sm sm:text-base text-gray-200 font-heading font-medium tracking-widest uppercase drop-shadow-md truncate max-w-[180px]">
+                      <div>
+                          <p className="text-[7px] text-amber-500/80 uppercase tracking-widest mb-0.5 font-bold">Card Holder</p>
+                          <p className="text-sm sm:text-base text-gray-100 font-heading font-semibold tracking-wider uppercase drop-shadow-sm truncate max-w-[180px]">
                               {accountName || savedDetails?.accountName || username || "VALUED MEMBER"}
-                          </p>
-                          
-                          {/* Signature Layer */}
-                          <p className="absolute -top-6 -right-10 text-2xl text-white/20 font-signature -rotate-3 pointer-events-none whitespace-nowrap pr-4">
-                              {accountName || username || "Signature"}
                           </p>
                       </div>
 
                       <div className="text-right">
-                          <p className="text-[6px] text-gray-400 uppercase tracking-widest mb-0.5 mr-0.5">Valid Thru</p>
-                          <p className="text-sm font-mono text-gray-200 font-bold tracking-widest drop-shadow-md">
+                          <p className="text-[7px] text-amber-500/80 uppercase tracking-widest mb-0.5 font-bold">Valid Thru</p>
+                          <p className="text-sm font-mono text-gray-100 font-bold tracking-widest drop-shadow-sm">
                               {formatJoinedDate(joinedAt)}
                           </p>
                       </div>

@@ -17,14 +17,9 @@ import LandingView from './LandingView';
 import NotificationBanner from './NotificationBanner';
 import DepositView from './DepositView';
 import SpinWheelView from './SpinWheelView';
-import PlayAndEarnView from './PlayAndEarnView';
 import PinLockView from './PinLockView';
 import WelcomeModal from './WelcomeModal';
 import MyApplicationsView from './MyApplicationsView';
-import LudoGame from './games/LudoGame';
-import LotteryGame from './games/LotteryGame';
-import CoinFlipGame from './games/CoinFlipGame';
-import MinesGame from './games/MinesGame';
 import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
 import NotificationToast from './NotificationToast';
@@ -32,6 +27,11 @@ import PremiumView from './PremiumView';
 import LeaderboardView from './LeaderboardView';
 import LevelsInfoView from './LevelsInfoView';
 import MailboxView from './MailboxView';
+import PlayAndEarnView from './PlayAndEarnView';
+import LudoGame from './games/LudoGame';
+import LotteryGame from './games/LotteryGame';
+import CoinFlipGame from './games/CoinFlipGame';
+import MinesGame from './games/MinesGame';
 import { GameControllerIcon, CloseIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog } from '../types';
@@ -72,14 +72,14 @@ const appUpdates: AppUpdate[] = [
         color: 'text-amber-400'
     },
     {
-        id: 'v1.2.0-games',
-        version: '1.2.0',
-        date: 'July 26, 2024',
-        title: 'Coin Flip & Mines Games Live!',
-        description: 'Test your luck with Coin Flip or your strategy in Mines. Two new exciting games have been added to the Play & Earn section.',
-        type: 'Game Release',
+        id: 'v1.5.0-campaign',
+        version: '1.5.0',
+        date: 'August 01, 2024',
+        title: 'Pro Campaign Manager',
+        description: 'Create professional task campaigns with our new easy-to-use manager.',
+        type: 'Improvement',
         icon: <GameControllerIcon className="w-5 h-5" />,
-        color: 'text-purple-400'
+        color: 'text-blue-400'
     },
 ];
 
@@ -475,7 +475,15 @@ const App: React.FC = () => {
   };
   
   const handleGameWin = async (amount: number, gameName: string) => { if (!user) return; const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { balance: increment(amount) }); batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.GAME_WIN, description: `Won in ${gameName}`, amount, date: serverTimestamp() }); await batch.commit(); };
-  const handleGameLoss = async (amount: number, gameName: string) => { if (!user || !userProfile) return; const batch = writeBatch(db); const userRef = doc(db, "users", user.uid); batch.update(userRef, { balance: increment(-amount) }); batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.GAME_LOSS, description: `Bet in ${gameName}`, amount: -amount, date: serverTimestamp() }); await batch.commit(); };
+  
+  const handleGameLoss = async (amount: number, gameName: string) => { 
+      if (!user) return; 
+      const batch = writeBatch(db); 
+      const userRef = doc(db, "users", user.uid); 
+      batch.update(userRef, { balance: increment(-amount) }); 
+      batch.set(doc(collection(userRef, "transactions")), { type: TransactionType.GAME_LOSS, description: `Lost in ${gameName}`, amount: -amount, date: serverTimestamp() }); 
+      await batch.commit(); 
+  };
   
   const handleSubscribe = async (plan: JobSubscriptionPlan, cost: number) => { 
       if(!user || !userProfile || userProfile.balance < cost) return; 
@@ -510,7 +518,7 @@ const App: React.FC = () => {
   };
 
   const renderContent = () => {
-    const views: Record<View | 'PREMIUM_HUB' | 'LEADERBOARD' | 'LEVELS_INFO', React.ReactNode> = {
+    const views: Record<View, React.ReactNode> = {
       DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} />,
@@ -520,7 +528,6 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      // Passed verification callback to ProfileSettingsView
       PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
@@ -535,7 +542,6 @@ const App: React.FC = () => {
       COIN_FLIP_GAME: <CoinFlipGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       MINES_GAME: <MinesGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={(id) => { if(!seenUpdateIds.includes(id)) setSeenUpdateIds([...seenUpdateIds, id]); }} onMarkAllAsRead={() => setSeenUpdateIds(appUpdates.map(u => u.id))} />,
-      // Mailbox is now global, this view might be deprecated if fully switched to modal, but kept for safety.
       MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} />,
     };
     return views[activeView] || views['DASHBOARD'];
@@ -566,7 +572,6 @@ const App: React.FC = () => {
       )}
 
       <div className="flex flex-col bg-[#F9FAFB] min-h-screen font-sans pb-[80px]">
-          {/* Header now toggles modal for Mailbox */}
           <Header username={userProfile.username} setActiveView={setActiveView} unreadEmailCount={unreadEmailCount} />
           <main className="flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full">{renderContent()}</main>
           <BottomNav activeView={activeView} setActiveView={setActiveView} />

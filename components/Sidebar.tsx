@@ -2,7 +2,7 @@
 import React from 'react';
 import {
   DashboardIcon, EarnIcon, WalletIcon, CreateTaskIcon, InviteIcon, SettingsIcon,
-  ClipboardListIcon, GiftIcon, GameControllerIcon,
+  ClipboardListIcon, GiftIcon, 
   PlusCircleIcon, BriefcaseIcon, DocumentCheckIcon, UserGroupIcon, MailIcon, SparklesIcon, ChartBarIcon, InboxIcon
 } from './icons';
 import type { View } from '../types';
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'LEADERBOARD', label: 'Leaderboard', icon: <ChartBarIcon className="w-5 h-5" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-5 h-5" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
-    { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-5 h-5" /> },
+    // Removed PLAY_AND_EARN
     { view: 'WALLET', label: 'Wallet', icon: <WalletIcon className="w-5 h-5" /> },
     { view: 'DEPOSIT', label: 'Deposit', icon: <PlusCircleIcon className="w-5 h-5" /> },
     { view: 'INVITE', label: 'Invite Friends', icon: <InviteIcon className="w-5 h-5" /> },
@@ -58,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
     { view: 'SOCIAL_GROUPS', label: 'Social Groups', icon: <UserGroupIcon className="w-5 h-5" /> },
     { view: 'MY_APPLICATIONS', label: 'My Applications', icon: <DocumentCheckIcon className="w-5 h-5" /> },
     { view: 'UPDATES_INBOX', label: 'Inbox', icon: <MailIcon className="w-5 h-5" /> },
-    { view: 'MAILBOX', label: 'System Mailbox', icon: <InboxIcon className="w-5 h-5" /> }, // Added Mailbox
+    { view: 'MAILBOX', label: 'System Mailbox', icon: <InboxIcon className="w-5 h-5" /> },
   ];
   
   const handleItemClick = (view: View) => {

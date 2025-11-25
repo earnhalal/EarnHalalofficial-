@@ -330,11 +330,19 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                         </p>
                     </div>
                     <div>
-                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Platform</h4>
+                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Company</h4>
                         <ul className="space-y-3 text-sm text-slate-400 font-medium">
                             <li><button onClick={() => setActiveModal('about')} className="hover:text-amber-400 transition-colors">About Us</button></li>
-                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-400 transition-colors">How it Works</button></li>
+                            <li><button onClick={() => setActiveModal('blog')} className="hover:text-amber-400 transition-colors">Blog</button></li>
                             <li><button onClick={() => onGetStarted('login')} className="hover:text-amber-400 transition-colors">Login / Sign Up</button></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Support</h4>
+                        <ul className="space-y-3 text-sm text-slate-400 font-medium">
+                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-400 transition-colors">How it Works</button></li>
+                            <li><button onClick={() => setActiveModal('deposit')} className="hover:text-amber-400 transition-colors">Deposit Guide</button></li>
+                            <li><button onClick={() => setActiveModal('support')} className="hover:text-amber-400 transition-colors">Contact Us</button></li>
                         </ul>
                     </div>
                     <div>
@@ -342,6 +350,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                         <ul className="space-y-3 text-sm text-slate-400 font-medium">
                             <li><button onClick={() => setActiveModal('privacy')} className="hover:text-amber-400 transition-colors">Privacy Policy</button></li>
                             <li><button onClick={() => setActiveModal('terms')} className="hover:text-amber-400 transition-colors">Terms of Service</button></li>
+                            <li><button onClick={() => setActiveModal('refund')} className="hover:text-amber-400 transition-colors">Refund Policy</button></li>
+                            <li><button onClick={() => setActiveModal('withdrawal')} className="hover:text-amber-400 transition-colors">Withdrawal Policy</button></li>
+                            <li><button onClick={() => setActiveModal('disclaimer')} className="hover:text-amber-400 transition-colors">Disclaimer</button></li>
                         </ul>
                     </div>
                 </div>
