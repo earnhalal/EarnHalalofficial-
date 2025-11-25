@@ -120,7 +120,15 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [activeView, setActiveViewInternal] = useState<View>('DASHBOARD');
+  
+  // Initialize activeView from history state if available (handles refresh)
+  const [activeView, setActiveViewInternal] = useState<View>(() => {
+      if (typeof window !== 'undefined' && window.history.state?.view) {
+          return window.history.state.view as View;
+      }
+      return 'DASHBOARD';
+  });
+
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
   const [userCreatedTasks, setUserCreatedTasks] = useState<UserCreatedTask[]>([]);
@@ -143,6 +151,28 @@ const App: React.FC = () => {
   }, []);
 
   const transactions = useMemo(() => baseTransactions, [baseTransactions]);
+
+  // Handle History Navigation (Back Button)
+  useEffect(() => {
+    if (user) {
+      const handlePopState = (event: PopStateEvent) => {
+        if (event.state && event.state.view) {
+          setActiveViewInternal(event.state.view);
+        } else {
+          // Fallback to default view if no state (e.g., initial load)
+          setActiveViewInternal('DASHBOARD');
+        }
+      };
+
+      // Ensure we have a state entry for the current view on load/login
+      if (!window.history.state) {
+        window.history.replaceState({ view: activeView }, '', '');
+      }
+
+      window.addEventListener('popstate', handlePopState);
+      return () => window.removeEventListener('popstate', handlePopState);
+    }
+  }, [user]); // activeView is intentionally omitted to avoid re-triggering
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -207,7 +237,17 @@ const App: React.FC = () => {
   useEffect(() => { if ((user && userProfile) || !user) setIsLoading(false); }, [user, userProfile]);
 
   const handleAuthNavigation = useCallback((view: 'login' | 'signup') => setAuthAction(view), []);
-  const setActiveView = (view: View) => { if (view !== activeView) setActiveViewInternal(view); };
+  
+  // Updated Navigation Handler with History Push
+  const setActiveView = (view: View) => { 
+      if (view !== activeView) {
+          // Push new state to history stack
+          window.history.pushState({ view }, '', '');
+          setActiveViewInternal(view);
+          // Scroll to top for better UX
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+  };
 
   const handleSignup = async (data: any) => {
     try {
