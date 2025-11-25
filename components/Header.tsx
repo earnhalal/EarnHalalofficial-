@@ -52,11 +52,13 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView }) => {
       )}
       <div className="flex items-center justify-center px-4 py-4 relative">
         {/* Centered Logo */}
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveView('DASHBOARD')}>
-            <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
-                <SparklesIcon className="w-5 h-5" />
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveView('DASHBOARD')}>
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-105">
+                <SparklesIcon className="w-6 h-6" />
             </div>
-            <span className="font-extrabold text-xl text-slate-900 tracking-tight font-heading">TaskMint</span>
+            <span className="font-black text-2xl text-slate-900 tracking-tighter font-heading">
+              Task<span className="text-amber-600">Mint</span>
+            </span>
         </div>
       </div>
     </header>

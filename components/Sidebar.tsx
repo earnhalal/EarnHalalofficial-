@@ -45,7 +45,7 @@ const NavItem: React.FC<{
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose, unreadUpdatesCount }) => {
   const mainViews: { view: View; label: string; icon: React.ReactNode }[] = [
     { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-5 h-5" /> },
-    { view: 'LEADERBOARD', label: 'Leaderboard', icon: <ChartBarIcon className="w-5 h-5" /> }, // Added
+    { view: 'LEADERBOARD', label: 'Leaderboard', icon: <ChartBarIcon className="w-5 h-5" /> },
     { view: 'EARN', label: 'Earn', icon: <EarnIcon className="w-5 h-5" /> },
     { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
     { view: 'PLAY_AND_EARN', label: 'Play & Earn', icon: <GameControllerIcon className="w-5 h-5" /> },
@@ -72,11 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
       }`}
     >
       <div className="p-4 flex flex-col h-full">
-        <div className="flex items-center space-x-3 mb-8 px-2 pt-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+        <div className="flex items-center gap-3 mb-8 px-2 pt-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
                 <SparklesIcon className="w-6 h-6" />
             </div>
-          <span className="text-xl font-extrabold text-gray-900 tracking-tight">TaskMint</span>
+          <span className="font-black text-xl text-slate-900 tracking-tighter font-heading">Task<span className="text-amber-600">Mint</span></span>
         </div>
         
         <div className="mb-2 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</div>

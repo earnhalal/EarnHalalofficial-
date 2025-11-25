@@ -118,10 +118,10 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
       </div>
 
       {/* Enhanced Glassmorphism Balance Card */}
-      <div className="relative p-6 sm:p-8 rounded-[32px] text-white bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl overflow-hidden group">
+      <div className="relative p-6 sm:p-8 rounded-[32px] text-white bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 shadow-2xl overflow-hidden group ring-1 ring-white/10">
         {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-amber-500/20 transition-colors duration-700"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl -ml-10 -mb-10"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-20 -mt-20 group-hover:bg-amber-500/20 transition-colors duration-700 animate-pulse-slow"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-600/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
         <div className="absolute inset-0 bg-white/5 backdrop-blur-[1px] rounded-[32px]"></div>
 
         <div className="relative z-10">
@@ -129,13 +129,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
                 <div>
                     <p className="font-bold text-slate-400 text-xs uppercase tracking-[0.2em] mb-1">Total Balance</p>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-300 to-amber-500 drop-shadow-sm tracking-tight">
+                        <span className="text-5xl sm:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 drop-shadow-md tracking-tighter">
                             {balance.toFixed(2)}
                         </span>
                         <span className="text-2xl font-bold text-amber-500">Rs</span>
                     </div>
                 </div>
-                <div className="bg-white/10 p-2 rounded-xl backdrop-blur-md">
+                <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md shadow-lg border border-white/10">
                    <SparklesIcon className="w-6 h-6 text-amber-400" />
                 </div>
             </div>
@@ -170,7 +170,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
             <span className="font-bold text-xs text-slate-700">Create Task</span>
           </button>
           <button onClick={() => setActiveView('EARN')} className="bg-white p-4 rounded-2xl shadow-subtle border border-gray-50 flex flex-col items-center justify-center aspect-square transition-all hover:shadow-lg hover:-translate-y-1 group active:scale-95 relative overflow-hidden">
-             <div className="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg">HOT</div>
+             <div className="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg shadow-sm">HOT</div>
             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
                 <EarnIcon className="w-6 h-6 text-amber-600 transition-colors"/>
             </div>
@@ -194,6 +194,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
       <style>{`
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.2; } }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite ease-in-out; }
       `}</style>
     </div>
   );

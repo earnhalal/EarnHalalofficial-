@@ -12,8 +12,6 @@ interface ProfileSettingsViewProps {
     onUpdateProfile: (updatedData: { name: string; email: string; password?: string }) => Promise<void>;
     onUpdatePhoto: (file: File | null, avatarUrl?: string) => Promise<void>;
     onLogout: () => void;
-    showChatbot: boolean;
-    onToggleChatbot: (isVisible: boolean) => void;
     onSetFingerprintEnabled: () => Promise<void>;
     onNavigate: (view: View) => void;
 }
@@ -61,7 +59,7 @@ const MenuRow: React.FC<{
 );
 
 const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ 
-    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, showChatbot, onToggleChatbot, onSetFingerprintEnabled, onNavigate 
+    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate 
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -291,13 +289,6 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                     <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Premium Jobs" onClick={() => onNavigate('JOBS')} />
                     <MenuRow icon={<UserGroupIcon className="w-5 h-5" />} label="Social Groups" onClick={() => onNavigate('SOCIAL_GROUPS')} />
                     <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="My Applications" onClick={() => onNavigate('MY_APPLICATIONS')} />
-                    <div className="p-4 flex items-center justify-between bg-white">
-                        <div className="flex items-center gap-4">
-                            <div className="p-2 rounded-xl bg-slate-50 text-slate-600"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg></div>
-                            <span className="font-semibold text-sm text-slate-700">TaskMint Support</span>
-                        </div>
-                        <button onClick={() => onToggleChatbot(true)} className="text-xs font-bold text-white bg-amber-500 px-3 py-1.5 rounded-lg hover:bg-amber-600 transition-colors">Open Chat</button>
-                    </div>
                 </div>
             </div>
 

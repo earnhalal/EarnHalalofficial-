@@ -1,3 +1,4 @@
+
 // components/LandingView.tsx
 import React, { useState, useEffect } from 'react';
 import { 
@@ -95,14 +96,14 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         {/* --- Header --- */}
         <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass-nav py-3' : 'bg-white/0 py-5'}`}>
           <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/20">
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo(0,0)}>
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-105">
                 <SparklesIcon className="w-6 h-6" />
               </div>
-              <span className="font-extrabold text-xl tracking-tight font-heading text-gray-900">TaskMint</span>
+              <span className="font-black text-xl tracking-tighter font-heading text-slate-900">Task<span className="text-amber-600">Mint</span></span>
             </div>
 
-            <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-600">
+            <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-gray-600">
               <button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-600 transition-colors">How it Works</button>
               <button onClick={() => setActiveModal('about')} className="hover:text-amber-600 transition-colors">About</button>
               <button onClick={() => setActiveModal('blog')} className="hover:text-amber-600 transition-colors">Blog</button>
@@ -110,7 +111,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             </nav>
 
             <div className="hidden md:flex items-center gap-4">
-              <button onClick={() => onGetStarted('login')} className="text-gray-900 hover:text-amber-600 font-bold transition-colors">Log In</button>
+              <button onClick={() => onGetStarted('login')} className="text-slate-900 hover:text-amber-600 font-black transition-colors">Log In</button>
               <button onClick={() => onGetStarted('signup')} className="btn-gold px-6 py-2.5 rounded-full font-bold text-sm">
                 Start Earning
               </button>
@@ -140,17 +141,17 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gray-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-semibold mb-8 shadow-sm animate-fade-in-up">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold mb-8 shadow-sm animate-fade-in-up">
                         <span className="flex h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
                         The #1 Earning App
                     </div>
                     
-                    <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight tracking-tight animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                    <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 leading-tight tracking-tighter animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                         Turn Your Time Into <br/>
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600 drop-shadow-sm">Real Money.</span>
                     </h1>
                     
-                    <p className="text-lg md:text-xl text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                    <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                         TaskMint is the premium platform for smart earners. Complete simple digital tasks, get instant gold rewards, and withdraw directly to your wallet.
                     </p>
                     
@@ -164,7 +165,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                         </button>
                     </div>
 
-                    <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16 text-gray-500 font-medium animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+                    <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16 text-slate-500 font-bold animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                          <div className="flex items-center gap-2">
                              <CheckCircleIcon className="w-5 h-5 text-amber-500" />
                              <span>Verified Tasks</span>
@@ -186,19 +187,19 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                         <div>
-                            <p className="text-4xl font-extrabold text-gray-900 mb-1">1.5M+</p>
+                            <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">1.5M+</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tasks Completed</p>
                         </div>
                         <div>
-                            <p className="text-4xl font-extrabold text-gray-900 mb-1">5M+</p>
+                            <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">5M+</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Paid Out (Rs)</p>
                         </div>
                         <div>
-                            <p className="text-4xl font-extrabold text-gray-900 mb-1">24h</p>
+                            <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">24h</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Avg. Withdrawal</p>
                         </div>
                         <div>
-                            <p className="text-4xl font-extrabold text-gray-900 mb-1">4.9/5</p>
+                            <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">4.9/5</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">User Rating</p>
                         </div>
                     </div>
@@ -210,7 +211,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                  <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-amber-600 font-bold tracking-widest uppercase text-sm mb-3">The TaskMint Advantage</h2>
-                        <h3 className="text-3xl md:text-5xl font-extrabold text-gray-900">Designed for <br/> Maximum Earnings.</h3>
+                        <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Designed for <br/> Maximum Earnings.</h3>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
@@ -218,8 +219,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                             <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
                                 <WalletIcon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-gray-900 mb-3">Fast Withdrawals</h4>
-                            <p className="text-gray-500 leading-relaxed">
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Fast Withdrawals</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium">
                                 Access your funds quickly. We process payouts via JazzCash, EasyPaisa, and Bank Transfer within 24-48 hours.
                             </p>
                         </div>
@@ -228,8 +229,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                             <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
                                 <ShieldCheck className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-gray-900 mb-3">Bank-Grade Security</h4>
-                            <p className="text-gray-500 leading-relaxed">
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Bank-Grade Security</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium">
                                 Your data and earnings are protected with top-tier encryption. We prioritize user privacy above all else.
                             </p>
                         </div>
@@ -238,13 +239,13 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                             <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
                                 <UserGroupIcon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-gray-900 mb-3">Referral Rewards</h4>
-                            <p className="text-gray-500 leading-relaxed">
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Referral Rewards</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium">
                                 Invite friends and build a passive income stream. Earn a bonus for every task your referrals complete.
                             </p>
                         </div>
                         
-                        <div className="md:col-span-2 bg-gradient-to-br from-gray-900 to-gray-800 p-10 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-8 group relative overflow-hidden text-white">
+                        <div className="md:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 p-10 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-8 group relative overflow-hidden text-white">
                              <div className="absolute right-0 top-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                              <div className="flex-1 relative z-10">
                                 <div className="flex items-center gap-3 mb-4">
@@ -254,15 +255,15 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                                     <span className="text-amber-400 font-bold uppercase tracking-wider text-sm">Daily Bonus</span>
                                 </div>
                                 <h4 className="text-3xl font-bold mb-3">Spin & Win Daily</h4>
-                                <p className="text-gray-300 leading-relaxed mb-8">
+                                <p className="text-gray-300 leading-relaxed mb-8 font-medium">
                                     Log in every day to spin the wheel. Win free cash prizes, multipliers, and exclusive rewards just for being active.
                                 </p>
-                                <button onClick={() => onGetStarted('signup')} className="bg-white text-gray-900 px-6 py-3 rounded-full font-bold hover:bg-amber-50 transition-colors">
+                                <button onClick={() => onGetStarted('signup')} className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-amber-50 transition-colors">
                                     Try Your Luck
                                 </button>
                              </div>
                              <div className="w-full md:w-1/3 flex justify-center">
-                                <div className="w-32 h-32 rounded-full border-4 border-amber-500 flex items-center justify-center bg-gray-800 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+                                <div className="w-32 h-32 rounded-full border-4 border-amber-500 flex items-center justify-center bg-slate-800 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
                                     <SparklesIcon className="w-16 h-16 text-amber-400 animate-pulse" />
                                 </div>
                              </div>
@@ -272,8 +273,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                             <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <TrophyIcon className="w-10 h-10 text-amber-600" />
                             </div>
-                            <h4 className="text-xl font-bold text-gray-900 mb-1">Leaderboards</h4>
-                            <p className="text-gray-500 text-sm">Compete for weekly prizes.</p>
+                            <h4 className="text-xl font-bold text-slate-900 mb-1">Leaderboards</h4>
+                            <p className="text-slate-500 text-sm font-medium">Compete for weekly prizes.</p>
                         </div>
                     </div>
                  </div>
@@ -296,8 +297,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             {/* --- CTA Section --- */}
             <section className="py-24 px-6 text-center bg-gray-50 border-t border-gray-200">
                 <div className="max-w-4xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">Ready to start minting?</h2>
-                    <p className="text-xl text-gray-500 mb-10 max-w-2xl mx-auto">Join the community today. No credit card required, just your phone and your ambition.</p>
+                    <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-6 tracking-tight">Ready to start minting?</h2>
+                    <p className="text-xl text-slate-500 mb-10 max-w-2xl mx-auto font-medium">Join the community today. No credit card required, just your phone and your ambition.</p>
                     <button onClick={() => onGetStarted('signup')} className="btn-gold px-12 py-5 rounded-full font-bold text-xl shadow-xl flex items-center justify-center gap-3 mx-auto">
                         Create Free Account <ArrowRight className="w-6 h-6" />
                     </button>
@@ -306,7 +307,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
         </main>
 
         {/* --- Footer --- */}
-        <footer className="bg-[#111827] text-white pt-20 pb-10">
+        <footer className="bg-[#0F172A] text-white pt-20 pb-10">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     <div className="space-y-6">
@@ -314,15 +315,15 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white">
                                 <SparklesIcon className="w-5 h-5" />
                              </div>
-                             <span className="font-bold text-xl text-white">TaskMint</span>
+                             <span className="font-black text-xl text-white tracking-tighter">Task<span className="text-amber-500">Mint</span></span>
                         </div>
-                        <p className="text-gray-400 text-sm leading-relaxed">
+                        <p className="text-slate-400 text-sm leading-relaxed font-medium">
                             The smartest way to earn online in Pakistan. We connect businesses with real users for authentic engagement.
                         </p>
                     </div>
                     <div>
                         <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Platform</h4>
-                        <ul className="space-y-3 text-sm text-gray-400">
+                        <ul className="space-y-3 text-sm text-slate-400 font-medium">
                             <li><button onClick={() => setActiveModal('about')} className="hover:text-amber-400 transition-colors">About Us</button></li>
                             <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-400 transition-colors">How it Works</button></li>
                             <li><button onClick={() => onGetStarted('login')} className="hover:text-amber-400 transition-colors">Login / Sign Up</button></li>
@@ -330,14 +331,14 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                     </div>
                     <div>
                         <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Legal</h4>
-                        <ul className="space-y-3 text-sm text-gray-400">
+                        <ul className="space-y-3 text-sm text-slate-400 font-medium">
                             <li><button onClick={() => setActiveModal('privacy')} className="hover:text-amber-400 transition-colors">Privacy Policy</button></li>
                             <li><button onClick={() => setActiveModal('terms')} className="hover:text-amber-400 transition-colors">Terms of Service</button></li>
                         </ul>
                     </div>
                 </div>
-                <div className="border-t border-gray-800 pt-8 flex justify-between items-center gap-4">
-                    <p className="text-gray-500 text-sm">© 2025 TaskMint. All rights reserved.</p>
+                <div className="border-t border-slate-800 pt-8 flex justify-between items-center gap-4">
+                    <p className="text-slate-500 text-sm font-medium">© 2025 TaskMint. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -1,6 +1,5 @@
-
 // components/App.tsx
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from './Header';
 import DashboardView from './DashboardView';
 import EarnView from './EarnView';
@@ -19,7 +18,6 @@ import DepositView from './DepositView';
 import SpinWheelView from './SpinWheelView';
 import PlayAndEarnView from './PlayAndEarnView';
 import PinLockView from './PinLockView';
-import AIAgentChatbot from './AIAgentChatbot';
 import WelcomeModal from './WelcomeModal';
 import MyApplicationsView from './MyApplicationsView';
 import LudoGame from './games/LudoGame';
@@ -30,8 +28,8 @@ import SocialGroupsView from './SocialGroupsView';
 import LoadingScreen from './LoadingScreen';
 import NotificationToast from './NotificationToast';
 import PremiumView from './PremiumView';
-import LeaderboardView from './LeaderboardView'; // Added
-import LevelsInfoView from './LevelsInfoView'; // Added
+import LeaderboardView from './LeaderboardView';
+import LevelsInfoView from './LevelsInfoView';
 import { GameControllerIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral } from '../types';
@@ -126,7 +124,6 @@ const App: React.FC = () => {
   const [pinLockMode, setPinLockMode] = useState<'set' | 'enter'>('set');
   const [pinAction, setPinAction] = useState<(() => void) | null>(null);
   const [seenUpdateIds, setSeenUpdateIds] = useState<string[]>([]);
-  const [showChatbot, setShowChatbot] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [referrals, setReferrals] = useState<Referral[]>([]);
 
@@ -366,7 +363,7 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} showChatbot={showChatbot} onToggleChatbot={(v) => { setShowChatbot(v); localStorage.setItem('showChatbot', JSON.stringify(v)); }} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
@@ -399,7 +396,6 @@ const App: React.FC = () => {
           <Header username={userProfile.username} setActiveView={setActiveView} />
           <main className="flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full">{renderContent()}</main>
           <BottomNav activeView={activeView} setActiveView={setActiveView} />
-          {showChatbot && <AIAgentChatbot />}
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={() => { setShowPinLock(false); pinAction && pinAction(); setPinAction(null); }} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
     </>
