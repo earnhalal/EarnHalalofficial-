@@ -42,7 +42,11 @@ export type View =
   | 'POST_JOB'
   | 'MANAGE_CAMPAIGNS'
   | 'ADS_GUIDE'
-  | 'ADS_POLICY';
+  | 'ADS_POLICY'
+  | 'AD_PIXEL'
+  | 'GEOFENCING'
+  | 'CONVERSION_EVENTS'
+  | 'BILLING';
 
 export type UserMode = 'EARNER' | 'ADVERTISER';
 

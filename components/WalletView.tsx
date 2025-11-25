@@ -6,7 +6,7 @@ import { TransactionType } from '../types';
 import {
   WalletIcon, PencilSquareIcon, BankIcon, NayaPayIcon,
   SadaPayIcon, UPaisaIcon, JazzCashIcon, EasyPaisaIcon, CheckCircleIcon,
-  ArrowRight, SparklesIcon, ArrowUpCircleIcon, PlusCircleIcon
+  ArrowRight, SparklesIcon, ArrowUpCircleIcon, PlusCircleIcon, Globe
 } from './icons';
 
 interface WalletViewProps {
@@ -135,30 +135,34 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
       {/* PREMIUM CREDIT CARD */}
       <div className="perspective-1000 w-full max-w-md mx-auto relative group">
           {/* Card Container */}
-          <div className="relative w-full aspect-[1.586/1] rounded-[20px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-amber-500/20 border border-amber-500/20 bg-[#0a0a0a]">
+          <div className="relative w-full aspect-[1.586/1] rounded-[20px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-amber-500/20 bg-[#0f0f0f]">
               
               {/* 1. Background */}
               {isAdvertiser ? (
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
+                  // Black Platinum Business Card
+                  <>
+                    <div className="absolute inset-0 bg-[#111]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-gray-700 via-gray-900 to-black"></div>
+                    {/* Subtle World Map Texture Overlay */}
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg')] bg-cover bg-center mix-blend-overlay filter invert"></div>
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none"></div>
+                  </>
               ) : (
+                  // User Gold/Black Card
                   <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#050505] to-[#000000]"></div>
               )}
               
-              {/* 2. Texture Overlay */}
-              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
-              
-              {/* 3. Abstract Glows */}
-              {isAdvertiser ? (
+              {/* 2. Glows & Texture */}
+              {!isAdvertiser && (
                   <>
-                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px]"></div>
-                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-indigo-500/20 rounded-full blur-[50px]"></div>
-                  </>
-              ) : (
-                  <>
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
                     <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px]"></div>
                     <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-[50px]"></div>
                   </>
               )}
+
+              {/* 3. Border Shine */}
+              <div className={`absolute inset-0 rounded-[20px] border ${isAdvertiser ? 'border-gray-600/30' : 'border-amber-500/20'}`}></div>
 
               {/* 4. Layout Content */}
               <div className="relative z-10 h-full flex flex-col justify-between">
@@ -167,15 +171,14 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                   <div className="flex justify-between items-start">
                       <div className="flex flex-col">
                           {/* TaskMint Logo Text inside Card */}
-                          <span className={`font-black text-xl sm:text-2xl tracking-tighter font-heading italic ${isAdvertiser ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200'}`}>
-                              TaskMint {isAdvertiser && <span className="text-blue-300 text-sm not-italic">Business</span>}
+                          <span className={`font-black text-xl sm:text-2xl tracking-tighter font-heading italic ${isAdvertiser ? 'text-gray-200 drop-shadow-md' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200'}`}>
+                              TaskMint {isAdvertiser && <span className="text-gray-400 text-xs not-italic font-sans tracking-widest ml-1">BUSINESS</span>}
                           </span>
-                          <span className={`text-[8px] tracking-[0.2em] uppercase font-bold ${isAdvertiser ? 'text-blue-200/70' : 'text-amber-500/70'}`}>
-                              {isAdvertiser ? 'Corporate Account' : 'Premium Member'}
-                          </span>
+                          {isAdvertiser && <span className="text-[9px] text-gray-500 tracking-[0.3em] uppercase mt-1">Platinum Commercial</span>}
                       </div>
-                      <div className="scale-75 origin-top-right opacity-90 filter drop-shadow-lg grayscale-[0.2] brightness-125">
-                          {isAdvertiser ? <WalletIcon className="w-10 h-10 text-blue-300"/> : methodIcon}
+                      
+                      <div className="scale-75 origin-top-right opacity-90 filter drop-shadow-lg">
+                          {isAdvertiser ? <Globe className="w-10 h-10 text-gray-400"/> : methodIcon}
                       </div>
                   </div>
 
@@ -185,7 +188,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                           <CardChip />
                           <ContactlessIcon className="w-6 h-6 text-white/40 rotate-90" />
                       </div>
-                      <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.12em] text-gray-100 drop-shadow-md" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                      <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.12em] text-gray-200 drop-shadow-md" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                           {isAdvertiser ? "**** **** **** " + (balance.toFixed(0).padStart(4, '0')) : formattedCardNumber}
                       </p>
                   </div>
@@ -193,15 +196,15 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                   {/* Bottom Row: Holder & Expiry */}
                   <div className="flex justify-between items-end">
                       <div>
-                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-blue-300/80' : 'text-amber-500/80'}`}>Card Holder</p>
-                          <p className="text-sm sm:text-base text-gray-100 font-heading font-semibold tracking-wider uppercase drop-shadow-sm truncate max-w-[180px]">
+                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-gray-500' : 'text-amber-500/80'}`}>Authorized Signature</p>
+                          <p className="text-sm sm:text-base text-gray-200 font-heading font-semibold tracking-wider uppercase drop-shadow-sm truncate max-w-[180px]">
                               {accountName || savedDetails?.accountName || username || "VALUED MEMBER"}
                           </p>
                       </div>
 
                       <div className="text-right">
-                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-blue-300/80' : 'text-amber-500/80'}`}>Valid Thru</p>
-                          <p className="text-sm font-mono text-gray-100 font-bold tracking-widest drop-shadow-sm">
+                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-gray-500' : 'text-amber-500/80'}`}>Valid Thru</p>
+                          <p className="text-sm font-mono text-gray-200 font-bold tracking-widest drop-shadow-sm">
                               {formatJoinedDate(joinedAt)}
                           </p>
                       </div>
