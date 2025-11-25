@@ -100,7 +100,7 @@ const LeaderboardView: React.FC = () => {
                             {users.length === 0 ? (
                                 <tr>
                                     <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                                        No users found with balance > 1000 Rs.
+                                        No users found with balance &gt; 1000 Rs.
                                     </td>
                                 </tr>
                             ) : (
