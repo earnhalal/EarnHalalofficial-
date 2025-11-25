@@ -2,7 +2,7 @@
 // components/JobsView.tsx
 import React, { useState } from 'react';
 import type { UserProfile, Job, JobSubscriptionPlan, Application } from '../types';
-import { CheckCircleIcon, BriefcaseIcon, StarIcon, RocketIcon } from './icons';
+import { CheckCircleIcon, BriefcaseIcon, StarIcon, RocketIcon, FireIcon } from './icons';
 import ThankYouModal from './ThankYouModal';
 
 interface JobsViewProps {
@@ -22,7 +22,8 @@ const plans = [
         features: ['Access to basic jobs', '5 applications per day', 'Standard Support'], 
         color: 'gray', 
         limit: 5,
-        icon: <BriefcaseIcon className="w-6 h-6" />
+        icon: <BriefcaseIcon className="w-6 h-6" />,
+        badge: null
     },
     { 
         name: 'Growth' as JobSubscriptionPlan, 
@@ -32,7 +33,8 @@ const plans = [
         color: 'primary', 
         limit: 15,
         icon: <RocketIcon className="w-6 h-6" />,
-        isPopular: true
+        isPopular: true,
+        badge: "Recommended"
     },
     { 
         name: 'Business' as JobSubscriptionPlan, 
@@ -41,7 +43,9 @@ const plans = [
         features: ['Unlimited Jobs', 'Unlimited Applications', 'VIP Support Channel', 'Verified Badge'], 
         color: 'accent', 
         limit: Infinity,
-        icon: <StarIcon className="w-6 h-6" />
+        icon: <StarIcon className="w-6 h-6" />,
+        badge: "Hot Offer",
+        badgeColor: "bg-red-500"
     },
 ];
 
@@ -78,6 +82,7 @@ const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubsc
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-start">
                     {plans.map((plan, index) => {
                         const isPopular = plan.isPopular;
+                        const isHot = plan.badge === "Hot Offer";
                         
                         return (
                             <div 
@@ -89,9 +94,10 @@ const JobsView: React.FC<JobsViewProps> = ({ userProfile, balance, jobs, onSubsc
                                     }`}
                                 style={{ animationDelay: `${index * 100}ms`}}
                             >
-                                {isPopular && (
-                                    <div className="bg-primary-500 text-white text-center text-xs font-bold uppercase py-2 tracking-wider">
-                                        Most Popular Choice
+                                {plan.badge && (
+                                    <div className={`absolute top-0 right-0 ${plan.badgeColor || 'bg-primary-500'} text-white text-[10px] font-bold uppercase px-3 py-1 rounded-bl-xl shadow-sm z-20 flex items-center gap-1`}>
+                                        {isHot && <FireIcon className="w-3 h-3" />}
+                                        {plan.badge}
                                     </div>
                                 )}
                                 

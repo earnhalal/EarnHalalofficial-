@@ -2,7 +2,7 @@
 // components/PremiumView.tsx
 import React from 'react';
 import type { View } from '../types';
-import { BriefcaseIcon, UserGroupIcon, CheckCircleIcon, ArrowRight, StarIcon, RocketIcon, MegaphoneIcon, ShoppingCartIcon } from './icons';
+import { BriefcaseIcon, UserGroupIcon, CheckCircleIcon, ArrowRight, StarIcon, RocketIcon, MegaphoneIcon, ShoppingCartIcon, FireIcon, DiamondIcon } from './icons';
 
 interface PremiumViewProps {
     setActiveView: (view: View) => void;
@@ -16,7 +16,8 @@ const PremiumCard: React.FC<{
     colorClass: string;
     delay: number;
     badge?: string;
-}> = ({ title, subtitle, icon, onClick, colorClass, delay, badge }) => (
+    badgeColor?: string;
+}> = ({ title, subtitle, icon, onClick, colorClass, delay, badge, badgeColor }) => (
     <button 
         onClick={onClick}
         className="relative w-full bg-white rounded-3xl p-6 shadow-card hover:shadow-gold border border-gray-100 transition-all duration-300 hover:-translate-y-1 text-left group overflow-hidden animate-fade-in-up"
@@ -29,7 +30,8 @@ const PremiumCard: React.FC<{
                 {icon}
             </div>
             {badge && (
-                <span className="bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                <span className={`${badgeColor || 'bg-slate-900'} text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1`}>
+                    {badge === 'Hot' && <FireIcon className="w-3 h-3" />}
                     {badge}
                 </span>
             )}
@@ -76,6 +78,7 @@ const PremiumView: React.FC<PremiumViewProps> = ({ setActiveView }) => {
                     colorClass="bg-gradient-to-br from-gray-800 to-black"
                     delay={100}
                     badge="Popular"
+                    badgeColor="bg-amber-500"
                 />
 
                 <PremiumCard 
@@ -106,10 +109,31 @@ const PremiumView: React.FC<PremiumViewProps> = ({ setActiveView }) => {
                     delay={400}
                     badge="Coming Soon"
                 />
+                
+                <PremiumCard 
+                    title="Crypto Cloud Mining"
+                    subtitle="Rent hash power and earn daily crypto rewards without hardware."
+                    icon={<DiamondIcon className="w-7 h-7" />}
+                    onClick={() => alert("Crypto Mining: Coming soon!")}
+                    colorClass="bg-gradient-to-br from-blue-500 to-cyan-600"
+                    delay={500}
+                    badge="Hot"
+                    badgeColor="bg-red-500"
+                />
+                
+                <PremiumCard 
+                    title="Affiliate Academy"
+                    subtitle="Learn professional affiliate marketing strategies. Earn from global brands."
+                    icon={<RocketIcon className="w-7 h-7" />}
+                    onClick={() => alert("Academy: Coming soon!")}
+                    colorClass="bg-gradient-to-br from-pink-500 to-rose-600"
+                    delay={600}
+                    badge="Future"
+                />
             </div>
 
             {/* Bottom Banner */}
-            <div className="mt-10 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-6 animate-fade-in-up" style={{animationDelay: '500ms'}}>
+            <div className="mt-10 bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100 rounded-3xl p-8 flex flex-col md:flex-row items-center gap-6 animate-fade-in-up" style={{animationDelay: '700ms'}}>
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg text-amber-500 shrink-0">
                     <StarIcon className="w-8 h-8" />
                 </div>

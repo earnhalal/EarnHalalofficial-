@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { 
     ClipboardCopyIcon, WhatsAppIcon, FacebookIcon, CheckCircleIcon, 
     TrophyIcon, InviteIcon, TelegramIcon, MessengerIcon, UserGroupIcon,
-    ChevronDownIcon
+    ChevronDownIcon, StarIcon, GiftIcon, WalletIcon
 } from './icons';
 import type { UserProfile, Referral } from '../types';
 
@@ -15,15 +15,15 @@ interface InviteViewProps {
 
 // --- Components Styled for White & Gold Theme ---
 
-const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; delay?: number }> = ({ label, value, icon, delay = 0 }) => (
+const StatCard: React.FC<{ label: string; value: string | number; icon: React.ReactNode; delay?: number; isHighlighted?: boolean }> = ({ label, value, icon, delay = 0, isHighlighted }) => (
     <div 
-        className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col items-center text-center shadow-card hover:shadow-gold transition-all duration-300 animate-fade-in-up"
+        className={`bg-white border ${isHighlighted ? 'border-amber-300 shadow-gold' : 'border-gray-100'} rounded-2xl p-5 flex flex-col items-center text-center shadow-card hover:shadow-gold transition-all duration-300 animate-fade-in-up hover:-translate-y-1 group`}
         style={{ animationDelay: `${delay}ms` }}
     >
-        <div className="mb-3 p-3 bg-primary-50 rounded-full text-primary-600">
+        <div className={`mb-3 p-3 rounded-full ${isHighlighted ? 'bg-amber-100 text-amber-600' : 'bg-primary-50 text-primary-600'} group-hover:scale-110 transition-transform`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-6 h-6" })}
         </div>
-        <p className="text-2xl font-extrabold text-gray-900 font-heading tracking-tight">{value}</p>
+        <p className={`text-2xl font-extrabold font-heading tracking-tight ${isHighlighted ? 'text-amber-600' : 'text-gray-900'}`}>{value}</p>
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{label}</p>
     </div>
 );
@@ -104,6 +104,19 @@ const ReferralCard: React.FC<{ referral: Referral; globalUserTasksCompleted: num
     );
 };
 
+const StepCard: React.FC<{ number: string; title: string; description: string; icon: React.ReactNode }> = ({ number, title, description, icon }) => (
+    <div className="relative p-6 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center group hover:shadow-lg transition-all duration-300">
+        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-sm border-2 border-white shadow-sm z-10">
+            {number}
+        </div>
+        <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+            {icon}
+        </div>
+        <h3 className="font-bold text-gray-900 mb-1">{title}</h3>
+        <p className="text-xs text-gray-500 leading-relaxed">{description}</p>
+    </div>
+);
+
 const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
     const [copied, setCopied] = useState(false);
     const [showReferralHistory, setShowReferralHistory] = useState(false);
@@ -128,47 +141,80 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
         <div className="min-h-screen bg-[#F9FAFB] pb-24 pt-4 px-4 font-sans">
             <div className="max-w-4xl mx-auto space-y-8">
                 
-                {/* Header */}
-                <div className="text-center space-y-2">
-                    <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 font-heading">
-                        Invite & <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-primary-700">Earn Big</span>
-                    </h1>
-                    <p className="text-gray-500 text-sm">Get <span className="font-bold text-gray-900">200 Rs</span> for every active friend you invite.</p>
+                {/* Header Section */}
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/20 rounded-full -ml-10 -mb-10 blur-3xl"></div>
+                     
+                     <div className="relative z-10 text-center space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold uppercase tracking-wider mb-2">
+                             <StarIcon className="w-3 h-3" /> Partner Program
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-black font-heading tracking-tight">
+                            Invite Friends, <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-200">Earn Forever</span>
+                        </h1>
+                        <p className="text-slate-300 text-sm md:text-base max-w-lg mx-auto">
+                            Get <span className="font-bold text-white">200 Rs</span> for every active friend. Plus, unlock exclusive tiered rewards as you grow your network.
+                        </p>
+                     </div>
                 </div>
 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <StatCard label="Total Invites" value={totalInvites} icon={<UserGroupIcon />} delay={100} />
                     <StatCard label="Completed" value={completedInvites} icon={<CheckCircleIcon />} delay={200} />
-                    <StatCard label="Pending" value={`${pendingBonuses}`} icon={<TrophyIcon />} delay={300} />
-                    <StatCard label="Earned" value={`${totalEarned}`} icon={<TrophyIcon />} delay={400} />
+                    <StatCard label="Pending Bonus" value={`${pendingBonuses}`} icon={<WalletIcon />} delay={300} />
+                    <StatCard label="Total Earned" value={`${totalEarned}`} icon={<TrophyIcon />} delay={400} isHighlighted={true} />
+                </div>
+
+                {/* How It Works Steps */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <StepCard 
+                        number="1" 
+                        title="Share Your Link" 
+                        description="Copy your unique link below and send it to friends." 
+                        icon={<InviteIcon className="w-6 h-6" />} 
+                    />
+                    <StepCard 
+                        number="2" 
+                        title="Friends Join" 
+                        description="They sign up and start completing tasks." 
+                        icon={<UserGroupIcon className="w-6 h-6" />} 
+                    />
+                    <StepCard 
+                        number="3" 
+                        title="Get Rewarded" 
+                        description="Earn 200 Rs once they complete their first 15 tasks." 
+                        icon={<GiftIcon className="w-6 h-6" />} 
+                    />
                 </div>
 
                 {/* Copy Link Section */}
-                <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-card text-center">
-                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Your Unique Referral Link</p>
+                <div className="bg-white border border-amber-200 rounded-3xl p-6 shadow-gold text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-300 via-amber-500 to-amber-300"></div>
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-4">Your Golden Ticket</p>
                     
-                    <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                        <div className="flex-grow bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-600 font-mono truncate">
+                    <div className="flex flex-col sm:flex-row gap-3 mb-6 relative z-10">
+                        <div className="flex-grow bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-800 font-mono truncate font-bold shadow-inner">
                             {referralLink}
                         </div>
                         <button 
                             onClick={handleCopy} 
-                            className="bg-gray-900 text-white px-6 py-4 rounded-xl font-bold hover:bg-primary-500 hover:text-white transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                            className="bg-slate-900 text-white px-6 py-4 rounded-xl font-bold hover:bg-amber-500 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2 group"
                         >
-                            {copied ? <CheckCircleIcon className="w-5 h-5" /> : <ClipboardCopyIcon className="w-5 h-5" />}
-                            {copied ? 'Copied!' : 'Copy'}
+                            {copied ? <CheckCircleIcon className="w-5 h-5" /> : <ClipboardCopyIcon className="w-5 h-5 group-hover:scale-110 transition-transform" />}
+                            {copied ? 'Copied!' : 'Copy Link'}
                         </button>
                     </div>
 
                     <div className="grid grid-cols-4 gap-4 max-w-xs mx-auto">
                         {[
-                            { icon: <WhatsAppIcon className="w-6 h-6"/>, color: 'bg-green-50 text-green-600', link: `https://wa.me/?text=${encodeURIComponent(referralLink)}` },
-                            { icon: <FacebookIcon className="w-6 h-6"/>, color: 'bg-blue-50 text-blue-600', link: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}` },
-                            { icon: <MessengerIcon className="w-6 h-6"/>, color: 'bg-indigo-50 text-indigo-600', link: `fb-messenger://share/?link=${encodeURIComponent(referralLink)}` },
-                            { icon: <TelegramIcon className="w-6 h-6"/>, color: 'bg-sky-50 text-sky-500', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}` }
+                            { icon: <WhatsAppIcon className="w-6 h-6"/>, color: 'bg-green-50 text-green-600 hover:bg-green-100', link: `https://wa.me/?text=${encodeURIComponent(referralLink)}` },
+                            { icon: <FacebookIcon className="w-6 h-6"/>, color: 'bg-blue-50 text-blue-600 hover:bg-blue-100', link: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}` },
+                            { icon: <MessengerIcon className="w-6 h-6"/>, color: 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100', link: `fb-messenger://share/?link=${encodeURIComponent(referralLink)}` },
+                            { icon: <TelegramIcon className="w-6 h-6"/>, color: 'bg-sky-50 text-sky-500 hover:bg-sky-100', link: `https://t.me/share/url?url=${encodeURIComponent(referralLink)}` }
                         ].map((social, i) => (
-                            <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`p-3 rounded-xl flex items-center justify-center transition-transform hover:scale-110 ${social.color}`}>
+                            <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`p-3 rounded-xl flex items-center justify-center transition-all hover:scale-110 shadow-sm border border-gray-100 ${social.color}`}>
                                 {social.icon}
                             </a>
                         ))}

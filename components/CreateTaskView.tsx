@@ -34,16 +34,16 @@ const initialFormState: FormState = {
 
 // Map TaskType to Icon and Label for the visual selector
 const TASK_CATEGORIES = [
-    { id: TaskType.VISIT_WEBSITE, label: 'Website Visit', icon: <Globe className="w-5 h-5"/>, color: 'text-blue-500' },
-    { id: TaskType.YOUTUBE_SUBSCRIBE, label: 'YouTube Subscribe', icon: <YoutubeIcon className="w-5 h-5"/>, color: 'text-red-600' },
-    { id: TaskType.FACEBOOK_LIKE, label: 'Facebook Like', icon: <FacebookIcon className="w-5 h-5"/>, color: 'text-blue-700' },
-    { id: TaskType.INSTAGRAM_FOLLOW, label: 'Instagram Follow', icon: <InstagramIcon className="w-5 h-5"/>, color: 'text-pink-600' },
-    { id: TaskType.TIKTOK_FOLLOW, label: 'TikTok Follow', icon: <TikTokIcon className="w-5 h-5"/>, color: 'text-black' },
-    { id: TaskType.TWITTER_FOLLOW, label: 'Twitter Follow', icon: <TwitterIcon className="w-5 h-5"/>, color: 'text-sky-500' },
-    { id: TaskType.LINKEDIN_FOLLOW, label: 'LinkedIn Follow', icon: <LinkedInIcon className="w-5 h-5"/>, color: 'text-blue-800' },
-    { id: TaskType.DISCORD_JOIN, label: 'Discord Join', icon: <DiscordIcon className="w-5 h-5"/>, color: 'text-indigo-600' },
-    { id: TaskType.TELEGRAM_JOIN, label: 'Telegram Join', icon: <TelegramIcon className="w-5 h-5"/>, color: 'text-sky-500' },
-    { id: TaskType.SNAPCHAT_FOLLOW, label: 'Snapchat Follow', icon: <SnapchatIcon className="w-5 h-5"/>, color: 'text-yellow-500' },
+    { id: TaskType.VISIT_WEBSITE, label: 'Website Visit', icon: <Globe className="w-5 h-5 text-blue-500"/>, color: 'bg-blue-50 border-blue-100 text-blue-600' },
+    { id: TaskType.YOUTUBE_SUBSCRIBE, label: 'YouTube Subscribe', icon: <YoutubeIcon className="w-5 h-5 text-red-600"/>, color: 'bg-red-50 border-red-100 text-red-600' },
+    { id: TaskType.FACEBOOK_LIKE, label: 'Facebook Like', icon: <FacebookIcon className="w-5 h-5 text-blue-700"/>, color: 'bg-blue-50 border-blue-200 text-blue-700' },
+    { id: TaskType.INSTAGRAM_FOLLOW, label: 'Instagram Follow', icon: <InstagramIcon className="w-5 h-5 text-pink-600"/>, color: 'bg-pink-50 border-pink-100 text-pink-600' },
+    { id: TaskType.TIKTOK_FOLLOW, label: 'TikTok Follow', icon: <TikTokIcon className="w-5 h-5 text-black"/>, color: 'bg-gray-100 border-gray-200 text-gray-900' },
+    { id: TaskType.TWITTER_FOLLOW, label: 'Twitter Follow', icon: <TwitterIcon className="w-5 h-5 text-sky-500"/>, color: 'bg-sky-50 border-sky-100 text-sky-500' },
+    { id: TaskType.LINKEDIN_FOLLOW, label: 'LinkedIn Follow', icon: <LinkedInIcon className="w-5 h-5 text-blue-800"/>, color: 'bg-blue-50 border-blue-200 text-blue-800' },
+    { id: TaskType.DISCORD_JOIN, label: 'Discord Join', icon: <DiscordIcon className="w-5 h-5 text-indigo-600"/>, color: 'bg-indigo-50 border-indigo-100 text-indigo-600' },
+    { id: TaskType.TELEGRAM_JOIN, label: 'Telegram Join', icon: <TelegramIcon className="w-5 h-5 text-sky-500"/>, color: 'bg-sky-50 border-sky-100 text-sky-500' },
+    { id: TaskType.SNAPCHAT_FOLLOW, label: 'Snapchat Follow', icon: <SnapchatIcon className="w-5 h-5 text-yellow-500"/>, color: 'bg-yellow-50 border-yellow-200 text-yellow-600' },
 ];
 
 // Catchy Templates for Auto-fill
@@ -205,15 +205,15 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                     <button
                         type="button"
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                        className="w-full flex items-center justify-between p-3 bg-white border border-gray-300 rounded-xl shadow-sm hover:border-primary-500 transition-colors"
+                        className={`w-full flex items-center justify-between p-3 rounded-xl shadow-sm border transition-all duration-200 ${selectedCategory.color}`}
                     >
                         <div className="flex items-center gap-3">
-                            <div className={`${selectedCategory.color} p-2 bg-gray-50 rounded-lg`}>
+                            <div className="p-1 rounded-full bg-white/50 backdrop-blur-sm">
                                 {selectedCategory.icon}
                             </div>
-                            <span className="font-bold text-gray-800">{selectedCategory.label}</span>
+                            <span className="font-bold text-current">{selectedCategory.label}</span>
                         </div>
-                        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDownIcon className={`w-5 h-5 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {isDropdownOpen && (
@@ -223,10 +223,10 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                                     key={cat.id}
                                     type="button"
                                     onClick={() => handleCategorySelect(cat.id)}
-                                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none"
+                                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none group"
                                 >
-                                    <div className={`${cat.color} w-8 flex justify-center`}>{cat.icon}</div>
-                                    <span className="text-sm font-medium text-gray-700">{cat.label}</span>
+                                    <div className="w-8 flex justify-center">{cat.icon}</div>
+                                    <span className={`text-sm font-medium ${form.taskType === cat.id ? 'text-gray-900 font-bold' : 'text-gray-700'}`}>{cat.label}</span>
                                     {form.taskType === cat.id && <CheckCircleIcon className="w-4 h-4 text-green-500 ml-auto" />}
                                 </button>
                             ))}

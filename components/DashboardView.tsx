@@ -1,7 +1,10 @@
 
 import React, { useMemo } from 'react';
 import type { View, UserProfile } from '../types';
-import { InviteIcon, CreateTaskIcon, DocumentCheckIcon, SparklesIcon, EarnIcon, ArrowRight, StarIcon, MedalIcon, CrownIcon, DiamondIcon } from './icons';
+import { 
+    InviteIcon, CreateTaskIcon, DocumentCheckIcon, SparklesIcon, EarnIcon, 
+    ArrowRight, WalletIcon, GiftIcon, PlusCircleIcon, ChevronDownIcon 
+} from './icons';
 
 interface DashboardViewProps {
   balance: number;
@@ -12,38 +15,36 @@ interface DashboardViewProps {
   userProfile: UserProfile | null;
 }
 
-const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; color: string; }> = ({ icon, label, value, color }) => (
-    <div className="bg-white p-5 rounded-[24px] shadow-subtle border border-gray-100 flex items-center gap-5 hover:shadow-subtle-md transition-all duration-300">
-        <div className={`w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center ${color} shadow-sm`}>
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; bgClass: string; iconColor: string }> = ({ icon, label, value, bgClass, iconColor }) => (
+    <div className={`p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-start justify-between min-h-[120px] ${bgClass} transition-all hover:shadow-md`}>
+        <div className={`p-3 rounded-2xl bg-white shadow-sm ${iconColor} mb-3`}>
             {icon}
         </div>
         <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1">{label}</p>
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{label}</p>
             <p className="text-2xl font-black text-slate-900 tracking-tight">{value}</p>
         </div>
     </div>
 );
 
-const DailyProgress: React.FC<{ completed: number }> = ({ completed }) => {
-    const dailyTarget = 10;
-    const percentage = Math.min((completed / dailyTarget) * 100, 100);
-    
-    return (
-        <div className="bg-white p-6 rounded-[24px] shadow-subtle border border-gray-100 flex items-center justify-between gap-6 group hover:border-amber-100 transition-colors">
-            <div>
-                <h3 className="font-bold text-gray-900 text-lg mb-1">Daily Goal</h3>
-                <p className="text-sm text-gray-500 font-medium">{completed} / {dailyTarget} tasks completed</p>
-            </div>
-            <div className="relative w-16 h-16 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path className="text-gray-100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
-                    <path className="text-amber-500 transition-all duration-1000 ease-out drop-shadow-sm" strokeDasharray={`${percentage}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                <span className="absolute text-xs font-bold text-amber-600">{Math.round(percentage)}%</span>
-            </div>
+const QuickActionBtn: React.FC<{ 
+    icon: React.ReactNode; 
+    label: string; 
+    onClick: () => void; 
+    colorClass: string; 
+    delay: number 
+}> = ({ icon, label, onClick, colorClass, delay }) => (
+    <button 
+        onClick={onClick} 
+        className="flex flex-col items-center gap-3 group animate-fade-in-up w-full"
+        style={{ animationDelay: `${delay}ms` }}
+    >
+        <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center text-white shadow-lg transition-transform duration-300 group-hover:scale-105 group-active:scale-95 ${colorClass}`}>
+            {React.cloneElement(icon as React.ReactElement, { className: "w-7 h-7" })}
         </div>
-    );
-};
+        <span className="text-xs font-bold text-slate-600 group-hover:text-slate-900 transition-colors">{label}</span>
+    </button>
+);
 
 const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, invitedCount, setActiveView, username, userProfile }) => {
   const getGreeting = () => {
@@ -57,139 +58,176 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
       if (tasks <= 10) return { level: 1, min: 0, max: 10 };
       let lvl = Math.ceil((tasks - 10) / 10) + 1;
       if (lvl > 15) lvl = 15;
-      const min = 10 + ((lvl - 2) * 10); 
-      const max = min + 10;
-      return { level: lvl, min, max };
+      return { level: lvl };
   };
 
-  const { level, min, max } = useMemo(() => calculateLevel(tasksCompleted), [tasksCompleted]);
+  const { level } = useMemo(() => calculateLevel(tasksCompleted), [tasksCompleted]);
   
-  let progressPercent = 0;
-  if (level === 1) {
-      progressPercent = (tasksCompleted / 10) * 100;
-  } else if (level === 15) {
-      progressPercent = 100;
-  } else {
-      progressPercent = ((tasksCompleted - min) / 10) * 100;
-  }
-  progressPercent = Math.min(Math.max(progressPercent, 0), 100);
+  // Progress ring calculation
+  const dailyTarget = 10;
+  const dailyCompleted = tasksCompleted % dailyTarget; 
+  const progressPercent = Math.min((dailyCompleted / dailyTarget) * 100, 100);
+  const circumference = 2 * Math.PI * 24; // r=24
+  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
   const getLevelColor = (lvl: number) => {
-      if (lvl >= 10) return "bg-gradient-to-r from-amber-500 to-red-600";
-      if (lvl >= 5) return "bg-gradient-to-r from-amber-300 to-amber-500";
-      return "bg-gradient-to-r from-emerald-400 to-emerald-600";
+      if (lvl >= 10) return "bg-gradient-to-br from-amber-500 to-red-600";
+      if (lvl >= 5) return "bg-gradient-to-br from-amber-300 to-amber-500";
+      return "bg-gradient-to-br from-emerald-400 to-emerald-600";
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-24">
-      {/* Compact Pro Header */}
-      <div className="flex items-center justify-between bg-white p-5 rounded-[24px] shadow-subtle border border-gray-100">
-          <div className="flex-1 cursor-pointer" onClick={() => setActiveView('LEVELS_INFO')}>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{getGreeting()}</p>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-3">{username}</h1>
-              
-              {/* Mini Progress Bar */}
-              <div className="flex items-center gap-3 max-w-[160px]">
-                  <div className="h-2 flex-1 bg-gray-100 rounded-full overflow-hidden shadow-inner">
-                      <div 
-                          className={`h-full rounded-full transition-all duration-1000 ${getLevelColor(level)}`} 
-                          style={{ width: `${progressPercent}%` }}
-                      ></div>
-                  </div>
-                  <span className="text-[10px] font-bold text-gray-400">{Math.round(progressPercent)}%</span>
-              </div>
+    <div className="space-y-8 animate-fade-in pb-24 font-sans">
+      
+      {/* Header Section */}
+      <div className="flex items-center justify-between px-2">
+          <div>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-0.5">{getGreeting()},</p>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tighter">{username}</h1>
           </div>
-
-          {/* Pro Avatar with Level Badge */}
-          <div className="relative group cursor-pointer" onClick={() => setActiveView('PROFILE_SETTINGS')}>
-              <div className="w-16 h-16 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-50">
-                  <img 
-                    src={userProfile?.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${username}`} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover" 
-                  />
+          <div className="relative cursor-pointer group" onClick={() => setActiveView('PROFILE_SETTINGS')}>
+              <div className="w-14 h-14 rounded-full p-1 bg-gradient-to-br from-amber-300 to-yellow-600 shadow-lg hover:shadow-gold transition-shadow">
+                  <div className="w-full h-full rounded-full bg-white p-0.5 overflow-hidden">
+                    <img 
+                        src={userProfile?.photoURL || `https://api.dicebear.com/9.x/micah/svg?seed=${username}`} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover rounded-full bg-gray-50" 
+                    />
+                  </div>
               </div>
-              <div className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-xs font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(level)}`}>
+              <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shadow-sm border-2 border-white ${getLevelColor(level)}`}>
                   {level}
               </div>
           </div>
       </div>
 
-      {/* Enhanced Glassmorphism Balance Card */}
-      <div className="relative p-8 rounded-[32px] text-white bg-slate-900 shadow-2xl overflow-hidden group">
-        {/* Gradients */}
-        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-amber-500/20 rounded-full blur-[80px] -mr-20 -mt-20 animate-pulse-slow pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[200px] h-[200px] bg-purple-500/10 rounded-full blur-[60px] -ml-10 -mb-10 pointer-events-none"></div>
+      {/* Main Balance Card - Luxury Style */}
+      <div className="relative w-full h-auto min-h-[220px] rounded-[36px] p-8 text-white shadow-2xl overflow-hidden group transform transition-transform hover:scale-[1.01]">
+        {/* Card Background */}
+        <div className="absolute inset-0 bg-[#0F172A]"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 to-black/50"></div>
         
-        <div className="relative z-10">
-            <div className="flex justify-between items-start mb-8">
-                <div>
-                    <p className="font-bold text-slate-400 text-xs uppercase tracking-[0.2em] mb-2">Total Balance</p>
-                    <div className="flex items-baseline gap-1.5">
-                        <span className="text-5xl sm:text-6xl font-black text-white tracking-tighter drop-shadow-md">
-                            {balance.toFixed(2)}
-                        </span>
-                        <span className="text-2xl font-bold text-amber-500">Rs</span>
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/20 rounded-full blur-[80px] -mr-16 -mt-16 animate-pulse-slow"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-600/20 rounded-full blur-[60px] -ml-10 -mb-10"></div>
+        <div className="absolute top-6 right-8 opacity-20 pointer-events-none">
+            <SparklesIcon className="w-24 h-24 text-amber-200 rotate-12" />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between h-full gap-6">
+            <div>
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-md border border-white/10">
+                        <WalletIcon className="w-4 h-4 text-amber-400" />
                     </div>
+                    <span className="text-xs font-bold text-slate-400 tracking-[0.2em] uppercase">Total Balance</span>
                 </div>
-                <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md border border-white/10 shadow-lg">
-                   <SparklesIcon className="w-6 h-6 text-amber-400" />
+                <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-200 drop-shadow-sm">
+                        {balance.toFixed(2)}
+                    </span>
+                    <span className="text-xl font-bold text-amber-500">Rs</span>
                 </div>
             </div>
-            
-            <div className="flex gap-4">
-                <button onClick={() => setActiveView('DEPOSIT')} className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95 border border-white/5">
-                    <span className="text-xl font-light text-amber-400 leading-none">+</span> Deposit
+
+            <div className="flex gap-4 mt-auto">
+                <button 
+                    onClick={() => setActiveView('DEPOSIT')}
+                    className="flex-1 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 text-white text-sm font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+                >
+                    <PlusCircleIcon className="w-4 h-4 text-amber-400" /> Deposit
                 </button>
-                <button onClick={() => setActiveView('WALLET')} className="flex-1 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95">
-                    Withdraw <ArrowRight className="w-4 h-4 text-white/80"/>
+                <button 
+                    onClick={() => setActiveView('WALLET')}
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-900 text-sm font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all active:scale-95"
+                >
+                    Withdraw <ArrowRight className="w-4 h-4" />
                 </button>
             </div>
         </div>
       </div>
 
-      {/* Daily Goal */}
-      <DailyProgress completed={tasksCompleted % 10} />
-
-      {/* Quick Actions */}
+      {/* Quick Actions Grid */}
       <div>
-        <div className="flex items-center justify-between mb-4 px-2">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
-                Quick Actions
-            </h2>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <button onClick={() => setActiveView('CREATE_TASK')} className="bg-white p-4 rounded-[20px] shadow-subtle border border-gray-100 flex flex-col items-center justify-center aspect-square transition-all hover:shadow-subtle-lg hover:-translate-y-1 group active:scale-95">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors">
-                <CreateTaskIcon className="w-6 h-6 text-blue-600"/>
-            </div>
-            <span className="font-bold text-xs text-slate-700">Create Task</span>
-          </button>
-          
-          <button onClick={() => setActiveView('EARN')} className="bg-white p-4 rounded-[20px] shadow-subtle border border-gray-100 flex flex-col items-center justify-center aspect-square transition-all hover:shadow-subtle-lg hover:-translate-y-1 group active:scale-95 relative overflow-hidden">
-             <div className="absolute top-0 right-0 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg shadow-sm">HOT</div>
-            <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-amber-100 transition-colors">
-                <EarnIcon className="w-6 h-6 text-amber-600"/>
-            </div>
-             <span className="font-bold text-xs text-slate-700">Earn Now</span>
-          </button>
-          
-          <button onClick={() => setActiveView('SPIN_WHEEL')} className="bg-white p-4 rounded-[20px] shadow-subtle border border-gray-100 flex flex-col items-center justify-center aspect-square transition-all hover:shadow-subtle-lg hover:-translate-y-1 group active:scale-95">
-            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center mb-3 group-hover:bg-purple-100 transition-colors">
-                <SparklesIcon className="w-6 h-6 text-purple-600" />
-            </div>
-            <span className="font-bold text-xs text-slate-700">Daily Spin</span>
-          </button>
-        </div>
+          <div className="flex items-center justify-between mb-6 px-2">
+              <h2 className="text-lg font-bold text-slate-900">Quick Actions</h2>
+          </div>
+          <div className="grid grid-cols-4 gap-2 sm:gap-4">
+              <QuickActionBtn 
+                  icon={<EarnIcon />} 
+                  label="Earn" 
+                  onClick={() => setActiveView('EARN')} 
+                  colorClass="bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/30" 
+                  delay={100}
+              />
+              <QuickActionBtn 
+                  icon={<SparklesIcon />} 
+                  label="Spin" 
+                  onClick={() => setActiveView('SPIN_WHEEL')} 
+                  colorClass="bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/30" 
+                  delay={200}
+              />
+              <QuickActionBtn 
+                  icon={<CreateTaskIcon />} 
+                  label="Promote" 
+                  onClick={() => setActiveView('CREATE_TASK')} 
+                  colorClass="bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/30" 
+                  delay={300}
+              />
+              <QuickActionBtn 
+                  icon={<InviteIcon />} 
+                  label="Invite" 
+                  onClick={() => setActiveView('INVITE')} 
+                  colorClass="bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/30" 
+                  delay={400}
+              />
+          </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-4">
-          <StatCard icon={<DocumentCheckIcon className="w-6 h-6 text-slate-700"/>} label="Total Tasks" value={tasksCompleted} color="bg-gray-100" />
-          <StatCard icon={<InviteIcon className="w-6 h-6 text-white"/>} label="Friends" value={invitedCount} color="bg-slate-900" />
+      {/* Stats & Daily Goal Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Daily Goal Card */}
+          <div className="col-span-1 sm:col-span-2 bg-white p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center justify-between relative overflow-hidden">
+              <div className="relative z-10">
+                  <h3 className="font-bold text-gray-900 text-lg mb-1">Daily Goal</h3>
+                  <p className="text-sm text-gray-500 font-medium mb-3">Keep your streak alive!</p>
+                  <div className="inline-block bg-amber-50 text-amber-700 text-xs font-bold px-3 py-1 rounded-full border border-amber-100">
+                      {dailyCompleted} / {dailyTarget} Tasks
+                  </div>
+              </div>
+              <div className="relative w-20 h-20 flex items-center justify-center">
+                  <svg className="w-full h-full transform -rotate-90 drop-shadow-sm" viewBox="0 0 52 52">
+                      <circle cx="26" cy="26" r="24" fill="none" stroke="#f1f5f9" strokeWidth="4" />
+                      <circle 
+                          cx="26" cy="26" r="24" fill="none" stroke="#f59e0b" strokeWidth="4" 
+                          strokeLinecap="round" strokeDasharray={`${circumference} ${circumference}`} 
+                          strokeDashoffset={strokeDashoffset}
+                          className="transition-all duration-1000 ease-out"
+                      />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center flex-col">
+                      <span className="text-sm font-black text-slate-900">{Math.round(progressPercent)}%</span>
+                  </div>
+              </div>
+          </div>
+
+          <StatCard 
+              icon={<DocumentCheckIcon className="w-6 h-6 text-white" />} 
+              label="Completed" 
+              value={tasksCompleted} 
+              bgClass="bg-white" 
+              iconColor="bg-slate-900"
+          />
+          <StatCard 
+              icon={<InviteIcon className="w-6 h-6 text-amber-600" />} 
+              label="Friends" 
+              value={invitedCount} 
+              bgClass="bg-white" 
+              iconColor="bg-amber-100"
+          />
       </div>
-      
+
       <style>{`
         .animate-pulse-slow { animation: pulse-slow 4s infinite ease-in-out; }
         @keyframes pulse-slow { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.3; } }

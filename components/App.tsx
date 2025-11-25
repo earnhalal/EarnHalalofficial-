@@ -121,7 +121,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
-  // Initialize activeView from history state if available (handles refresh)
+  // Initialize activeView from history state to handle refresh correctly
   const [activeView, setActiveViewInternal] = useState<View>(() => {
       if (typeof window !== 'undefined' && window.history.state?.view) {
           return window.history.state.view as View;
@@ -152,27 +152,45 @@ const App: React.FC = () => {
 
   const transactions = useMemo(() => baseTransactions, [baseTransactions]);
 
-  // Handle History Navigation (Back Button)
+  // --- History Navigation Handling ---
   useEffect(() => {
-    if (user) {
-      const handlePopState = (event: PopStateEvent) => {
-        if (event.state && event.state.view) {
-          setActiveViewInternal(event.state.view);
-        } else {
-          // Fallback to default view if no state (e.g., initial load)
-          setActiveViewInternal('DASHBOARD');
-        }
-      };
+    if (!user) return;
 
-      // Ensure we have a state entry for the current view on load/login
-      if (!window.history.state) {
+    // 1. Ensure the initial/current page has a state entry.
+    // This fixes the "first back click exits app" issue.
+    if (!window.history.state) {
         window.history.replaceState({ view: activeView }, '', '');
-      }
-
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
     }
-  }, [user]); // activeView is intentionally omitted to avoid re-triggering
+
+    // 2. Handle Browser Back Button
+    const handlePopState = (event: PopStateEvent) => {
+        if (event.state && event.state.view) {
+            // Navigate back internally
+            setActiveViewInternal(event.state.view);
+        } else {
+            // Fallback if state is lost or we returned to the initial entry
+            setActiveViewInternal('DASHBOARD');
+        }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [user]); 
+  // Dependency on [user] ensures we re-bind correctly after login/logout
+
+  // --- Enhanced Navigation Function ---
+  const setActiveView = useCallback((view: View) => {
+      setActiveViewInternal((currentView) => {
+          if (currentView !== view) {
+              // Push new state to history stack
+              window.history.pushState({ view }, '', '');
+              // Scroll to top for better UX
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              return view;
+          }
+          return currentView;
+      });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -237,17 +255,6 @@ const App: React.FC = () => {
   useEffect(() => { if ((user && userProfile) || !user) setIsLoading(false); }, [user, userProfile]);
 
   const handleAuthNavigation = useCallback((view: 'login' | 'signup') => setAuthAction(view), []);
-  
-  // Updated Navigation Handler with History Push
-  const setActiveView = (view: View) => { 
-      if (view !== activeView) {
-          // Push new state to history stack
-          window.history.pushState({ view }, '', '');
-          setActiveViewInternal(view);
-          // Scroll to top for better UX
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-  };
 
   const handleSignup = async (data: any) => {
     try {
