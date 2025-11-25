@@ -36,7 +36,13 @@ export type View =
   | 'PREMIUM_HUB'
   | 'LEADERBOARD'
   | 'LEVELS_INFO'
-  | 'MAILBOX'; // Added for Email System
+  | 'MAILBOX'
+  // Advertiser Views
+  | 'ADVERTISER_DASHBOARD'
+  | 'POST_JOB'
+  | 'MANAGE_CAMPAIGNS';
+
+export type UserMode = 'EARNER' | 'ADVERTISER';
 
 export enum TransactionType {
   EARNING = 'Earning',
@@ -44,6 +50,7 @@ export enum TransactionType {
   DEPOSIT = 'Deposit',
   PENDING_DEPOSIT = 'Pending Deposit',
   TASK_CREATION = 'Task Creation Fee',
+  JOB_POSTING_FEE = 'Job Posting Fee',
   REFERRAL = 'Referral Bonus',
   JOINING_FEE = 'Joining Fee',
   JOB_SUBSCRIPTION = 'Job Subscription',
@@ -159,6 +166,8 @@ export interface Job {
     type: string; // e.g., 'Full-time', 'Part-time'
     salary: string;
     isPremium: boolean;
+    postedBy?: string; // Added to link back to advertiser
+    postedAt?: any;
 }
 
 export interface Application {

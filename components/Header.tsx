@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import type { View } from '../types';
-import { SparklesIcon, MailIcon } from './icons';
+import type { View, UserMode } from '../types';
+import { SparklesIcon, MailIcon, MenuIcon, MegaphoneIcon } from './icons';
 
 const names = [
     'Ahmed', 'Fatima', 'Ali', 'Ayesha', 'Zainab', 'Bilal', 'Hassan', 'Sana', 'Usman', 'Maryam', 'Abdullah', 'Khadija'
@@ -17,9 +17,11 @@ interface HeaderProps {
   username: string;
   setActiveView: (view: View) => void;
   unreadEmailCount: number;
+  onMenuClick?: () => void;
+  userMode: UserMode;
 }
 
-const Header: React.FC<HeaderProps> = ({ username, setActiveView, unreadEmailCount }) => {
+const Header: React.FC<HeaderProps> = ({ username, setActiveView, unreadEmailCount, onMenuClick, userMode }) => {
   const [isBannerVisible, setIsBannerVisible] = useState(true);
   const [notificationMessage, setNotificationMessage] = useState('🔔 Welcome to TaskMint! See what others are earning.');
   const [isNotificationAnimating, setIsNotificationAnimating] = useState(true);
@@ -38,9 +40,11 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView, unreadEmailCou
     return () => clearInterval(notificationInterval);
   }, []);
 
+  const isAdvertiser = userMode === 'ADVERTISER';
+
   return (
     <header className="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 transition-all duration-300">
-      {isBannerVisible && (
+      {isBannerVisible && !isAdvertiser && (
         <div className="bg-slate-900 text-white text-xs font-medium p-2 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
           <span 
@@ -51,14 +55,32 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView, unreadEmailCou
         </div>
       )}
       <div className="flex items-center justify-between px-4 py-4 relative max-w-7xl mx-auto">
-        {/* Logo - Fixed visibility on mobile */}
-        <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setActiveView('DASHBOARD')}>
-            <div className="w-9 h-9 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-105">
-                <SparklesIcon className="w-5 h-5" />
+        <div className="flex items-center gap-3">
+            {/* Mobile Menu Button - Only for Advertiser (Sidebar) */}
+            {isAdvertiser && (
+                <button 
+                    onClick={onMenuClick} 
+                    className="md:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                    <MenuIcon className="w-6 h-6" />
+                </button>
+            )}
+
+            {/* Logo */}
+            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setActiveView(isAdvertiser ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD')}>
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-105 ${isAdvertiser ? 'bg-blue-600 shadow-blue-500/30' : 'bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 shadow-amber-500/30'}`}>
+                    {isAdvertiser ? <MegaphoneIcon className="w-5 h-5" /> : <SparklesIcon className="w-5 h-5" />}
+                </div>
+                {isAdvertiser ? (
+                    <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tighter font-heading">
+                        TaskMint <span className="text-blue-600">Ads</span>
+                    </span>
+                ) : (
+                    <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tighter font-heading">
+                        Task<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">Mint</span>
+                    </span>
+                )}
             </div>
-            <span className="font-black text-xl sm:text-2xl text-slate-900 tracking-tighter font-heading">
-              Task<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">Mint</span>
-            </span>
         </div>
 
         {/* Right Actions */}
@@ -68,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView, unreadEmailCou
                 onClick={() => setActiveView('MAILBOX')}
                 className="relative p-2 rounded-full hover:bg-gray-100 transition-colors group"
             >
-                <MailIcon className="w-6 h-6 text-slate-600 group-hover:text-amber-600 transition-colors" />
+                <MailIcon className={`w-6 h-6 text-slate-600 transition-colors ${isAdvertiser ? 'group-hover:text-blue-600' : 'group-hover:text-amber-600'}`} />
                 {unreadEmailCount > 0 && (
                     <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-bounce">
                         {unreadEmailCount > 9 ? '9+' : unreadEmailCount}

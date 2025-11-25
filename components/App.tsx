@@ -2,6 +2,7 @@
 // components/App.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from './Header';
+import Sidebar from './Sidebar';
 import DashboardView from './DashboardView';
 import EarnView from './EarnView';
 import WalletView from './WalletView';
@@ -32,9 +33,11 @@ import LudoGame from './games/LudoGame';
 import LotteryGame from './games/LotteryGame';
 import CoinFlipGame from './games/CoinFlipGame';
 import MinesGame from './games/MinesGame';
+import AdvertiserDashboard from './AdvertiserDashboard';
+import PostJobView from './PostJobView';
 import { GameControllerIcon, CloseIcon } from './icons';
 
-import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog } from '../types';
+import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog, UserMode } from '../types';
 import { TransactionType } from '../types';
 
 import { auth, db, serverTimestamp, increment, arrayUnion, storage } from '../firebase';
@@ -121,6 +124,8 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userMode, setUserMode] = useState<UserMode>('EARNER'); // State for Mode Switching
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   // Initialize activeView from history state to handle refresh correctly
   const [activeView, setActiveViewInternal] = useState<View>(() => {
@@ -183,6 +188,7 @@ const App: React.FC = () => {
   }, [user]); 
 
   const setActiveView = useCallback((view: View) => {
+      setIsSidebarOpen(false); // Auto close sidebar on navigation
       if (view === 'MAILBOX') {
           setIsMailboxOpen(true); // Open modal instead of changing view
       } else {
@@ -196,6 +202,14 @@ const App: React.FC = () => {
           });
       }
   }, []);
+
+  const toggleUserMode = () => {
+      setUserMode(prev => {
+          const newMode = prev === 'EARNER' ? 'ADVERTISER' : 'EARNER';
+          setActiveView(newMode === 'ADVERTISER' ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD');
+          return newMode;
+      });
+  };
 
   const sendSystemEmail = async (userId: string, userEmail: string, type: EmailLog['type'], subject: string, htmlContent: string) => {
       try {
@@ -241,7 +255,6 @@ const App: React.FC = () => {
         </div>
       `;
       await sendSystemEmail(user.uid, destination, 'Verification', subject, htmlContent);
-      // Show a toast/notification that OTP is sent
       setNotifications(prev => [...prev, { id: Date.now().toString(), title: 'Code Sent', message: `Verification code sent to your System Mailbox.`, type: 'info' }]);
   };
 
@@ -382,10 +395,15 @@ const App: React.FC = () => {
       try { 
           const userCredential = await signInWithEmailAndPassword(auth, email, password); 
           const user = userCredential.user;
+          
+          // Check if device is recognized to avoid spamming login alerts
           const storedDeviceId = localStorage.getItem('taskmint_device_id');
+          
           if (!storedDeviceId) {
+               // New Device Detected
                const newDeviceId = Math.random().toString(36).substring(7);
                localStorage.setItem('taskmint_device_id', newDeviceId);
+               
                const alertTemplate = `
                    <div style="color: #333; font-family: sans-serif;">
                        <h2 style="color: #d32f2f;">New Login Detected</h2>
@@ -396,6 +414,8 @@ const App: React.FC = () => {
                `;
                await sendSystemEmail(user.uid, user.email || email, 'Security Alert', 'New Login Detected', alertTemplate);
           }
+          // If storedDeviceId exists, we assume it's the same trusted device and do NOT send an alert.
+
           setAuthAction(null); 
       } catch (error: any) { alert(`Login failed: ${error.message}`); } 
   };
@@ -436,6 +456,35 @@ const App: React.FC = () => {
       await batch.commit();
       const campaignEmail = `<h3>Campaign Submitted</h3><p>Your task "<strong>${task.title}</strong>" has been submitted for approval.</p><p>Cost: ${totalCost} Rs</p><p>Status: Pending</p>`;
       await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Campaign Created', campaignEmail);
+  };
+
+  const handlePostJob = async (jobData: Omit<Job, 'id' | 'postedAt'>, cost: number) => {
+      if (!user || !userProfile || userProfile.balance < cost) return;
+      const batch = writeBatch(db);
+      const userRef = doc(db, "users", user.uid);
+      
+      // 1. Add to jobs collection
+      const jobRef = doc(collection(db, "jobs"));
+      batch.set(jobRef, { 
+          ...jobData, 
+          postedAt: serverTimestamp(), 
+          postedBy: user.uid // Link to advertiser
+      });
+
+      // 2. Deduct balance
+      batch.update(userRef, { balance: increment(-cost) });
+      
+      // 3. Log transaction
+      batch.set(doc(collection(userRef, "transactions")), { 
+          type: TransactionType.JOB_POSTING_FEE, 
+          description: `Posted Job: ${jobData.title}`, 
+          amount: -cost, 
+          date: serverTimestamp() 
+      });
+
+      await batch.commit();
+      const jobEmail = `<h3>Job Posted</h3><p>Your job "<strong>${jobData.title}</strong>" is now live in the Premium Hub.</p><p>Cost: ${cost} Rs</p>`;
+      await sendSystemEmail(user.uid, user.email || '', 'Notification', 'Job Posted', jobEmail);
   };
   
   const handleWithdraw = async (amount: number, details: WithdrawalDetails) => {
@@ -519,16 +568,16 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
-      DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} />,
+      // EARNER VIEWS
+      DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} onSwitchMode={toggleUserMode} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} />,
-      CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
       INVITE: <InviteView userProfile={userProfile} referrals={referrals} />,
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} userMode={userMode} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
       LEADERBOARD: <LeaderboardView />,
@@ -542,9 +591,15 @@ const App: React.FC = () => {
       COIN_FLIP_GAME: <CoinFlipGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       MINES_GAME: <MinesGame balance={userProfile?.balance ?? 0} onWin={handleGameWin} onLoss={handleGameLoss} />,
       UPDATES_INBOX: <UpdatesView updates={appUpdates} seenIds={seenUpdateIds} onMarkAsRead={(id) => { if(!seenUpdateIds.includes(id)) setSeenUpdateIds([...seenUpdateIds, id]); }} onMarkAllAsRead={() => setSeenUpdateIds(appUpdates.map(u => u.id))} />,
-      MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} />,
+      MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} userMode={userMode} />,
+      
+      // ADVERTISER VIEWS
+      ADVERTISER_DASHBOARD: <AdvertiserDashboard balance={userProfile?.balance ?? 0} setActiveView={setActiveView} />,
+      CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
+      POST_JOB: <PostJobView balance={userProfile?.balance ?? 0} onPostJob={handlePostJob} />,
+      MANAGE_CAMPAIGNS: <TaskHistoryView userTasks={userCreatedTasks} />,
     };
-    return views[activeView] || views['DASHBOARD'];
+    return views[activeView] || (userMode === 'ADVERTISER' ? views['ADVERTISER_DASHBOARD'] : views['DASHBOARD']);
   };
 
   if (isLoading) return <LoadingScreen />;
@@ -565,16 +620,44 @@ const App: React.FC = () => {
                       <CloseIcon className="w-6 h-6 text-slate-900" />
                   </button>
                   <div className="overflow-y-auto flex-1">
-                      <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} />
+                      <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} userMode={userMode} />
                   </div>
               </div>
           </div>
       )}
 
-      <div className="flex flex-col bg-[#F9FAFB] min-h-screen font-sans pb-[80px]">
-          <Header username={userProfile.username} setActiveView={setActiveView} unreadEmailCount={unreadEmailCount} />
-          <main className="flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full">{renderContent()}</main>
-          <BottomNav activeView={activeView} setActiveView={setActiveView} />
+      <div className="flex flex-col bg-[#F9FAFB] min-h-screen font-sans pb-[80px] md:pb-0">
+          <Header 
+            username={userProfile.username} 
+            setActiveView={setActiveView} 
+            unreadEmailCount={unreadEmailCount} 
+            onMenuClick={() => setIsSidebarOpen(true)} 
+            userMode={userMode}
+          />
+          
+          <div className="flex flex-1 relative">
+              {/* Sidebar - Only for Advertiser Mode */}
+              {userMode === 'ADVERTISER' && (
+                  <Sidebar 
+                      activeView={activeView} 
+                      setActiveView={setActiveView} 
+                      isSidebarOpen={isSidebarOpen} 
+                      onClose={() => setIsSidebarOpen(false)} 
+                      unreadUpdatesCount={0} 
+                      userMode={userMode}
+                      onSwitchMode={toggleUserMode}
+                  />
+              )}
+              
+              {/* Main Content - Adjust margin based on Sidebar presence */}
+              <main className={`flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full transition-all duration-300 ${userMode === 'EARNER' ? '' : 'md:ml-0'}`}>
+                  {renderContent()}
+              </main>
+          </div>
+
+          {/* BottomNav - Always Visible for Earner Mode (Mobile & Desktop) */}
+          {userMode === 'EARNER' && <BottomNav activeView={activeView} setActiveView={setActiveView} />}
+          
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={() => { setShowPinLock(false); pinAction && pinAction(); setPinAction(null); }} onPinSet={handleSetPin} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
       <style>{`

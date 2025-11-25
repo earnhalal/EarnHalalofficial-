@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
-import type { UserProfile, View } from '../types';
+import type { UserProfile, View, UserMode } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon, BuildingIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
@@ -15,6 +15,7 @@ interface ProfileSettingsViewProps {
     onSetFingerprintEnabled: () => Promise<void>;
     onNavigate: (view: View) => void;
     onSendVerificationOTP: (type: 'email' | 'phone', destination: string, otp: string) => void;
+    userMode?: UserMode;
 }
 
 // --- Professional Avatar System Configuration ---
@@ -60,7 +61,7 @@ const MenuRow: React.FC<{
 );
 
 const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ 
-    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate, onSendVerificationOTP 
+    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate, onSendVerificationOTP, userMode
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -81,6 +82,8 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     // Avatar Selection State
     const [activeCollection, setActiveCollection] = useState<CollectionKey>('Basic');
     const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(userProfile?.photoURL || '');
+
+    const isAdvertiser = userMode === 'ADVERTISER';
 
     if (!userProfile) return null;
 
@@ -110,12 +113,10 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
             alert("Please verify your new email address first.");
             return;
         }
-        // Assuming phone is stored in profile but not used for auth directly here, logic similar
         
         setIsSubmitting(true);
         try {
             await onUpdateProfile({ name, email, password: password || undefined });
-            // Also update phone if your backend supports it (User profile object needs update)
             setIsEditing(false);
         } catch (error) {
             alert("Failed to update profile.");
@@ -193,10 +194,10 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     if (isEditing) {
         return (
             <div className="bg-white p-6 rounded-2xl shadow-sm animate-fade-in">
-                <h2 className="text-xl font-bold mb-6">Edit Profile Info</h2>
+                <h2 className="text-xl font-bold mb-6">Edit {isAdvertiser ? 'Company' : 'Profile'} Info</h2>
                 <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{isAdvertiser ? 'Company Name' : 'Full Name'}</label>
                         <input value={name} onChange={e => setName(e.target.value)} className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
                     </div>
                     
@@ -315,10 +316,10 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     return (
         <div className="max-w-2xl mx-auto pb-24 space-y-6 animate-fade-in">
             
-            {/* Pro Header Card */}
-            <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden">
+            {/* Header Card */}
+            <div className={`p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden ${isAdvertiser ? 'bg-slate-900 text-white' : 'bg-white'}`}>
                 <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
-                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-amber-100 to-yellow-50 p-1 overflow-hidden relative">
+                    <div className={`w-24 h-24 rounded-full border-4 shadow-lg p-1 overflow-hidden relative ${isAdvertiser ? 'border-slate-700 bg-slate-800' : 'border-white bg-gradient-to-br from-amber-100 to-yellow-50'}`}>
                         <img 
                             src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
                             alt="Profile" 
@@ -328,52 +329,79 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                             <PencilSquareIcon className="w-8 h-8 text-white drop-shadow-md" />
                         </div>
                     </div>
-                    {/* Level Badge on Profile */}
-                    <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(userProfile.level || 1)}`}>
-                        {userProfile.level || 1}
-                    </div>
+                    {/* Level Badge on Profile - Hide for Advertiser */}
+                    {!isAdvertiser && (
+                        <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(userProfile.level || 1)}`}>
+                            {userProfile.level || 1}
+                        </div>
+                    )}
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{userProfile.username}</h2>
-                            <p className="text-slate-500 text-sm mb-2 font-medium">{userProfile.email}</p>
+                            <h2 className={`text-2xl font-black tracking-tight ${isAdvertiser ? 'text-white' : 'text-slate-900'}`}>{userProfile.username}</h2>
+                            <p className={`text-sm mb-2 font-medium ${isAdvertiser ? 'text-slate-400' : 'text-slate-500'}`}>{userProfile.email}</p>
                         </div>
                         <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
                             Edit Info
                         </button>
                     </div>
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-white rounded-full text-xs font-bold shadow-sm mt-1">
-                        <CrownIcon className="w-3.5 h-3.5 text-amber-400" /> 
-                        <span>{userProfile.levelName || 'Member'}</span>
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm mt-1 ${isAdvertiser ? 'bg-blue-600 text-white' : 'bg-slate-900 text-white'}`}>
+                        {isAdvertiser ? <BuildingIcon className="w-3.5 h-3.5"/> : <CrownIcon className="w-3.5 h-3.5 text-amber-400" />}
+                        <span>{isAdvertiser ? 'Business Account' : (userProfile.levelName || 'Member')}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Section: Rank & Progression */}
-            <div className="space-y-2">
-                <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Rank & Progression</p>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow 
-                        icon={<StarIcon className="w-5 h-5" />} 
-                        label="My Level & Benefits" 
-                        onClick={() => onNavigate('LEVELS_INFO')} 
-                    />
-                    <MenuRow 
-                        icon={<ChartBarIcon className="w-5 h-5" />} 
-                        label="Top Earners Leaderboard" 
-                        onClick={() => onNavigate('LEADERBOARD')} 
-                    />
+            {/* Section: Corporate Settings (Advertiser Only) */}
+            {isAdvertiser && (
+                <div className="space-y-2">
+                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Company & Billing</p>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <MenuRow 
+                            icon={<DocumentTextIcon className="w-5 h-5" />} 
+                            label="Billing Settings" 
+                            onClick={() => alert('Billing Settings - Coming Soon')} 
+                        />
+                        <MenuRow 
+                            icon={<BriefcaseIcon className="w-5 h-5" />} 
+                            label="Invoices & Receipts" 
+                            onClick={() => alert('Invoice History - Coming Soon')} 
+                        />
+                        <MenuRow 
+                            icon={<BuildingIcon className="w-5 h-5" />} 
+                            label="API Configuration" 
+                            onClick={() => alert('API Keys - Coming Soon')} 
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Section: Rank & Progression (Earner Only) */}
+            {!isAdvertiser && (
+                <div className="space-y-2">
+                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Rank & Progression</p>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <MenuRow 
+                            icon={<StarIcon className="w-5 h-5" />} 
+                            label="My Level & Benefits" 
+                            onClick={() => onNavigate('LEVELS_INFO')} 
+                        />
+                        <MenuRow 
+                            icon={<ChartBarIcon className="w-5 h-5" />} 
+                            label="Top Earners Leaderboard" 
+                            onClick={() => onNavigate('LEADERBOARD')} 
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Section: Account */}
             <div className="space-y-2">
                 <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Account</p>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Change Avatar" onClick={() => setIsEditingPhoto(true)} />
-                    <MenuRow icon={<WalletIcon className="w-5 h-5" />} label="Manage Wallet & PIN" onClick={() => onNavigate('WALLET')} />
-                    {/* Mailbox is now primarily via Header, but kept here for redundancy */}
+                    <MenuRow icon={<WalletIcon className="w-5 h-5" />} label={isAdvertiser ? "Company Funds" : "Manage Wallet & PIN"} onClick={() => onNavigate('WALLET')} />
                     <MenuRow icon={<InboxIcon className="w-5 h-5" />} label="System Mailbox" onClick={() => onNavigate('MAILBOX')} />
                     <div className="p-4 flex items-center justify-between bg-white border-b border-gray-50">
                         <div className="flex items-center gap-4">
@@ -387,15 +415,17 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 </div>
             </div>
 
-            {/* Section: Features */}
-            <div className="space-y-2">
-                <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Features</p>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Premium Jobs" onClick={() => onNavigate('JOBS')} />
-                    <MenuRow icon={<UserGroupIcon className="w-5 h-5" />} label="Social Groups" onClick={() => onNavigate('SOCIAL_GROUPS')} />
-                    <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="My Applications" onClick={() => onNavigate('MY_APPLICATIONS')} />
+            {/* Section: Features (Earner Only) */}
+            {!isAdvertiser && (
+                <div className="space-y-2">
+                    <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Features</p>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Premium Jobs" onClick={() => onNavigate('JOBS')} />
+                        <MenuRow icon={<UserGroupIcon className="w-5 h-5" />} label="Social Groups" onClick={() => onNavigate('SOCIAL_GROUPS')} />
+                        <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="My Applications" onClick={() => onNavigate('MY_APPLICATIONS')} />
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Section: Support & Legal */}
             <div className="space-y-2">
@@ -408,7 +438,7 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 </div>
             </div>
 
-            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.4.0 • Built for Hustlers</p>
+            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.4.0 • {isAdvertiser ? 'Business Console' : 'Built for Hustlers'}</p>
         </div>
     );
 };

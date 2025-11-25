@@ -1,3 +1,4 @@
+
 // components/Footer.tsx
 import React from 'react';
 import type { View } from '../types';
@@ -51,7 +52,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView }) => {
 
     return (
         <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-50 pb-safe h-[80px]">
-            <div className="flex justify-around items-center h-full max-w-md mx-auto px-4 pb-2">
+            <div className="flex justify-around items-center h-full max-w-lg mx-auto px-4 pb-2">
                 {navItems.map(item => (
                     <NavItem 
                         key={item.view}

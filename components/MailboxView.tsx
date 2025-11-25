@@ -1,16 +1,49 @@
 
 // components/MailboxView.tsx
-import React, { useState } from 'react';
-import type { EmailLog } from '../types';
-import { MailIcon, PaperAirplaneIcon, InboxIcon, CheckCircleIcon, EyeIcon, CloseIcon, ShieldCheck, GiftIcon } from './icons';
+import React, { useState, useMemo } from 'react';
+import type { EmailLog, UserMode } from '../types';
+import { MailIcon, PaperAirplaneIcon, InboxIcon, CheckCircleIcon, EyeIcon, CloseIcon, ShieldCheck, GiftIcon, BriefcaseIcon } from './icons';
 
 interface MailboxViewProps {
     emails: EmailLog[];
     onMarkAsRead: (id: string) => void;
+    userMode?: UserMode;
 }
 
-const MailboxView: React.FC<MailboxViewProps> = ({ emails, onMarkAsRead }) => {
+const MailboxView: React.FC<MailboxViewProps> = ({ emails, onMarkAsRead, userMode }) => {
     const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null);
+
+    // Smart filtering based on User Mode
+    const filteredEmails = useMemo(() => {
+        return emails.filter(email => {
+            const subject = email.subject.toLowerCase();
+            const type = email.type;
+            const body = (email.bodyPreview || "").toLowerCase();
+
+            if (userMode === 'ADVERTISER') {
+                // Advertiser Mode: STRICT Filter
+                // Show ONLY: Security Alerts, Verification, and Explicit Business/Campaign/Billing emails.
+                // Hide: Welcome (unless business welcome), Referral, Tasks, Games.
+                
+                const isStrictBusiness = 
+                    subject.includes('campaign') || 
+                    subject.includes('job') || 
+                    subject.includes('ad funds') || 
+                    subject.includes('billing') ||
+                    subject.includes('invoice') ||
+                    subject.includes('deposit'); // Advertisers deposit too
+
+                const isSecurity = type === 'Security Alert' || type === 'Verification';
+
+                return isStrictBusiness || isSecurity;
+            } else {
+                // Earner Mode: Show everything EXCEPT internal ad-ops stuff that users shouldn't see
+                // Usually users generate their own campaigns too, but if we want to separate purely 'Business Console' logs:
+                // For now, users see everything relevant to their personal account activity.
+                return true; 
+            }
+        });
+    }, [emails, userMode]);
 
     const handleOpenEmail = (email: EmailLog) => {
         setSelectedEmail(email);
@@ -28,7 +61,9 @@ const MailboxView: React.FC<MailboxViewProps> = ({ emails, onMarkAsRead }) => {
         }
     };
 
-    const getIconForType = (type: string) => {
+    const getIconForType = (type: string, subject: string) => {
+        if (subject.toLowerCase().includes('campaign') || subject.toLowerCase().includes('job')) return <BriefcaseIcon className="w-6 h-6 text-white"/>;
+        
         switch (type) {
             case 'Security Alert': return <ShieldCheck className="w-6 h-6 text-white"/>;
             case 'Welcome': return <GiftIcon className="w-6 h-6 text-white"/>;
@@ -76,28 +111,34 @@ const MailboxView: React.FC<MailboxViewProps> = ({ emails, onMarkAsRead }) => {
                 </div>
             )}
 
-            <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
+            <div className={`rounded-3xl p-8 text-white shadow-2xl mb-8 relative overflow-hidden ${userMode === 'ADVERTISER' ? 'bg-blue-900' : 'bg-slate-900'}`}>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                 <div className="relative z-10">
-                    <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20 text-amber-400">
+                    <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20 text-white">
                         <InboxIcon className="w-8 h-8" />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight mb-2">System Mailbox</h1>
-                    <p className="text-slate-400">Secure notifications and alerts from TaskMint.</p>
+                    <h1 className="text-3xl font-black tracking-tight mb-2">
+                        {userMode === 'ADVERTISER' ? 'Business Inbox' : 'System Mailbox'}
+                    </h1>
+                    <p className="text-white/70">
+                        {userMode === 'ADVERTISER' 
+                            ? 'Campaign updates, approvals, and billing notifications.' 
+                            : 'Secure notifications, rewards, and alerts.'}
+                    </p>
                 </div>
             </div>
 
             <div className="space-y-3">
-                {emails.length === 0 ? (
+                {filteredEmails.length === 0 ? (
                     <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 text-center">
                         <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
                             <MailIcon className="w-10 h-10" />
                         </div>
                         <h3 className="text-xl font-bold text-gray-900">No Emails Yet</h3>
-                        <p className="text-gray-500 mt-2">System notifications and security alerts will appear here.</p>
+                        <p className="text-gray-500 mt-2">Notifications will appear here.</p>
                     </div>
                 ) : (
-                    emails.map((email, index) => (
+                    filteredEmails.map((email, index) => (
                         <button 
                             key={email.id} 
                             onClick={() => handleOpenEmail(email)}
@@ -108,7 +149,7 @@ const MailboxView: React.FC<MailboxViewProps> = ({ emails, onMarkAsRead }) => {
                         >
                             <div className="flex items-start gap-4">
                                 <div className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${getBgForType(email.type)}`}>
-                                    {getIconForType(email.type)}
+                                    {getIconForType(email.type, email.subject)}
                                 </div>
                                 
                                 <div className="flex-grow min-w-0">
