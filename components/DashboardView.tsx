@@ -45,84 +45,6 @@ const DailyProgress: React.FC<{ completed: number }> = ({ completed }) => {
     );
 };
 
-// NEW: Level Progress Component using Mint Theme
-const LevelProgressCard: React.FC<{ tasksCompleted: number; onInfoClick: () => void; levelName?: string }> = ({ tasksCompleted, onInfoClick, levelName }) => {
-    // Level Logic: 0-10 = Level 1. 11-20 = Level 2.
-    // Formula: if tasks <= 10, lvl 1. else ceil((tasks - 10) / 10) + 1. Max 15.
-    
-    const calculateLevel = (tasks: number) => {
-        if (tasks <= 10) return { level: 1, min: 0, max: 10 };
-        let lvl = Math.ceil((tasks - 10) / 10) + 1;
-        if (lvl > 15) lvl = 15;
-        const min = 10 + ((lvl - 2) * 10); 
-        const max = min + 10;
-        return { level: lvl, min, max };
-    };
-
-    const { level, min, max } = useMemo(() => calculateLevel(tasksCompleted), [tasksCompleted]);
-    
-    let progressPercent = 0;
-    if (level === 1) {
-        progressPercent = (tasksCompleted / 10) * 100;
-    } else if (level === 15) {
-        progressPercent = 100;
-    } else {
-        progressPercent = ((tasksCompleted - min) / 10) * 100;
-    }
-    
-    progressPercent = Math.min(Math.max(progressPercent, 0), 100);
-
-    const getLevelIcon = (lvl: number) => {
-        if (lvl >= 10) return <CrownIcon className="w-6 h-6" />;
-        if (lvl >= 7) return <DiamondIcon className="w-6 h-6" />;
-        if (lvl >= 3) return <MedalIcon className="w-6 h-6" />;
-        return <StarIcon className="w-6 h-6" />;
-    };
-
-    return (
-        <div className="bg-gradient-to-r from-mint-900 to-gray-900 rounded-[24px] p-6 shadow-lg relative overflow-hidden text-white cursor-pointer group" onClick={onInfoClick}>
-            <div className="absolute top-0 right-0 w-32 h-32 bg-mint-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-            
-            <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-mint-500/20 flex items-center justify-center text-mint-500 border border-mint-500/30">
-                        {getLevelIcon(level)}
-                    </div>
-                    <div>
-                        <p className="text-mint-500 text-xs font-bold uppercase tracking-wider">Current Rank</p>
-                        <h3 className="text-2xl font-bold">{levelName || `Level ${level}`}</h3>
-                    </div>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs text-gray-400">Total Tasks</p>
-                    <p className="font-mono font-bold text-lg">{tasksCompleted}</p>
-                </div>
-            </div>
-
-            <div className="relative z-10">
-                <div className="flex justify-between text-xs text-gray-400 mb-1.5 font-medium">
-                    <span>Next Rank</span>
-                    <span>{Math.round(progressPercent)}%</span>
-                </div>
-                <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden border border-white/5">
-                    <div 
-                        className="h-full bg-mint-500 shadow-[0_0_10px_rgba(78,242,195,0.5)] transition-all duration-1000 ease-out relative"
-                        style={{ width: `${progressPercent}%` }}
-                    >
-                        <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                    </div>
-                </div>
-                {level < 15 && (
-                    <p className="text-xs text-gray-500 mt-2 text-center group-hover:text-mint-500 transition-colors">
-                        {max - tasksCompleted} more tasks to level up
-                    </p>
-                )}
-            </div>
-        </div>
-    );
-};
-
-
 const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, invitedCount, setActiveView, username, userProfile }) => {
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -131,25 +53,69 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
     return "Good Evening";
   };
 
+  // Level Calculation Logic (Mini Version)
+  const calculateLevel = (tasks: number) => {
+      if (tasks <= 10) return { level: 1, min: 0, max: 10 };
+      let lvl = Math.ceil((tasks - 10) / 10) + 1;
+      if (lvl > 15) lvl = 15;
+      const min = 10 + ((lvl - 2) * 10); 
+      const max = min + 10;
+      return { level: lvl, min, max };
+  };
+
+  const { level, min, max } = useMemo(() => calculateLevel(tasksCompleted), [tasksCompleted]);
+  
+  let progressPercent = 0;
+  if (level === 1) {
+      progressPercent = (tasksCompleted / 10) * 100;
+  } else if (level === 15) {
+      progressPercent = 100;
+  } else {
+      progressPercent = ((tasksCompleted - min) / 10) * 100;
+  }
+  progressPercent = Math.min(Math.max(progressPercent, 0), 100);
+
+  const getLevelColor = (lvl: number) => {
+      if (lvl >= 10) return "bg-gradient-to-r from-amber-500 to-red-600"; // Elite/God
+      if (lvl >= 5) return "bg-gradient-to-r from-amber-300 to-amber-500"; // Gold/Platinum
+      return "bg-gradient-to-r from-mint-500 to-emerald-600"; // Starter/Bronze
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-24">
-      {/* Header Greeting */}
-      <div className="flex items-center justify-between">
-          <div>
-              <p className="text-sm font-semibold text-gray-500">{getGreeting()}</p>
-              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{username}</h1>
+      {/* Compact Pro Header */}
+      <div className="flex items-center justify-between bg-white p-4 rounded-[24px] shadow-sm border border-gray-100">
+          <div className="flex-1 cursor-pointer" onClick={() => setActiveView('LEVELS_INFO')}>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">{getGreeting()}</p>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight mb-2">{username}</h1>
+              
+              {/* Mini Progress Bar */}
+              <div className="flex items-center gap-2 max-w-[140px]">
+                  <div className="h-1.5 flex-1 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                          className={`h-full rounded-full transition-all duration-1000 ${getLevelColor(level)}`} 
+                          style={{ width: `${progressPercent}%` }}
+                      ></div>
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400">{Math.round(progressPercent)}%</span>
+              </div>
           </div>
-          <div className="w-12 h-12 rounded-full border-2 border-white shadow-md overflow-hidden bg-gray-100 cursor-pointer" onClick={() => setActiveView('PROFILE_SETTINGS')}>
-              <img 
-                src={userProfile?.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${username}`} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-              />
+
+          {/* Pro Avatar with Level Badge */}
+          <div className="relative group cursor-pointer" onClick={() => setActiveView('PROFILE_SETTINGS')}>
+              <div className="w-14 h-14 rounded-full border-2 border-white shadow-lg overflow-hidden bg-gray-100">
+                  <img 
+                    src={userProfile?.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${username}`} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover" 
+                  />
+              </div>
+              {/* Level Badge Attached */}
+              <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(level)}`}>
+                  {level}
+              </div>
           </div>
       </div>
-
-      {/* NEW: Level Progress Card */}
-      <LevelProgressCard tasksCompleted={tasksCompleted} onInfoClick={() => setActiveView('LEVELS_INFO')} levelName={userProfile?.levelName} />
 
       {/* Enhanced Glassmorphism Balance Card */}
       <div className="relative p-6 sm:p-8 rounded-[32px] text-white bg-gradient-to-br from-slate-900 to-slate-800 shadow-2xl overflow-hidden group">

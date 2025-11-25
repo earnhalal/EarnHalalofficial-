@@ -4,7 +4,7 @@ import type { UserProfile, View } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, PlusCircleIcon
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
@@ -18,15 +18,32 @@ interface ProfileSettingsViewProps {
     onNavigate: (view: View) => void;
 }
 
-// Avatar Seeds for Dicebear
-const BOY_AVATARS = ['Felix', 'Joshua', 'Aidan', 'Jake', 'Ryan', 'Liam'];
-const GIRL_AVATARS = ['Annie', 'Sophia', 'Kylie', 'Jessica', 'Mila', 'Eliza'];
+// --- Professional Avatar System Configuration ---
+const AVATAR_COLLECTIONS = {
+    'Basic': {
+        style: 'micah', // Clean, flat, modern UI style (Corporate Memphis)
+        seeds: ['Felix', 'Aneka', 'Hudson', 'Zoe', 'River', 'Aiden', 'Bella', 'Evan', 'Nora', 'Leo', 'Maya', 'Dylan'],
+        description: 'Modern & Clean'
+    },
+    'Ranked': {
+        style: 'avataaars', // Standard Tech/SaaS look
+        seeds: ['Christopher', 'Jack', 'Sophia', 'Ethan', 'Emma', 'William', 'Olivia', 'James', 'Ava', 'Alexander', 'Michael', 'Emily'],
+        description: 'Pro Level Status'
+    },
+    'Premium': {
+        style: 'notionists', // High-end, sketched, professional (Notion style)
+        seeds: ['Robert', 'Jade', 'Avery', 'Stark', 'Maria', 'Oliver', 'Sophie', 'Caleb', 'Eden', 'Liam', 'Noah', 'Grace'],
+        description: 'Executive Suite'
+    }
+};
+
+type CollectionKey = keyof typeof AVATAR_COLLECTIONS;
 
 const MenuRow: React.FC<{ 
     icon: React.ReactNode; 
     label: string; 
     onClick: () => void; 
-    isDestructive?: boolean;
+    isDestructive?: boolean; 
     rightElement?: React.ReactNode;
 }> = ({ icon, label, onClick, isDestructive = false, rightElement }) => (
     <button 
@@ -54,7 +71,10 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     const [email, setEmail] = useState(userProfile?.email || '');
     const [password, setPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isPhotoUploading, setIsPhotoUploading] = useState(false);
+    
+    // Avatar Selection State
+    const [activeCollection, setActiveCollection] = useState<CollectionKey>('Basic');
+    const [selectedAvatarUrl, setSelectedAvatarUrl] = useState(userProfile?.photoURL || '');
 
     if (!userProfile) return null;
 
@@ -71,21 +91,71 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
         }
     };
 
-    const handleAvatarSelect = async (seed: string) => {
-        setIsPhotoUploading(true);
-        const url = `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`;
+    const handleAvatarSelect = async (url: string) => {
+        setSelectedAvatarUrl(url);
         await onUpdatePhoto(null, url);
-        setIsEditingPhoto(false);
-        setIsPhotoUploading(false);
+        setTimeout(() => {
+            setIsEditingPhoto(false);
+        }, 300);
     };
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setIsPhotoUploading(true);
-            await onUpdatePhoto(e.target.files[0]);
-            setIsEditingPhoto(false);
-            setIsPhotoUploading(false);
+    const getLevelColor = (lvl: number) => {
+        if (lvl >= 10) return "bg-gradient-to-r from-amber-500 to-red-600"; 
+        if (lvl >= 5) return "bg-gradient-to-r from-amber-300 to-amber-500"; 
+        return "bg-gradient-to-r from-mint-500 to-emerald-600"; 
+    };
+
+    // --- Render Logic for Avatar Items based on Category ---
+    const renderAvatarItem = (seed: string, index: number) => {
+        const style = AVATAR_COLLECTIONS[activeCollection].style;
+        const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=transparent`;
+        const isSelected = selectedAvatarUrl === url;
+
+        let containerClass = "";
+        let borderClass = "";
+        let badge = null;
+
+        if (activeCollection === 'Basic') {
+            containerClass = "bg-white rounded-2xl shadow-sm";
+            borderClass = isSelected ? "ring-4 ring-gray-200" : "hover:ring-2 hover:ring-gray-100";
+        } else if (activeCollection === 'Ranked') {
+            containerClass = "rounded-full bg-white shadow-sm";
+            if (index < 3) { 
+                borderClass = isSelected ? "ring-4 ring-orange-700" : "border-[3px] border-orange-700/20";
+                badge = <div className="absolute -bottom-1 -right-1 bg-orange-700 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">III</div>;
+            } else if (index < 6) { 
+                borderClass = isSelected ? "ring-4 ring-slate-400" : "border-[3px] border-slate-400/30";
+                badge = <div className="absolute -bottom-1 -right-1 bg-slate-400 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">II</div>;
+            } else if (index < 9) { 
+                borderClass = isSelected ? "ring-4 ring-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]" : "border-[3px] border-yellow-500/40";
+                badge = <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">I</div>;
+            } else { 
+                borderClass = isSelected ? "ring-4 ring-cyan-500 shadow-[0_0_20px_rgba(6,182,212,0.3)]" : "border-[3px] border-cyan-500/40";
+                badge = <div className="absolute -bottom-1 -right-1 bg-cyan-500 text-white p-1 rounded-full shadow-sm"><DiamondIcon className="w-3 h-3" /></div>;
+            }
+        } else if (activeCollection === 'Premium') {
+            containerClass = "bg-slate-900 rounded-xl shadow-lg";
+            borderClass = isSelected ? "ring-2 ring-amber-400 shadow-gold" : "border border-amber-500/20 hover:border-amber-500/50";
+            badge = <div className="absolute -top-2 -left-2 text-amber-400 drop-shadow-md bg-slate-900 rounded-full p-0.5 border border-amber-500/30"><CrownIcon className="w-4 h-4" /></div>;
         }
+
+        return (
+            <button 
+                key={seed} 
+                onClick={() => handleAvatarSelect(url)} 
+                className={`group relative aspect-square flex items-center justify-center transition-all duration-300 ${containerClass} ${borderClass}`}
+            >
+                <div className={`w-[85%] h-[85%] transition-transform duration-300 group-hover:scale-105 ${activeCollection === 'Premium' ? 'filter drop-shadow-md' : ''}`}>
+                    <img src={url} alt={seed} className="w-full h-full object-contain" />
+                </div>
+                {badge}
+                {isSelected && activeCollection !== 'Ranked' && (
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white shadow-sm z-10 border-2 border-white">
+                        <CheckCircleIcon className="w-3.5 h-3.5" />
+                    </div>
+                )}
+            </button>
+        );
     };
 
     if (isEditing) {
@@ -118,50 +188,25 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
 
     if (isEditingPhoto) {
         return (
-            <div className="bg-white p-6 rounded-2xl shadow-sm animate-fade-in space-y-6">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold text-gray-900">Choose Avatar</h2>
-                    <button onClick={() => setIsEditingPhoto(false)} className="text-gray-500 hover:text-gray-800">Cancel</button>
+            <div className="bg-white p-6 rounded-3xl shadow-2xl animate-fade-in space-y-6 relative border border-gray-100 h-[85vh] flex flex-col">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-4 flex-shrink-0">
+                    <div>
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Select Avatar</h2>
+                        <p className="text-xs text-gray-500 font-medium">{AVATAR_COLLECTIONS[activeCollection].description}</p>
+                    </div>
+                    <button onClick={() => setIsEditingPhoto(false)} className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200">&times;</button>
                 </div>
-
-                {/* Upload Section */}
-                <div>
-                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            {isPhotoUploading ? (
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
-                            ) : (
-                                <>
-                                    <PlusCircleIcon className="w-8 h-8 text-gray-400 mb-2" />
-                                    <p className="text-sm text-gray-500"><span className="font-semibold">Click to upload</span> custom photo</p>
-                                </>
-                            )}
-                        </div>
-                        <input type="file" className="hidden" accept="image/*" onChange={handleFileUpload} disabled={isPhotoUploading} />
-                    </label>
+                <div className="flex p-1.5 bg-gray-100 rounded-xl flex-shrink-0">
+                    {(Object.keys(AVATAR_COLLECTIONS) as CollectionKey[]).map(key => (
+                        <button key={key} onClick={() => setActiveCollection(key)} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-300 ${activeCollection === key ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>{key}</button>
+                    ))}
                 </div>
-
-                {/* Avatars */}
-                <div>
-                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Boys</h3>
-                    <div className="grid grid-cols-4 gap-3">
-                        {BOY_AVATARS.map(seed => (
-                            <button key={seed} onClick={() => handleAvatarSelect(seed)} disabled={isPhotoUploading} className="rounded-full border-2 border-transparent hover:border-amber-400 hover:scale-110 transition-all p-1">
-                                <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`} alt="avatar" className="w-full h-full rounded-full bg-slate-100" />
-                            </button>
-                        ))}
+                <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 pt-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 sm:gap-6 pb-4">
+                        {AVATAR_COLLECTIONS[activeCollection].seeds.map((seed, index) => renderAvatarItem(seed, index))}
                     </div>
                 </div>
-                <div>
-                    <h3 className="text-sm font-bold text-gray-500 uppercase mb-3">Girls</h3>
-                    <div className="grid grid-cols-4 gap-3">
-                        {GIRL_AVATARS.map(seed => (
-                             <button key={seed} onClick={() => handleAvatarSelect(seed)} disabled={isPhotoUploading} className="rounded-full border-2 border-transparent hover:border-amber-400 hover:scale-110 transition-all p-1">
-                                <img src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}`} alt="avatar" className="w-full h-full rounded-full bg-slate-100" />
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <div className="text-center text-xs text-gray-400 pt-2 font-medium flex-shrink-0 border-t border-gray-50">Tap any avatar to update instantly</div>
             </div>
         )
     }
@@ -169,128 +214,105 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     return (
         <div className="max-w-2xl mx-auto pb-24 space-y-6 animate-fade-in">
             
-            {/* Header Card */}
+            {/* Pro Header Card */}
             <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden">
                 <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
-                    <div className="w-20 h-20 rounded-full border-2 border-amber-100 p-1">
+                    <div className="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-gradient-to-br from-amber-100 to-yellow-50 p-1 overflow-hidden relative">
                         <img 
                             src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
                             alt="Profile" 
-                            className="w-full h-full rounded-full bg-gray-100 object-cover" 
+                            className="w-full h-full rounded-full object-cover" 
                         />
+                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <PencilSquareIcon className="w-8 h-8 text-white drop-shadow-md" />
+                        </div>
                     </div>
-                    <div className="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PencilSquareIcon className="w-6 h-6 text-white" />
+                    {/* Level Badge on Profile */}
+                    <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(userProfile.level || 1)}`}>
+                        {userProfile.level || 1}
                     </div>
-                    <div className="absolute bottom-0 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900">{userProfile.username}</h2>
-                            <p className="text-slate-500 text-sm mb-2">{userProfile.email}</p>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{userProfile.username}</h2>
+                            <p className="text-slate-500 text-sm mb-2 font-medium">{userProfile.email}</p>
                         </div>
-                        <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700">Edit Info</button>
+                        <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
+                            Edit Info
+                        </button>
                     </div>
-                    <div className="inline-flex items-center gap-1 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-bold border border-amber-100">
-                        <CheckCircleIcon className="w-3 h-3" /> Verified Member
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-white rounded-full text-xs font-bold shadow-sm mt-1">
+                        <CrownIcon className="w-3.5 h-3.5 text-amber-400" /> 
+                        <span>{userProfile.levelName || 'Member'}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Section 1: Account & Wallet */}
+            {/* Section: Rank & Progression */}
+            <div className="space-y-2">
+                <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Rank & Progression</p>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <MenuRow 
+                        icon={<StarIcon className="w-5 h-5" />} 
+                        label="My Level & Benefits" 
+                        onClick={() => onNavigate('LEVELS_INFO')} 
+                    />
+                    <MenuRow 
+                        icon={<ChartBarIcon className="w-5 h-5" />} 
+                        label="Top Earners Leaderboard" 
+                        onClick={() => onNavigate('LEADERBOARD')} 
+                    />
+                </div>
+            </div>
+
+            {/* Section: Account */}
             <div className="space-y-2">
                 <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Account</p>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow 
-                        icon={<BriefcaseIcon className="w-5 h-5" />} 
-                        label="Profile Picture" 
-                        onClick={() => setIsEditingPhoto(true)} 
-                    />
-                    <MenuRow 
-                        icon={<WalletIcon className="w-5 h-5" />} 
-                        label="Manage Wallet & PIN" 
-                        onClick={() => onNavigate('WALLET')} 
-                    />
+                    <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Change Avatar" onClick={() => setIsEditingPhoto(true)} />
+                    <MenuRow icon={<WalletIcon className="w-5 h-5" />} label="Manage Wallet & PIN" onClick={() => onNavigate('WALLET')} />
                     <div className="p-4 flex items-center justify-between bg-white border-b border-gray-50">
                         <div className="flex items-center gap-4">
                             <div className="p-2 rounded-xl bg-slate-50 text-slate-600"><FingerprintIcon className="w-5 h-5" /></div>
                             <span className="font-semibold text-sm text-slate-700">Biometric Login</span>
                         </div>
-                        <button 
-                            onClick={() => !userProfile.isFingerprintEnabled && onSetFingerprintEnabled()}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${userProfile.isFingerprintEnabled ? 'bg-green-500' : 'bg-gray-200'}`}
-                        >
+                        <button onClick={() => !userProfile.isFingerprintEnabled && onSetFingerprintEnabled()} className={`w-11 h-6 rounded-full transition-colors relative ${userProfile.isFingerprintEnabled ? 'bg-green-500' : 'bg-gray-200'}`}>
                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${userProfile.isFingerprintEnabled ? 'left-6' : 'left-1'}`}></div>
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Section 2: App Features */}
+            {/* Section: Features */}
             <div className="space-y-2">
                 <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Features</p>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow 
-                        icon={<BriefcaseIcon className="w-5 h-5" />} 
-                        label="Premium Jobs" 
-                        onClick={() => onNavigate('JOBS')} 
-                    />
-                    <MenuRow 
-                        icon={<UserGroupIcon className="w-5 h-5" />} 
-                        label="Social Groups" 
-                        onClick={() => onNavigate('SOCIAL_GROUPS')} 
-                    />
-                    <MenuRow 
-                        icon={<DocumentTextIcon className="w-5 h-5" />} 
-                        label="My Applications" 
-                        onClick={() => onNavigate('MY_APPLICATIONS')} 
-                    />
+                    <MenuRow icon={<BriefcaseIcon className="w-5 h-5" />} label="Premium Jobs" onClick={() => onNavigate('JOBS')} />
+                    <MenuRow icon={<UserGroupIcon className="w-5 h-5" />} label="Social Groups" onClick={() => onNavigate('SOCIAL_GROUPS')} />
+                    <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="My Applications" onClick={() => onNavigate('MY_APPLICATIONS')} />
                     <div className="p-4 flex items-center justify-between bg-white">
                         <div className="flex items-center gap-4">
                             <div className="p-2 rounded-xl bg-slate-50 text-slate-600"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg></div>
-                            <span className="font-semibold text-sm text-slate-700">AI Support Assistant</span>
+                            <span className="font-semibold text-sm text-slate-700">TaskMint Support</span>
                         </div>
-                        <button 
-                            onClick={() => onToggleChatbot(!showChatbot)}
-                            className={`w-11 h-6 rounded-full transition-colors relative ${showChatbot ? 'bg-amber-500' : 'bg-gray-200'}`}
-                        >
-                            <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${showChatbot ? 'left-6' : 'left-1'}`}></div>
-                        </button>
+                        <button onClick={() => onToggleChatbot(true)} className="text-xs font-bold text-white bg-amber-500 px-3 py-1.5 rounded-lg hover:bg-amber-600 transition-colors">Open Chat</button>
                     </div>
                 </div>
             </div>
 
-            {/* Section 3: Support & Legal */}
+            {/* Section: Support & Legal */}
             <div className="space-y-2">
                 <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Support</p>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow 
-                        icon={<InfoIcon className="w-5 h-5" />} 
-                        label="How It Works" 
-                        onClick={() => onNavigate('HOW_IT_WORKS')} 
-                    />
-                    <MenuRow 
-                        icon={<ShieldCheck className="w-5 h-5" />} 
-                        label="Privacy Policy" 
-                        onClick={() => onNavigate('PRIVACY_POLICY')} 
-                    />
-                    <MenuRow 
-                        icon={<DocumentTextIcon className="w-5 h-5" />} 
-                        label="Terms of Service" 
-                        onClick={() => onNavigate('TERMS_CONDITIONS')} 
-                    />
-                    <MenuRow 
-                        icon={<LogoutIcon className="w-5 h-5" />} 
-                        label="Log Out" 
-                        onClick={onLogout}
-                        isDestructive
-                        rightElement={<ArrowRight className="w-4 h-4 text-red-400" />}
-                    />
+                    <MenuRow icon={<InfoIcon className="w-5 h-5" />} label="How It Works" onClick={() => onNavigate('HOW_IT_WORKS')} />
+                    <MenuRow icon={<ShieldCheck className="w-5 h-5" />} label="Privacy Policy" onClick={() => onNavigate('PRIVACY_POLICY')} />
+                    <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="Terms of Service" onClick={() => onNavigate('TERMS_CONDITIONS')} />
+                    <MenuRow icon={<LogoutIcon className="w-5 h-5" />} label="Log Out" onClick={onLogout} isDestructive rightElement={<ArrowRight className="w-4 h-4 text-red-400" />} />
                 </div>
             </div>
 
-            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.2.5 • Built for Hustlers</p>
+            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.3.0 • Built for Hustlers</p>
         </div>
     );
 };

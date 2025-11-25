@@ -1,11 +1,11 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import type { Task, TaskType as TaskTypeEnum } from '../types';
 import { TaskType } from '../types';
 import { 
     CheckCircleIcon, InfoIcon, YoutubeIcon, FacebookIcon, 
     InstagramIcon, TikTokIcon, TwitterIcon, LinkedInIcon, 
-    DiscordIcon, TelegramIcon, SnapchatIcon, Globe 
+    DiscordIcon, TelegramIcon, SnapchatIcon, Globe, ChevronDownIcon
 } from './icons';
 
 
@@ -34,17 +34,46 @@ const initialFormState: FormState = {
 
 // Map TaskType to Icon and Label for the visual selector
 const TASK_CATEGORIES = [
-    { id: TaskType.VISIT_WEBSITE, label: 'Website', icon: <Globe className="w-6 h-6"/>, color: 'text-blue-500' },
-    { id: TaskType.YOUTUBE_SUBSCRIBE, label: 'YouTube', icon: <YoutubeIcon className="w-6 h-6"/>, color: 'text-red-600' },
-    { id: TaskType.FACEBOOK_LIKE, label: 'Facebook', icon: <FacebookIcon className="w-6 h-6"/>, color: 'text-blue-700' },
-    { id: TaskType.INSTAGRAM_FOLLOW, label: 'Instagram', icon: <InstagramIcon className="w-6 h-6"/>, color: 'text-pink-600' },
-    { id: TaskType.TIKTOK_FOLLOW, label: 'TikTok', icon: <TikTokIcon className="w-6 h-6"/>, color: 'text-black' },
-    { id: TaskType.TWITTER_FOLLOW, label: 'Twitter', icon: <TwitterIcon className="w-6 h-6"/>, color: 'text-sky-500' },
-    { id: TaskType.LINKEDIN_FOLLOW, label: 'LinkedIn', icon: <LinkedInIcon className="w-6 h-6"/>, color: 'text-blue-800' },
-    { id: TaskType.DISCORD_JOIN, label: 'Discord', icon: <DiscordIcon className="w-6 h-6"/>, color: 'text-indigo-600' },
-    { id: TaskType.TELEGRAM_JOIN, label: 'Telegram', icon: <TelegramIcon className="w-6 h-6"/>, color: 'text-sky-500' },
-    { id: TaskType.SNAPCHAT_FOLLOW, label: 'Snapchat', icon: <SnapchatIcon className="w-6 h-6"/>, color: 'text-yellow-500' },
+    { id: TaskType.VISIT_WEBSITE, label: 'Website Visit', icon: <Globe className="w-5 h-5"/>, color: 'text-blue-500' },
+    { id: TaskType.YOUTUBE_SUBSCRIBE, label: 'YouTube Subscribe', icon: <YoutubeIcon className="w-5 h-5"/>, color: 'text-red-600' },
+    { id: TaskType.FACEBOOK_LIKE, label: 'Facebook Like', icon: <FacebookIcon className="w-5 h-5"/>, color: 'text-blue-700' },
+    { id: TaskType.INSTAGRAM_FOLLOW, label: 'Instagram Follow', icon: <InstagramIcon className="w-5 h-5"/>, color: 'text-pink-600' },
+    { id: TaskType.TIKTOK_FOLLOW, label: 'TikTok Follow', icon: <TikTokIcon className="w-5 h-5"/>, color: 'text-black' },
+    { id: TaskType.TWITTER_FOLLOW, label: 'Twitter Follow', icon: <TwitterIcon className="w-5 h-5"/>, color: 'text-sky-500' },
+    { id: TaskType.LINKEDIN_FOLLOW, label: 'LinkedIn Follow', icon: <LinkedInIcon className="w-5 h-5"/>, color: 'text-blue-800' },
+    { id: TaskType.DISCORD_JOIN, label: 'Discord Join', icon: <DiscordIcon className="w-5 h-5"/>, color: 'text-indigo-600' },
+    { id: TaskType.TELEGRAM_JOIN, label: 'Telegram Join', icon: <TelegramIcon className="w-5 h-5"/>, color: 'text-sky-500' },
+    { id: TaskType.SNAPCHAT_FOLLOW, label: 'Snapchat Follow', icon: <SnapchatIcon className="w-5 h-5"/>, color: 'text-yellow-500' },
 ];
+
+// Catchy Templates for Auto-fill
+const TEMPLATES: Record<string, { titles: string[], descriptions: string[] }> = {
+    [TaskType.YOUTUBE_SUBSCRIBE]: {
+        titles: ["🔥 100% Permanent Sub", "Watch 2 Mins & Subscribe 🚀", "Fast Subscribe & Bell 🔔", "Need Organic Subs"],
+        descriptions: ["Please watch the video for at least 2 minutes before subscribing so it counts.", "Permanent subscribers only. Unsubscribers will be reported.", "Like, Comment and Subscribe for quick approval."]
+    },
+    [TaskType.TIKTOK_FOLLOW]: {
+        titles: ["Follow for Best Content ✨", "Viral Video Support 🚀", "Fast Follow Back", "Grow Together 📈"],
+        descriptions: ["Follow my account and like 3 videos.", "Real active followers only.", "Watch full video and follow."]
+    },
+    [TaskType.FACEBOOK_LIKE]: {
+        titles: ["Like Page & Follow 👍", "React Love on Post ❤️", "Join Our Community"],
+        descriptions: ["Like the page and follow. Do not unlike later.", "React Love to the pinned post.", "Join the group and invite 2 friends."]
+    },
+    [TaskType.INSTAGRAM_FOLLOW]: {
+        titles: ["Follow Me on Insta 📸", "Like Recent Post ❤️", "Story View & Follow"],
+        descriptions: ["Follow account and like the latest reel.", "Genuine followers for lifestyle content.", "View story and follow."]
+    },
+    [TaskType.VISIT_WEBSITE]: {
+        titles: ["Visit & Stay 30s ⏱️", "Click on Banner Ad 💸", "Read Full Article"],
+        descriptions: ["Visit the link, scroll to the bottom, and stay for 30 seconds.", "Click 1 ad on the page to support.", "Read the full article and share."]
+    },
+    // Default fallback
+    'default': {
+        titles: ["Check this out! 🌟", "Support my channel", "Follow for updates"],
+        descriptions: ["Complete the task honestly for instant approval.", "No fake accounts allowed.", "Simple task, quick payment."]
+    }
+};
 
 const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }) => {
   const [form, setForm] = useState<FormState>(initialFormState);
@@ -52,6 +81,19 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [submittedTask, setSubmittedTask] = useState<Omit<Task, 'id'> & { quantity: number; totalCost: number; } | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+          if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+              setIsDropdownOpen(false);
+          }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const totalCost = useMemo(() => {
     const rewardNum = parseFloat(form.reward);
@@ -69,6 +111,11 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
 
   const handleCategorySelect = (type: TaskTypeEnum) => {
       setForm(prev => ({ ...prev, taskType: type }));
+      setIsDropdownOpen(false);
+  };
+
+  const handleTemplateClick = (field: 'title' | 'description', value: string) => {
+      setForm(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -111,6 +158,9 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
     setError('');
   };
 
+  const selectedCategory = TASK_CATEGORIES.find(c => c.id === form.taskType) || TASK_CATEGORIES[0];
+  const currentTemplates = TEMPLATES[form.taskType] || TEMPLATES['default'];
+
   if (isSuccess && submittedTask) {
     return (
         <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto text-center animate-fade-in">
@@ -137,7 +187,7 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
   }
 
   return (
-    <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto">
+    <div className="bg-white p-6 sm:p-8 rounded-xl shadow-subtle-md max-w-3xl mx-auto pb-24">
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold text-gray-900">Create a New Task Campaign</h2>
         <p className="text-gray-600 mt-2">
@@ -150,39 +200,82 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
             <div className="p-6 border rounded-lg border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">1. Select Platform</h3>
                 
-                {/* Visual Grid Selector */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
-                    {TASK_CATEGORIES.map((cat) => (
-                        <button
-                            key={cat.id}
-                            type="button"
-                            onClick={() => handleCategorySelect(cat.id)}
-                            className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 ${
-                                form.taskType === cat.id 
-                                    ? 'border-primary-500 bg-primary-50 shadow-sm' 
-                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
-                            }`}
-                        >
-                            <div className={`mb-2 ${cat.color}`}>{cat.icon}</div>
-                            <span className={`text-xs font-bold ${form.taskType === cat.id ? 'text-primary-700' : 'text-gray-600'}`}>
-                                {cat.label}
-                            </span>
-                        </button>
-                    ))}
+                {/* Custom Dropdown */}
+                <div className="relative mb-6" ref={dropdownRef}>
+                    <button
+                        type="button"
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className="w-full flex items-center justify-between p-3 bg-white border border-gray-300 rounded-xl shadow-sm hover:border-primary-500 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`${selectedCategory.color} p-2 bg-gray-50 rounded-lg`}>
+                                {selectedCategory.icon}
+                            </div>
+                            <span className="font-bold text-gray-800">{selectedCategory.label}</span>
+                        </div>
+                        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {isDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto custom-scrollbar">
+                            {TASK_CATEGORIES.map((cat) => (
+                                <button
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => handleCategorySelect(cat.id)}
+                                    className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-none"
+                                >
+                                    <div className={`${cat.color} w-8 flex justify-center`}>{cat.icon}</div>
+                                    <span className="text-sm font-medium text-gray-700">{cat.label}</span>
+                                    {form.taskType === cat.id && <CheckCircleIcon className="w-4 h-4 text-green-500 ml-auto" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                     <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-gray-700">Task Title</label>
-                      <input type="text" id="title" value={form.title} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Visit my new blog post" required />
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                      <input type="text" id="title" value={form.title} onChange={handleChange} className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Visit my new blog post" required />
+                      
+                      {/* Title Suggestions */}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                          {currentTemplates.titles.map((t, i) => (
+                              <button 
+                                key={i} 
+                                type="button" 
+                                onClick={() => handleTemplateClick('title', t)}
+                                className="text-[10px] sm:text-xs px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full hover:bg-amber-100 transition-colors"
+                              >
+                                {t}
+                              </button>
+                          ))}
+                      </div>
                     </div>
+
                      <div>
-                      <label htmlFor="url" className="block text-sm font-medium text-gray-700">Task URL</label>
-                      <input type="url" id="url" value={form.url} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="https://example.com/page" required />
+                      <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-1">Task URL</label>
+                      <input type="url" id="url" value={form.url} onChange={handleChange} className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="https://..." required />
                     </div>
+
                      <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">Short Description</label>
-                      <input type="text" id="description" value={form.description} onChange={handleChange} className="mt-1 block w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="e.g., Like the page and follow for updates" required />
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description & Instructions</label>
+                      <input type="text" id="description" value={form.description} onChange={handleChange} className="block w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-primary-500 focus:border-primary-500 bg-gray-50" placeholder="Tell users what to do..." required />
+                      
+                      {/* Description Suggestions */}
+                      <div className="mt-2 flex flex-wrap gap-2">
+                          {currentTemplates.descriptions.map((d, i) => (
+                              <button 
+                                key={i} 
+                                type="button" 
+                                onClick={() => handleTemplateClick('description', d)}
+                                className="text-[10px] sm:text-xs px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full hover:bg-blue-100 transition-colors text-left"
+                              >
+                                {d}
+                              </button>
+                          ))}
+                      </div>
                     </div>
                 </div>
             </div>
