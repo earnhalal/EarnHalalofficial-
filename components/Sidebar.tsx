@@ -2,7 +2,7 @@
 import React from 'react';
 import {
   DashboardIcon, WalletIcon, CreateTaskIcon, SettingsIcon,
-  ClipboardListIcon, PlusCircleIcon, BriefcaseIcon, ExchangeIcon, BuildingIcon, MegaphoneIcon, ChartBarIcon, UserGroupIcon, EyeIcon, TargetIcon
+  ClipboardListIcon, PlusCircleIcon, BriefcaseIcon, ExchangeIcon, BuildingIcon, MegaphoneIcon, ChartBarIcon, UserGroupIcon, EyeIcon, TargetIcon, InfoIcon, ShieldCheck
 } from './icons';
 import type { View, UserMode } from '../types';
 
@@ -45,7 +45,7 @@ const NavItem: React.FC<{
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose, unreadUpdatesCount, userMode, onSwitchMode }) => {
   
-  // Advertiser Menu (Business Suite) - Removed Demo Labels
+  // Advertiser Menu (Business Suite)
   const advertiserViews: { view: View; label: string; icon: React.ReactNode }[] = [
       { view: 'ADVERTISER_DASHBOARD', label: 'Overview', icon: <DashboardIcon className="w-5 h-5" /> },
       { view: 'CREATE_TASK', label: 'New Campaign', icon: <MegaphoneIcon className="w-5 h-5" /> },
@@ -54,9 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
       { view: 'WALLET', label: 'Funds & Wallet', icon: <WalletIcon className="w-5 h-5" /> },
       { view: 'DEPOSIT', label: 'Add Budget', icon: <PlusCircleIcon className="w-5 h-5" /> },
       // Expanded Functional Options
-      { view: 'ADVERTISER_DASHBOARD', label: 'Targeting Rules', icon: <TargetIcon className="w-5 h-5" /> },
-      { view: 'ADVERTISER_DASHBOARD', label: 'Ad Pixel', icon: <EyeIcon className="w-5 h-5" /> },
-      { view: 'ADVERTISER_DASHBOARD', label: 'Audience Segments', icon: <UserGroupIcon className="w-5 h-5" /> },
+      { view: 'ADS_GUIDE', label: 'How to Run Ads', icon: <InfoIcon className="w-5 h-5" /> },
+      { view: 'ADS_POLICY', label: 'Ads Policy', icon: <ShieldCheck className="w-5 h-5" /> },
       { view: 'PROFILE_SETTINGS', label: 'Business Settings', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
   
@@ -119,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
                     key={`tools-${index}`}
                     icon={item.icon}
                     label={item.label}
-                    isActive={false} // These are just for show currently in the dashboard view context
+                    isActive={activeView === item.view}
                     onClick={() => handleItemClick(item.view)}
                 />
                 ))}

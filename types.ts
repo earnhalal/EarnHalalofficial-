@@ -40,7 +40,9 @@ export type View =
   // Advertiser Views
   | 'ADVERTISER_DASHBOARD'
   | 'POST_JOB'
-  | 'MANAGE_CAMPAIGNS';
+  | 'MANAGE_CAMPAIGNS'
+  | 'ADS_GUIDE'
+  | 'ADS_POLICY';
 
 export type UserMode = 'EARNER' | 'ADVERTISER';
 

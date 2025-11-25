@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { View } from '../types';
 import { BriefcaseIcon, MegaphoneIcon, ChartBarIcon, PlusCircleIcon, WalletIcon, TargetIcon, Globe, EyeIcon, UserGroupIcon, DocumentTextIcon } from './icons';
 
@@ -71,6 +71,21 @@ const PerformanceGraph = () => {
 };
 
 const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setActiveView }) => {
+    const [liveAudience, setLiveAudience] = useState(842);
+
+    useEffect(() => {
+        // Randomly fluctuate live audience count
+        const interval = setInterval(() => {
+            setLiveAudience(prev => {
+                const change = Math.floor(Math.random() * 15) - 7; // Random change between -7 and +7
+                const newValue = prev + change;
+                return newValue > 500 ? newValue : 500; // Keep it realistic minimum
+            });
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div className="max-w-6xl mx-auto pb-24 animate-fade-in">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -127,7 +142,10 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                     <div className="space-y-5 flex-1">
                         <div className="flex items-center justify-between p-3 bg-white/10 rounded-xl border border-white/10">
                             <span className="text-sm font-medium text-slate-300">Active Users</span>
-                            <span className="font-bold text-white">842 Online</span>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                <span className="font-bold text-white text-lg">{liveAudience}</span>
+                            </div>
                         </div>
                         <div>
                             <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">

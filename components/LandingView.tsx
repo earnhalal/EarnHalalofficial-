@@ -7,6 +7,7 @@ import {
     BriefcaseIcon, DiamondIcon
 } from './icons';
 import { InfoModal, renderModalContent } from './LandingInfoViews';
+import { AdsGuideView, AdsPolicyView } from './AdsInfoViews';
 
 interface LandingViewProps {
   onGetStarted: (view: 'login' | 'signup') => void;
@@ -34,7 +35,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
           'deposit': 'Deposit Instructions',
           'refund': 'Refund Policy',
           'disclaimer': 'Disclaimer',
-          'blog': 'TaskMint Blog'
+          'blog': 'TaskMint Blog',
+          'ads-guide': 'Advertiser Guide',
+          'ads-policy': 'Advertising Policy'
       };
       return titles[key] || 'Information';
   };
@@ -95,7 +98,9 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             title={getModalTitle(activeModal)} 
             onClose={() => setActiveModal(null)}
           >
-              {renderModalContent(activeModal)}
+              {activeModal === 'ads-guide' ? <AdsGuideView /> : 
+               activeModal === 'ads-policy' ? <AdsPolicyView /> : 
+               renderModalContent(activeModal)}
           </InfoModal>
       )}
 
@@ -338,11 +343,11 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                         </ul>
                     </div>
                     <div>
-                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Support</h4>
+                        <h4 className="font-bold text-white mb-6 uppercase text-xs tracking-wider">Advertisers</h4>
                         <ul className="space-y-3 text-sm text-slate-400 font-medium">
-                            <li><button onClick={() => setActiveModal('how-it-works')} className="hover:text-amber-400 transition-colors">How it Works</button></li>
-                            <li><button onClick={() => setActiveModal('deposit')} className="hover:text-amber-400 transition-colors">Deposit Guide</button></li>
-                            <li><button onClick={() => setActiveModal('support')} className="hover:text-amber-400 transition-colors">Contact Us</button></li>
+                            <li><button onClick={() => setActiveModal('ads-guide')} className="hover:text-amber-400 transition-colors">How to Run Ads</button></li>
+                            <li><button onClick={() => setActiveModal('ads-policy')} className="hover:text-amber-400 transition-colors">Ad Policy</button></li>
+                            <li><button onClick={() => setActiveModal('support')} className="hover:text-amber-400 transition-colors">Contact Sales</button></li>
                         </ul>
                     </div>
                     <div>

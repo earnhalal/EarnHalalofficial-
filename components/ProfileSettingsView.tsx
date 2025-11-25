@@ -4,7 +4,7 @@ import type { UserProfile, View, UserMode } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon, BuildingIcon
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon, BuildingIcon, TargetIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
@@ -77,7 +77,7 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     const [verifyingField, setVerifyingField] = useState<'email' | 'phone' | null>(null);
     const [generatedOTP, setGeneratedOTP] = useState('');
     const [enteredOTP, setEnteredOTP] = useState('');
-    const [isVerified, setIsVerified] = useState({ email: true, phone: true }); // Assuming current profile is verified initially or check actual status
+    const [isVerified, setIsVerified] = useState({ email: true, phone: true });
 
     // Avatar Selection State
     const [activeCollection, setActiveCollection] = useState<CollectionKey>('Basic');
@@ -108,7 +108,6 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Simple check: if user changed email/phone, force verification
         if (email !== userProfile.email && !isVerified.email) {
             alert("Please verify your new email address first.");
             return;
@@ -200,8 +199,6 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{isAdvertiser ? 'Company Name' : 'Full Name'}</label>
                         <input value={name} onChange={e => setName(e.target.value)} className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
                     </div>
-                    
-                    {/* Email Field with Verification */}
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
                         <div className="flex gap-2">
@@ -211,33 +208,19 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                                 className="flex-1 p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" 
                             />
                             {email !== userProfile.email && !isVerified.email && (
-                                <button 
-                                    type="button" 
-                                    onClick={() => handleStartVerification('email', email)}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
-                                >
-                                    Verify
-                                </button>
+                                <button type="button" onClick={() => handleStartVerification('email', email)} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">Verify</button>
                             )}
                         </div>
                         {verifyingField === 'email' && (
                             <div className="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100 animate-fade-in">
-                                <p className="text-xs text-blue-600 mb-2">Code sent to System Mailbox. Check the inbox icon in header.</p>
+                                <p className="text-xs text-blue-600 mb-2">Code sent to System Mailbox.</p>
                                 <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Enter OTP" 
-                                        value={enteredOTP}
-                                        onChange={e => setEnteredOTP(e.target.value)}
-                                        className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"
-                                    />
+                                    <input type="text" placeholder="Enter OTP" value={enteredOTP} onChange={e => setEnteredOTP(e.target.value)} className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"/>
                                     <button type="button" onClick={handleVerifyOTP} className="px-3 bg-blue-600 text-white rounded-lg text-xs font-bold">Confirm</button>
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {/* Phone Field with Verification */}
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
                         <div className="flex gap-2">
@@ -247,41 +230,26 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                                 className="flex-1 p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" 
                             />
                             {phone !== userProfile.phone && !isVerified.phone && (
-                                <button 
-                                    type="button" 
-                                    onClick={() => handleStartVerification('phone', phone)}
-                                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
-                                >
-                                    Verify
-                                </button>
+                                <button type="button" onClick={() => handleStartVerification('phone', phone)} className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">Verify</button>
                             )}
                         </div>
                         {verifyingField === 'phone' && (
                             <div className="mt-2 p-3 bg-blue-50 rounded-xl border border-blue-100 animate-fade-in">
                                 <p className="text-xs text-blue-600 mb-2">Code sent to System Mailbox.</p>
                                 <div className="flex gap-2">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Enter OTP" 
-                                        value={enteredOTP}
-                                        onChange={e => setEnteredOTP(e.target.value)}
-                                        className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"
-                                    />
+                                    <input type="text" placeholder="Enter OTP" value={enteredOTP} onChange={e => setEnteredOTP(e.target.value)} className="flex-1 p-2 rounded-lg text-center font-mono border border-blue-200"/>
                                     <button type="button" onClick={handleVerifyOTP} className="px-3 bg-blue-600 text-white rounded-lg text-xs font-bold">Confirm</button>
                                 </div>
                             </div>
                         )}
                     </div>
-
                     <div>
                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">New Password</label>
                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Optional" className="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-amber-500" />
                     </div>
                     <div className="flex gap-3 pt-4">
                         <button type="button" onClick={() => setIsEditing(false)} className="flex-1 py-3 font-bold text-gray-500 bg-gray-100 rounded-xl">Cancel</button>
-                        <button type="submit" disabled={isSubmitting} className="flex-1 py-3 font-bold text-white bg-amber-500 rounded-xl shadow-lg shadow-amber-500/30">
-                            {isSubmitting ? 'Saving...' : 'Save Changes'}
-                        </button>
+                        <button type="submit" disabled={isSubmitting} className="flex-1 py-3 font-bold text-white bg-amber-500 rounded-xl shadow-lg shadow-amber-500/30">{isSubmitting ? 'Saving...' : 'Save Changes'}</button>
                     </div>
                 </form>
             </div>
@@ -316,42 +284,85 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
     return (
         <div className="max-w-2xl mx-auto pb-24 space-y-6 animate-fade-in">
             
-            {/* Header Card */}
-            <div className={`p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden ${isAdvertiser ? 'bg-slate-900 text-white' : 'bg-white'}`}>
-                <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
-                    <div className={`w-24 h-24 rounded-full border-4 shadow-lg p-1 overflow-hidden relative ${isAdvertiser ? 'border-slate-700 bg-slate-800' : 'border-white bg-gradient-to-br from-amber-100 to-yellow-50'}`}>
-                        <img 
-                            src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
-                            alt="Profile" 
-                            className="w-full h-full rounded-full object-cover" 
-                        />
-                        <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <PencilSquareIcon className="w-8 h-8 text-white drop-shadow-md" />
+            {/* Unique Premium Card for Business (Advertiser) */}
+            {isAdvertiser ? (
+                <div className="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#000] rounded-3xl p-6 shadow-2xl text-white relative overflow-hidden border border-blue-500/20">
+                    {/* Decorative Platinum/Blue Sheen */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full blur-[80px] -mr-16 -mt-16"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-slate-500/10 rounded-full blur-[60px] -ml-10 -mb-10"></div>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+
+                    <div className="relative z-10 flex items-center gap-6">
+                        <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
+                            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 border border-slate-600 shadow-lg p-1 overflow-hidden relative">
+                                <img 
+                                    src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
+                                    alt="Profile" 
+                                    className="w-full h-full rounded-xl object-cover grayscale-[0.3] group-hover:grayscale-0 transition-all" 
+                                />
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <PencilSquareIcon className="w-8 h-8 text-white drop-shadow-md" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h2 className="text-3xl font-black tracking-tight font-heading text-white mb-1">{userProfile.username}</h2>
+                                    <div className="flex items-center gap-2 text-blue-300 text-sm font-medium mb-3">
+                                        <BriefcaseIcon className="w-4 h-4" />
+                                        <span>Corporate Account</span>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsEditing(true)} className="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">
+                                    Settings
+                                </button>
+                            </div>
+                            <div className="flex gap-2 mt-1">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-900/50 border border-blue-500/30 text-blue-200 text-[10px] font-bold uppercase tracking-wider">
+                                    <CheckCircleIcon className="w-3 h-3" /> Verified
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-800 border border-slate-600 text-slate-300 text-[10px] font-bold uppercase tracking-wider">
+                                    ID: {userProfile.uid.slice(0, 6)}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    {/* Level Badge on Profile - Hide for Advertiser */}
-                    {!isAdvertiser && (
+                </div>
+            ) : (
+                <div className="p-6 rounded-3xl shadow-subtle border border-gray-100 flex items-center gap-5 relative overflow-hidden bg-white">
+                    <div className="relative group cursor-pointer" onClick={() => setIsEditingPhoto(true)}>
+                        <div className="w-24 h-24 rounded-full border-4 border-white bg-gradient-to-br from-amber-100 to-yellow-50 shadow-lg p-1 overflow-hidden relative">
+                            <img 
+                                src={userProfile.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${userProfile.username}`} 
+                                alt="Profile" 
+                                className="w-full h-full rounded-full object-cover" 
+                            />
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <PencilSquareIcon className="w-8 h-8 text-white drop-shadow-md" />
+                            </div>
+                        </div>
                         <div className={`absolute bottom-0 right-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(userProfile.level || 1)}`}>
                             {userProfile.level || 1}
                         </div>
-                    )}
-                </div>
-                <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <h2 className={`text-2xl font-black tracking-tight ${isAdvertiser ? 'text-white' : 'text-slate-900'}`}>{userProfile.username}</h2>
-                            <p className={`text-sm mb-2 font-medium ${isAdvertiser ? 'text-slate-400' : 'text-slate-500'}`}>{userProfile.email}</p>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-black tracking-tight text-slate-900">{userProfile.username}</h2>
+                                <p className="text-sm mb-2 font-medium text-slate-500">{userProfile.email}</p>
+                            </div>
+                            <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
+                                Edit Info
+                            </button>
                         </div>
-                        <button onClick={() => setIsEditing(true)} className="text-sm font-bold text-amber-600 hover:text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">
-                            Edit Info
-                        </button>
-                    </div>
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm mt-1 ${isAdvertiser ? 'bg-blue-600 text-white' : 'bg-slate-900 text-white'}`}>
-                        {isAdvertiser ? <BuildingIcon className="w-3.5 h-3.5"/> : <CrownIcon className="w-3.5 h-3.5 text-amber-400" />}
-                        <span>{isAdvertiser ? 'Business Account' : (userProfile.levelName || 'Member')}</span>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold shadow-sm mt-1 bg-slate-900 text-white">
+                            <CrownIcon className="w-3.5 h-3.5 text-amber-400" />
+                            <span>{userProfile.levelName || 'Member'}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Section: Corporate Settings (Advertiser Only) */}
             {isAdvertiser && (
@@ -431,7 +442,14 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
             <div className="space-y-2">
                 <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Support</p>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <MenuRow icon={<InfoIcon className="w-5 h-5" />} label="How It Works" onClick={() => onNavigate('HOW_IT_WORKS')} />
+                    {isAdvertiser ? (
+                        <>
+                            <MenuRow icon={<TargetIcon className="w-5 h-5" />} label="Ads Guide" onClick={() => onNavigate('ADS_GUIDE')} />
+                            <MenuRow icon={<ShieldCheck className="w-5 h-5" />} label="Ads Policy" onClick={() => onNavigate('ADS_POLICY')} />
+                        </>
+                    ) : (
+                        <MenuRow icon={<InfoIcon className="w-5 h-5" />} label="How It Works" onClick={() => onNavigate('HOW_IT_WORKS')} />
+                    )}
                     <MenuRow icon={<ShieldCheck className="w-5 h-5" />} label="Privacy Policy" onClick={() => onNavigate('PRIVACY_POLICY')} />
                     <MenuRow icon={<DocumentTextIcon className="w-5 h-5" />} label="Terms of Service" onClick={() => onNavigate('TERMS_CONDITIONS')} />
                     <MenuRow icon={<LogoutIcon className="w-5 h-5" />} label="Log Out" onClick={onLogout} isDestructive rightElement={<ArrowRight className="w-4 h-4 text-red-400" />} />

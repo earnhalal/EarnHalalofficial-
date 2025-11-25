@@ -1,12 +1,12 @@
 
 // components/WalletView.tsx
 import React, { useState, useEffect } from 'react';
-import type { Transaction, WithdrawalDetails } from '../types';
+import type { Transaction, WithdrawalDetails, UserMode } from '../types';
 import { TransactionType } from '../types';
 import {
   WalletIcon, PencilSquareIcon, BankIcon, NayaPayIcon,
   SadaPayIcon, UPaisaIcon, JazzCashIcon, EasyPaisaIcon, CheckCircleIcon,
-  ArrowRight, SparklesIcon, ArrowUpCircleIcon
+  ArrowRight, SparklesIcon, ArrowUpCircleIcon, PlusCircleIcon
 } from './icons';
 
 interface WalletViewProps {
@@ -18,7 +18,8 @@ interface WalletViewProps {
   savedDetails: WithdrawalDetails | null;
   hasPin: boolean;
   onSetupPin: () => void;
-  joinedAt?: any; // Passed from App.tsx
+  joinedAt?: any;
+  userMode?: UserMode; // Added Prop
 }
 
 type Method = 'JazzCash' | 'EasyPaisa' | 'Bank Transfer' | 'NayaPay' | 'SadaPay' | 'UPaisa';
@@ -55,7 +56,7 @@ const CardChip = () => (
     </div>
 );
 
-const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin, joinedAt }) => {
+const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transactions, username, onWithdraw, savedDetails, hasPin, onSetupPin, joinedAt, userMode }) => {
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<Method | null>(savedDetails?.method || null);
   const [accountName, setAccountName] = useState('');
@@ -63,6 +64,8 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
   const [bankName, setBankName] = useState('');
   const [message, setMessage] = useState('');
   const [isEditingDetails, setIsEditingDetails] = useState(!savedDetails);
+
+  const isAdvertiser = userMode === 'ADVERTISER';
 
   useEffect(() => {
       if (savedDetails && !isEditingDetails) {
@@ -134,15 +137,28 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
           {/* Card Container */}
           <div className="relative w-full aspect-[1.586/1] rounded-[20px] p-6 sm:p-8 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] overflow-hidden transform transition-all duration-500 hover:scale-[1.02] hover:shadow-amber-500/20 border border-amber-500/20 bg-[#0a0a0a]">
               
-              {/* 1. Background - Premium Matte Black with Gold Sheen */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#050505] to-[#000000]"></div>
+              {/* 1. Background */}
+              {isAdvertiser ? (
+                  <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
+              ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] via-[#050505] to-[#000000]"></div>
+              )}
               
-              {/* 2. Gold Noise Texture Overlay */}
+              {/* 2. Texture Overlay */}
               <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
               
-              {/* 3. Abstract Gold Glows */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px]"></div>
-              <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-[50px]"></div>
+              {/* 3. Abstract Glows */}
+              {isAdvertiser ? (
+                  <>
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-500/20 rounded-full blur-[60px]"></div>
+                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-indigo-500/20 rounded-full blur-[50px]"></div>
+                  </>
+              ) : (
+                  <>
+                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[60px]"></div>
+                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-amber-600/10 rounded-full blur-[50px]"></div>
+                  </>
+              )}
 
               {/* 4. Layout Content */}
               <div className="relative z-10 h-full flex flex-col justify-between">
@@ -151,13 +167,15 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                   <div className="flex justify-between items-start">
                       <div className="flex flex-col">
                           {/* TaskMint Logo Text inside Card */}
-                          <span className="font-black text-xl sm:text-2xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 tracking-tighter font-heading italic">
-                              TaskMint
+                          <span className={`font-black text-xl sm:text-2xl tracking-tighter font-heading italic ${isAdvertiser ? 'text-white' : 'text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200'}`}>
+                              TaskMint {isAdvertiser && <span className="text-blue-300 text-sm not-italic">Business</span>}
                           </span>
-                          <span className="text-[8px] text-amber-500/70 tracking-[0.2em] uppercase font-bold">Premium Member</span>
+                          <span className={`text-[8px] tracking-[0.2em] uppercase font-bold ${isAdvertiser ? 'text-blue-200/70' : 'text-amber-500/70'}`}>
+                              {isAdvertiser ? 'Corporate Account' : 'Premium Member'}
+                          </span>
                       </div>
                       <div className="scale-75 origin-top-right opacity-90 filter drop-shadow-lg grayscale-[0.2] brightness-125">
-                          {methodIcon}
+                          {isAdvertiser ? <WalletIcon className="w-10 h-10 text-blue-300"/> : methodIcon}
                       </div>
                   </div>
 
@@ -168,21 +186,21 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                           <ContactlessIcon className="w-6 h-6 text-white/40 rotate-90" />
                       </div>
                       <p className="text-xl sm:text-2xl font-mono font-bold tracking-[0.12em] text-gray-100 drop-shadow-md" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                          {formattedCardNumber}
+                          {isAdvertiser ? "**** **** **** " + (balance.toFixed(0).padStart(4, '0')) : formattedCardNumber}
                       </p>
                   </div>
 
                   {/* Bottom Row: Holder & Expiry */}
                   <div className="flex justify-between items-end">
                       <div>
-                          <p className="text-[7px] text-amber-500/80 uppercase tracking-widest mb-0.5 font-bold">Card Holder</p>
+                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-blue-300/80' : 'text-amber-500/80'}`}>Card Holder</p>
                           <p className="text-sm sm:text-base text-gray-100 font-heading font-semibold tracking-wider uppercase drop-shadow-sm truncate max-w-[180px]">
                               {accountName || savedDetails?.accountName || username || "VALUED MEMBER"}
                           </p>
                       </div>
 
                       <div className="text-right">
-                          <p className="text-[7px] text-amber-500/80 uppercase tracking-widest mb-0.5 font-bold">Valid Thru</p>
+                          <p className={`text-[7px] uppercase tracking-widest mb-0.5 font-bold ${isAdvertiser ? 'text-blue-300/80' : 'text-amber-500/80'}`}>Valid Thru</p>
                           <p className="text-sm font-mono text-gray-100 font-bold tracking-widest drop-shadow-sm">
                               {formatJoinedDate(joinedAt)}
                           </p>
@@ -192,7 +210,7 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
           </div>
       </div>
 
-      {!hasPin && (
+      {!hasPin && !isAdvertiser && (
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm animate-fade-in gap-4">
               <div className="flex items-center gap-3">
                   <div className="p-2 bg-amber-100 rounded-lg text-amber-700">
@@ -209,111 +227,113 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
           </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Withdrawal Section */}
-          <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
-                  Request Withdrawal
-              </h3>
+      <div className={`grid grid-cols-1 ${isAdvertiser ? '' : 'lg:grid-cols-3'} gap-8`}>
+          {/* Withdrawal Section - HIDDEN FOR ADVERTISERS */}
+          {!isAdvertiser && (
+              <div className="lg:col-span-2 space-y-6">
+                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                      <span className="w-1.5 h-6 bg-amber-500 rounded-full"></span>
+                      Request Withdrawal
+                  </h3>
 
-              <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100">
-                  {savedDetails && !isEditingDetails ? (
-                      <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                          <div className="flex items-center gap-4">
-                              <div className="p-3 bg-white rounded-xl shadow-sm text-slate-700">
-                                  <CheckCircleIcon className="w-6 h-6 text-green-500" />
-                              </div>
-                              <div>
-                                  <p className="text-xs text-slate-500 font-bold uppercase mb-0.5">Sending to Saved Account</p>
-                                  <p className="font-bold text-slate-900">{savedDetails.method} • {savedDetails.accountNumber}</p>
-                              </div>
-                          </div>
-                          <button onClick={handleUseDifferentAccount} className="p-2 text-slate-400 hover:text-amber-600 transition-colors">
-                              <PencilSquareIcon className="w-5 h-5" />
-                          </button>
-                      </div>
-                  ) : (
-                      <div className="space-y-6">
-                          <div>
-                              <label className="block text-xs font-bold text-gray-400 uppercase mb-3">Select Method</label>
-                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                  {paymentMethods.map((method) => (
-                                      <button
-                                          key={method.id}
-                                          onClick={() => handleMethodSelect(method.id)}
-                                          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
-                                              selectedMethod === method.id 
-                                                  ? `${method.color} shadow-md ring-1 ring-offset-1 ring-transparent` 
-                                                  : 'border-gray-100 bg-white text-gray-400 hover:bg-gray-50 hover:border-gray-200'
-                                          }`}
-                                      >
-                                          <div className="mb-2 scale-90 sm:scale-100">{method.icon}</div>
-                                          <span className="text-[10px] sm:text-xs font-bold text-center">{method.name}</span>
-                                      </button>
-                                  ))}
-                              </div>
-                          </div>
-
-                          {selectedMethod && (
-                              <div className="space-y-4 animate-fade-in">
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                      <div>
-                                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Account Title</label>
-                                          <input type="text" value={accountName} onChange={e => setAccountName(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="e.g. Muhammad Ali" />
-                                      </div>
-                                      <div>
-                                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Account Number</label>
-                                          <input type="text" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="0300..." />
-                                      </div>
+                  <div className="bg-white p-6 rounded-3xl shadow-subtle border border-gray-100">
+                      {savedDetails && !isEditingDetails ? (
+                          <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                              <div className="flex items-center gap-4">
+                                  <div className="p-3 bg-white rounded-xl shadow-sm text-slate-700">
+                                      <CheckCircleIcon className="w-6 h-6 text-green-500" />
                                   </div>
-                                  {selectedMethod === 'Bank Transfer' && (
-                                      <div>
-                                          <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Bank Name</label>
-                                          <input type="text" value={bankName} onChange={e => setBankName(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="e.g. HBL, Meezan" />
-                                      </div>
-                                  )}
+                                  <div>
+                                      <p className="text-xs text-slate-500 font-bold uppercase mb-0.5">Sending to Saved Account</p>
+                                      <p className="font-bold text-slate-900">{savedDetails.method} • {savedDetails.accountNumber}</p>
+                                  </div>
                               </div>
+                              <button onClick={handleUseDifferentAccount} className="p-2 text-slate-400 hover:text-amber-600 transition-colors">
+                                  <PencilSquareIcon className="w-5 h-5" />
+                              </button>
+                          </div>
+                      ) : (
+                          <div className="space-y-6">
+                              <div>
+                                  <label className="block text-xs font-bold text-gray-400 uppercase mb-3">Select Method</label>
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                      {paymentMethods.map((method) => (
+                                          <button
+                                              key={method.id}
+                                              onClick={() => handleMethodSelect(method.id)}
+                                              className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
+                                                  selectedMethod === method.id 
+                                                      ? `${method.color} shadow-md ring-1 ring-offset-1 ring-transparent` 
+                                                      : 'border-gray-100 bg-white text-gray-400 hover:bg-gray-50 hover:border-gray-200'
+                                              }`}
+                                          >
+                                              <div className="mb-2 scale-90 sm:scale-100">{method.icon}</div>
+                                              <span className="text-[10px] sm:text-xs font-bold text-center">{method.name}</span>
+                                          </button>
+                                      ))}
+                                  </div>
+                              </div>
+
+                              {selectedMethod && (
+                                  <div className="space-y-4 animate-fade-in">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                          <div>
+                                              <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Account Title</label>
+                                              <input type="text" value={accountName} onChange={e => setAccountName(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="e.g. Muhammad Ali" />
+                                          </div>
+                                          <div>
+                                              <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Account Number</label>
+                                              <input type="text" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="0300..." />
+                                          </div>
+                                      </div>
+                                      {selectedMethod === 'Bank Transfer' && (
+                                          <div>
+                                              <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Bank Name</label>
+                                              <input type="text" value={bankName} onChange={e => setBankName(e.target.value)} className="w-full p-4 bg-gray-50 rounded-xl border-none font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300" placeholder="e.g. HBL, Meezan" />
+                                          </div>
+                                      )}
+                                  </div>
+                              )}
+                          </div>
+                      )}
+
+                      <div className="mt-8 pt-6 border-t border-gray-100">
+                          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Withdrawal Amount</label>
+                          <div className="relative">
+                              <input
+                                  type="number"
+                                  value={amount}
+                                  onChange={e => setAmount(e.target.value)}
+                                  placeholder="Min 1000"
+                                  className="w-full p-4 pl-12 pr-32 bg-gray-50 rounded-2xl border-none text-xl font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300"
+                              />
+                              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rs</span>
+                              <button 
+                                  onClick={handleWithdraw}
+                                  disabled={!amount || parseFloat(amount) < 1000}
+                                  className="absolute right-2 top-2 bottom-2 bg-slate-900 text-white px-6 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                              >
+                                  Withdraw <ArrowRight className="w-4 h-4" />
+                              </button>
+                          </div>
+                          {message && (
+                            <div className={`mt-4 p-3 rounded-xl text-center text-sm font-bold flex items-center justify-center gap-2 ${message.includes('submitted') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                              {message.includes('submitted') ? <CheckCircleIcon className="w-5 h-5"/> : null}
+                              {message}
+                            </div>
                           )}
                       </div>
-                  )}
-
-                  <div className="mt-8 pt-6 border-t border-gray-100">
-                      <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Withdrawal Amount</label>
-                      <div className="relative">
-                          <input
-                              type="number"
-                              value={amount}
-                              onChange={e => setAmount(e.target.value)}
-                              placeholder="Min 1000"
-                              className="w-full p-4 pl-12 pr-32 bg-gray-50 rounded-2xl border-none text-xl font-bold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-gray-300"
-                          />
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Rs</span>
-                          <button 
-                              onClick={handleWithdraw}
-                              disabled={!amount || parseFloat(amount) < 1000}
-                              className="absolute right-2 top-2 bottom-2 bg-slate-900 text-white px-6 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                          >
-                              Withdraw <ArrowRight className="w-4 h-4" />
-                          </button>
-                      </div>
-                      {message && (
-                        <div className={`mt-4 p-3 rounded-xl text-center text-sm font-bold flex items-center justify-center gap-2 ${message.includes('submitted') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                           {message.includes('submitted') ? <CheckCircleIcon className="w-5 h-5"/> : null}
-                           {message}
-                        </div>
-                      )}
                   </div>
               </div>
-          </div>
+          )}
 
           {/* Transaction History */}
           <div className="space-y-4">
               <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <span className="w-1.5 h-6 bg-slate-300 rounded-full"></span>
-                  History
+                  <span className={`w-1.5 h-6 rounded-full ${isAdvertiser ? 'bg-blue-500' : 'bg-slate-300'}`}></span>
+                  {isAdvertiser ? 'Funds Ledger' : 'History'}
               </h3>
-              <div className="bg-white rounded-3xl shadow-subtle border border-gray-100 overflow-hidden h-[500px] overflow-y-auto custom-scrollbar">
+              <div className={`bg-white rounded-3xl shadow-subtle border border-gray-100 overflow-hidden overflow-y-auto custom-scrollbar ${isAdvertiser ? 'h-[600px]' : 'h-[500px]'}`}>
                   {transactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8 text-center">
                           <WalletIcon className="w-12 h-12 mb-2 opacity-20" />
@@ -326,12 +346,16 @@ const WalletView: React.FC<WalletViewProps> = ({ balance, pendingRewards, transa
                                   <div className="flex items-center gap-3">
                                       <div className={`p-2.5 rounded-xl transition-colors ${
                                           tx.type === TransactionType.WITHDRAWAL
-                                            ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-200' // Amber for withdrawals
-                                            : tx.amount >= 0 
-                                                ? 'bg-green-50 text-green-600 group-hover:bg-green-100' 
-                                                : 'bg-red-50 text-red-500 group-hover:bg-red-100'
+                                            ? 'bg-amber-100 text-amber-600 group-hover:bg-amber-200'
+                                            : tx.type === TransactionType.DEPOSIT || tx.type === TransactionType.PENDING_DEPOSIT
+                                                ? 'bg-blue-50 text-blue-600 group-hover:bg-blue-100'
+                                                : tx.amount >= 0 
+                                                    ? 'bg-green-50 text-green-600 group-hover:bg-green-100' 
+                                                    : 'bg-red-50 text-red-500 group-hover:bg-red-100'
                                         }`}>
-                                          {tx.type === TransactionType.WITHDRAWAL ? <WalletIcon className="w-5 h-5" /> : (tx.amount >= 0 ? <ArrowUpCircleIcon className="w-5 h-5 rotate-180" /> : <ArrowUpCircleIcon className="w-5 h-5" />)}
+                                          {tx.type === TransactionType.WITHDRAWAL ? <WalletIcon className="w-5 h-5" /> : 
+                                           tx.type === TransactionType.DEPOSIT || tx.type === TransactionType.PENDING_DEPOSIT ? <PlusCircleIcon className="w-5 h-5" /> :
+                                           (tx.amount >= 0 ? <ArrowUpCircleIcon className="w-5 h-5 rotate-180" /> : <ArrowUpCircleIcon className="w-5 h-5" />)}
                                       </div>
                                       <div>
                                           <p className={`font-bold text-sm ${tx.type === TransactionType.WITHDRAWAL ? 'text-amber-700' : 'text-slate-900'}`}>{tx.type}</p>

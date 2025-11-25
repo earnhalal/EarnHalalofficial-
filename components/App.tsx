@@ -11,6 +11,7 @@ import TaskHistoryView from './TaskHistoryView';
 import InviteView from './InviteView';
 import ProfileSettingsView from './ProfileSettingsView';
 import { HowItWorksView, AboutUsView, ContactUsView, PrivacyPolicyView, TermsAndConditionsView } from './InfoViews';
+import { AdsGuideView, AdsPolicyView } from './AdsInfoViews';
 import JobsView from './JobsView';
 import BottomNav from './Footer';
 import AuthView from './AuthView';
@@ -35,6 +36,7 @@ import CoinFlipGame from './games/CoinFlipGame';
 import MinesGame from './games/MinesGame';
 import AdvertiserDashboard from './AdvertiserDashboard';
 import PostJobView from './PostJobView';
+import ModeSwitchLoader from './ModeSwitchLoader'; // Import the loader
 import { GameControllerIcon, CloseIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog, UserMode } from '../types';
@@ -122,12 +124,12 @@ const UpdatesView: React.FC<UpdatesViewProps> = ({ updates, seenIds, onMarkAsRea
 
 const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [isSwitchingMode, setIsSwitchingMode] = useState(false); // New State for Switch Loader
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [userMode, setUserMode] = useState<UserMode>('EARNER'); // State for Mode Switching
+  const [userMode, setUserMode] = useState<UserMode>('EARNER');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Initialize activeView from history state to handle refresh correctly
   const [activeView, setActiveViewInternal] = useState<View>(() => {
       if (typeof window !== 'undefined' && window.history.state?.view) {
           return window.history.state.view as View;
@@ -135,7 +137,6 @@ const App: React.FC = () => {
       return 'DASHBOARD';
   });
 
-  // Mailbox Overlay State (Global Modal)
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
 
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
@@ -188,9 +189,9 @@ const App: React.FC = () => {
   }, [user]); 
 
   const setActiveView = useCallback((view: View) => {
-      setIsSidebarOpen(false); // Auto close sidebar on navigation
+      setIsSidebarOpen(false); 
       if (view === 'MAILBOX') {
-          setIsMailboxOpen(true); // Open modal instead of changing view
+          setIsMailboxOpen(true);
       } else {
           setActiveViewInternal((currentView) => {
               if (currentView !== view) {
@@ -204,11 +205,17 @@ const App: React.FC = () => {
   }, []);
 
   const toggleUserMode = () => {
-      setUserMode(prev => {
-          const newMode = prev === 'EARNER' ? 'ADVERTISER' : 'EARNER';
-          setActiveView(newMode === 'ADVERTISER' ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD');
-          return newMode;
-      });
+      setIsSwitchingMode(true); // Start loading animation
+      
+      // Delay switching by 5 seconds to show the loader
+      setTimeout(() => {
+          setUserMode(prev => {
+              const newMode = prev === 'EARNER' ? 'ADVERTISER' : 'EARNER';
+              setActiveView(newMode === 'ADVERTISER' ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD');
+              return newMode;
+          });
+          setIsSwitchingMode(false); // End loading animation
+      }, 5000);
   };
 
   const sendSystemEmail = async (userId: string, userEmail: string, type: EmailLog['type'], subject: string, htmlContent: string) => {
@@ -240,7 +247,6 @@ const App: React.FC = () => {
       }
   };
 
-  // --- NEW: Verification OTP Handler ---
   const handleSendVerificationOTP = async (type: 'email' | 'phone', destination: string, otp: string) => {
       if (!user) return;
       const subject = `Verify your ${type === 'email' ? 'Email Address' : 'Phone Number'}`;
@@ -396,11 +402,9 @@ const App: React.FC = () => {
           const userCredential = await signInWithEmailAndPassword(auth, email, password); 
           const user = userCredential.user;
           
-          // Check if device is recognized to avoid spamming login alerts
           const storedDeviceId = localStorage.getItem('taskmint_device_id');
           
           if (!storedDeviceId) {
-               // New Device Detected
                const newDeviceId = Math.random().toString(36).substring(7);
                localStorage.setItem('taskmint_device_id', newDeviceId);
                
@@ -414,7 +418,6 @@ const App: React.FC = () => {
                `;
                await sendSystemEmail(user.uid, user.email || email, 'Security Alert', 'New Login Detected', alertTemplate);
           }
-          // If storedDeviceId exists, we assume it's the same trusted device and do NOT send an alert.
 
           setAuthAction(null); 
       } catch (error: any) { alert(`Login failed: ${error.message}`); } 
@@ -463,18 +466,15 @@ const App: React.FC = () => {
       const batch = writeBatch(db);
       const userRef = doc(db, "users", user.uid);
       
-      // 1. Add to jobs collection
       const jobRef = doc(collection(db, "jobs"));
       batch.set(jobRef, { 
           ...jobData, 
           postedAt: serverTimestamp(), 
-          postedBy: user.uid // Link to advertiser
+          postedBy: user.uid 
       });
 
-      // 2. Deduct balance
       batch.update(userRef, { balance: increment(-cost) });
       
-      // 3. Log transaction
       batch.set(doc(collection(userRef, "transactions")), { 
           type: TransactionType.JOB_POSTING_FEE, 
           description: `Posted Job: ${jobData.title}`, 
@@ -571,7 +571,7 @@ const App: React.FC = () => {
       // EARNER VIEWS
       DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} onSwitchMode={toggleUserMode} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
-      WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} />,
+      WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} userMode={userMode} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
       INVITE: <InviteView userProfile={userProfile} referrals={referrals} />,
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
@@ -598,6 +598,8 @@ const App: React.FC = () => {
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       POST_JOB: <PostJobView balance={userProfile?.balance ?? 0} onPostJob={handlePostJob} />,
       MANAGE_CAMPAIGNS: <TaskHistoryView userTasks={userCreatedTasks} />,
+      ADS_GUIDE: <AdsGuideView />,
+      ADS_POLICY: <AdsPolicyView />,
     };
     return views[activeView] || (userMode === 'ADVERTISER' ? views['ADVERTISER_DASHBOARD'] : views['DASHBOARD']);
   };
@@ -610,6 +612,12 @@ const App: React.FC = () => {
     <>
       {notificationPermission === 'default' && <NotificationBanner onRequestPermission={() => Notification.requestPermission().then(setNotificationPermission)} onDismiss={() => setNotificationPermission('dismissed')} />}
       {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+      
+      {/* Switching Loader Overlay */}
+      {isSwitchingMode && (
+          <ModeSwitchLoader targetMode={userMode === 'EARNER' ? 'ADVERTISER' : 'EARNER'} />
+      )}
+
       <div className="fixed top-4 right-4 z-[100] space-y-3 w-full max-w-sm"> {notifications.map(n => (<NotificationToast key={n.id} title={n.title} message={n.message} type={n.type} onClose={() => setNotifications(prev => prev.filter(i => i.id !== n.id))} />))} </div>
       
       {/* GLOBAL MAILBOX OVERLAY */}
