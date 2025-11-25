@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
     MenuIcon, CloseIcon, WalletIcon, CheckCircleIcon, BankIcon, 
-    FacebookIcon, InstagramIcon, YoutubeIcon, LockIcon,
-    SparklesIcon, UserGroupIcon, TrophyIcon, Globe, ShieldCheck, ArrowRight
+    SparklesIcon, UserGroupIcon, TrophyIcon, ArrowRight, ShieldCheck,
+    BriefcaseIcon, DiamondIcon
 } from './icons';
 import { InfoModal, renderModalContent } from './LandingInfoViews';
 
@@ -42,15 +42,23 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
   return (
     <>
       <style>{`
-        .btn-gold {
+        .text-gold-gradient {
+            background: linear-gradient(to right, #D4AF37, #F59E0B, #B45309);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-gold-gradient {
             background: linear-gradient(to right, #F59E0B, #D97706);
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
-            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39);
             transition: all 0.3s ease;
         }
         .btn-gold:hover {
             transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(245, 158, 11, 0.4);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.23);
             filter: brightness(1.1);
         }
         .btn-outline-gold {
@@ -100,7 +108,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
               <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-105">
                 <SparklesIcon className="w-6 h-6" />
               </div>
-              <span className="font-black text-xl tracking-tighter font-heading text-slate-900">Task<span className="text-amber-600">Mint</span></span>
+              <span className="font-black text-2xl tracking-tighter font-heading text-slate-900">Task<span className="text-gold-gradient">Mint</span></span>
             </div>
 
             <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-gray-600">
@@ -112,7 +120,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
 
             <div className="hidden md:flex items-center gap-4">
               <button onClick={() => onGetStarted('login')} className="text-slate-900 hover:text-amber-600 font-black transition-colors">Log In</button>
-              <button onClick={() => onGetStarted('signup')} className="btn-gold px-6 py-2.5 rounded-full font-bold text-sm">
+              <button onClick={() => onGetStarted('signup')} className="btn-gold px-6 py-2.5 rounded-full font-bold text-sm shadow-gold">
                 Start Earning
               </button>
             </div>
@@ -138,25 +146,25 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             {/* --- Hero Section --- */}
             <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden bg-white">
                 <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-amber-50 rounded-full blur-3xl opacity-60 -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gray-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-slate-50 rounded-full blur-3xl opacity-60 translate-y-1/3 -translate-x-1/4 pointer-events-none"></div>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-gray-200 text-gray-600 text-sm font-bold mb-8 shadow-sm animate-fade-in-up">
                         <span className="flex h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
-                        The #1 Earning App
+                        The #1 Premium Earning Platform
                     </div>
                     
                     <h1 className="text-5xl md:text-7xl font-black text-slate-900 mb-6 leading-tight tracking-tighter animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                         Turn Your Time Into <br/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600 drop-shadow-sm">Real Money.</span>
+                        <span className="text-gold-gradient drop-shadow-sm">Digital Gold.</span>
                     </h1>
                     
                     <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed font-medium animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-                        TaskMint is the premium platform for smart earners. Complete simple digital tasks, get instant gold rewards, and withdraw directly to your wallet.
+                        TaskMint is the elite platform for smart hustlers. Complete premium tasks, access exclusive jobs, and withdraw instantly to your local wallet.
                     </p>
                     
                     <div className="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
-                        <button onClick={() => onGetStarted('signup')} className="btn-gold px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 group">
+                        <button onClick={() => onGetStarted('signup')} className="btn-gold px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-2 group shadow-lg hover:shadow-xl transition-all">
                             Start Earning Now 
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </button>
@@ -165,18 +173,18 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                         </button>
                     </div>
 
-                    <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16 text-slate-500 font-bold animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+                    <div className="mt-16 flex flex-wrap justify-center gap-8 md:gap-16 text-slate-600 font-bold animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                          <div className="flex items-center gap-2">
-                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
-                             <span>Verified Tasks</span>
+                             <div className="p-1 rounded-full bg-green-100 text-green-600"><CheckCircleIcon className="w-4 h-4" /></div>
+                             <span>Verified Premium Tasks</span>
                          </div>
                          <div className="flex items-center gap-2">
-                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
-                             <span>Instant Payouts</span>
+                             <div className="p-1 rounded-full bg-green-100 text-green-600"><CheckCircleIcon className="w-4 h-4" /></div>
+                             <span>Instant Local Payouts</span>
                          </div>
                          <div className="flex items-center gap-2">
-                             <CheckCircleIcon className="w-5 h-5 text-amber-500" />
-                             <span>Secure Platform</span>
+                             <div className="p-1 rounded-full bg-green-100 text-green-600"><CheckCircleIcon className="w-4 h-4" /></div>
+                             <span>Bank-Grade Security</span>
                          </div>
                     </div>
                 </div>
@@ -186,19 +194,19 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             <section className="py-16 bg-[#F9FAFB] border-y border-gray-100">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        <div>
+                        <div className="animate-fade-in-up" style={{animationDelay: '0.1s'}}>
                             <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">1.5M+</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Tasks Completed</p>
                         </div>
-                        <div>
+                        <div className="animate-fade-in-up" style={{animationDelay: '0.2s'}}>
                             <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">5M+</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Paid Out (Rs)</p>
                         </div>
-                        <div>
+                        <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
                             <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">24h</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">Avg. Withdrawal</p>
                         </div>
-                        <div>
+                        <div className="animate-fade-in-up" style={{animationDelay: '0.4s'}}>
                             <p className="text-4xl font-black text-slate-900 mb-1 tracking-tight">4.9/5</p>
                             <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">User Rating</p>
                         </div>
@@ -211,45 +219,45 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                  <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-amber-600 font-bold tracking-widest uppercase text-sm mb-3">The TaskMint Advantage</h2>
-                        <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Designed for <br/> Maximum Earnings.</h3>
+                        <h3 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">Designed for <br/> Maximum Profit.</h3>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
-                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
-                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                        <div className="bg-white border border-gray-100 p-8 rounded-[32px] shadow-card hover:shadow-gold transition-all duration-300 group hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
                                 <WalletIcon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-slate-900 mb-3">Fast Withdrawals</h4>
-                            <p className="text-slate-500 leading-relaxed font-medium">
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Instant Withdrawals</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium text-sm">
                                 Access your funds quickly. We process payouts via JazzCash, EasyPaisa, and Bank Transfer within 24-48 hours.
                             </p>
                         </div>
 
-                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
-                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
-                                <ShieldCheck className="w-8 h-8" />
+                        <div className="bg-white border border-gray-100 p-8 rounded-[32px] shadow-card hover:shadow-gold transition-all duration-300 group hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
+                                <BriefcaseIcon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-slate-900 mb-3">Bank-Grade Security</h4>
-                            <p className="text-slate-500 leading-relaxed font-medium">
-                                Your data and earnings are protected with top-tier encryption. We prioritize user privacy above all else.
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Premium Jobs</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium text-sm">
+                                Unlock high-paying opportunities like data entry and reviews. Subscribe to premium plans for unlimited earnings.
                             </p>
                         </div>
 
-                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group">
-                            <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6 group-hover:scale-110 transition-transform">
+                        <div className="bg-white border border-gray-100 p-8 rounded-[32px] shadow-card hover:shadow-gold transition-all duration-300 group hover:-translate-y-1">
+                            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform shadow-sm">
                                 <UserGroupIcon className="w-8 h-8" />
                             </div>
-                            <h4 className="text-xl font-bold text-slate-900 mb-3">Referral Rewards</h4>
-                            <p className="text-slate-500 leading-relaxed font-medium">
-                                Invite friends and build a passive income stream. Earn a bonus for every task your referrals complete.
+                            <h4 className="text-xl font-bold text-slate-900 mb-3">Referral Empire</h4>
+                            <p className="text-slate-500 leading-relaxed font-medium text-sm">
+                                Invite friends and build a passive income stream. Earn up to 200 Rs for every active referral you bring.
                             </p>
                         </div>
                         
-                        <div className="md:col-span-2 bg-gradient-to-br from-slate-900 to-slate-800 p-10 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-8 group relative overflow-hidden text-white">
+                        <div className="md:col-span-2 bg-gradient-to-br from-slate-900 to-black p-10 rounded-[32px] shadow-2xl flex flex-col md:flex-row items-center gap-8 group relative overflow-hidden text-white border border-slate-800">
                              <div className="absolute right-0 top-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                              <div className="flex-1 relative z-10">
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                                    <div className="p-2 bg-amber-500/20 rounded-lg text-amber-400 backdrop-blur-sm border border-amber-500/30">
                                         <SparklesIcon className="w-6 h-6" />
                                     </div>
                                     <span className="text-amber-400 font-bold uppercase tracking-wider text-sm">Daily Bonus</span>
@@ -258,23 +266,23 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                                 <p className="text-gray-300 leading-relaxed mb-8 font-medium">
                                     Log in every day to spin the wheel. Win free cash prizes, multipliers, and exclusive rewards just for being active.
                                 </p>
-                                <button onClick={() => onGetStarted('signup')} className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold hover:bg-amber-50 transition-colors">
+                                <button onClick={() => onGetStarted('signup')} className="bg-white text-slate-900 px-8 py-3.5 rounded-full font-bold hover:bg-amber-50 transition-colors shadow-lg">
                                     Try Your Luck
                                 </button>
                              </div>
                              <div className="w-full md:w-1/3 flex justify-center">
-                                <div className="w-32 h-32 rounded-full border-4 border-amber-500 flex items-center justify-center bg-slate-800 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
-                                    <SparklesIcon className="w-16 h-16 text-amber-400 animate-pulse" />
+                                <div className="w-40 h-40 rounded-full border-[6px] border-amber-500 flex items-center justify-center bg-slate-800 shadow-[0_0_50px_rgba(245,158,11,0.4)] animate-pulse">
+                                    <TrophyIcon className="w-20 h-20 text-amber-400" />
                                 </div>
                              </div>
                         </div>
 
-                        <div className="bg-white border border-gray-100 p-8 rounded-3xl shadow-lg hover:shadow-xl transition-shadow group flex flex-col justify-center items-center text-center">
+                        <div className="bg-white border border-gray-100 p-8 rounded-[32px] shadow-card hover:shadow-gold transition-all duration-300 group flex flex-col justify-center items-center text-center">
                             <div className="w-20 h-20 rounded-full bg-amber-50 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <TrophyIcon className="w-10 h-10 text-amber-600" />
+                                <DiamondIcon className="w-10 h-10 text-amber-600" />
                             </div>
-                            <h4 className="text-xl font-bold text-slate-900 mb-1">Leaderboards</h4>
-                            <p className="text-slate-500 text-sm font-medium">Compete for weekly prizes.</p>
+                            <h4 className="text-xl font-bold text-slate-900 mb-1">VIP Levels</h4>
+                            <p className="text-slate-500 text-sm font-medium">Climb ranks for bigger rewards.</p>
                         </div>
                     </div>
                  </div>
@@ -283,10 +291,10 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
             {/* --- Payment Methods --- */}
             <section className="py-20 bg-[#F9FAFB] border-t border-gray-200">
                 <div className="max-w-7xl mx-auto px-6 text-center">
-                    <p className="text-gray-500 font-bold uppercase tracking-widest mb-10 text-xs">Trusted Payment Partners</p>
+                    <p className="text-gray-400 font-bold uppercase tracking-widest mb-10 text-xs">Trusted Payment Partners</p>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 hover:opacity-100 transition-opacity duration-300 grayscale hover:grayscale-0">
-                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-xs">JC</span> JazzCash</div>
-                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs">EP</span> EasyPaisa</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center text-xs shadow-md">JC</span> JazzCash</div>
+                         <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><span className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-xs shadow-md">EP</span> EasyPaisa</div>
                          <div className="flex items-center gap-2 text-2xl font-bold text-gray-800"><BankIcon className="w-8 h-8 text-gray-700"/> Bank Transfer</div>
                          <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">NayaPay</div>
                          <div className="flex items-center gap-2 text-2xl font-bold text-gray-800">SadaPay</div>
@@ -312,7 +320,7 @@ const LandingView: React.FC<LandingViewProps> = ({ onGetStarted }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     <div className="space-y-6">
                         <div className="flex items-center gap-2">
-                             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white">
+                             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center text-white shadow-gold">
                                 <SparklesIcon className="w-5 h-5" />
                              </div>
                              <span className="font-black text-xl text-white tracking-tighter">Task<span className="text-amber-500">Mint</span></span>

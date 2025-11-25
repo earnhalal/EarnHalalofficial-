@@ -19,17 +19,17 @@ interface ProfileSettingsViewProps {
 // --- Professional Avatar System Configuration ---
 const AVATAR_COLLECTIONS = {
     'Basic': {
-        style: 'micah', // Clean, flat, modern UI style (Corporate Memphis)
+        style: 'micah',
         seeds: ['Felix', 'Aneka', 'Hudson', 'Zoe', 'River', 'Aiden', 'Bella', 'Evan', 'Nora', 'Leo', 'Maya', 'Dylan'],
         description: 'Modern & Clean'
     },
     'Ranked': {
-        style: 'avataaars', // Standard Tech/SaaS look
+        style: 'avataaars',
         seeds: ['Christopher', 'Jack', 'Sophia', 'Ethan', 'Emma', 'William', 'Olivia', 'James', 'Ava', 'Alexander', 'Michael', 'Emily'],
         description: 'Pro Level Status'
     },
     'Premium': {
-        style: 'notionists', // High-end, sketched, professional (Notion style)
+        style: 'notionists',
         seeds: ['Robert', 'Jade', 'Avery', 'Stark', 'Maria', 'Oliver', 'Sophie', 'Caleb', 'Eden', 'Liam', 'Noah', 'Grace'],
         description: 'Executive Suite'
     }
@@ -103,7 +103,6 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
         return "bg-gradient-to-r from-mint-500 to-emerald-600"; 
     };
 
-    // --- Render Logic for Avatar Items based on Category ---
     const renderAvatarItem = (seed: string, index: number) => {
         const style = AVATAR_COLLECTIONS[activeCollection].style;
         const url = `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=transparent`;
@@ -303,7 +302,7 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 </div>
             </div>
 
-            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.3.0 • Built for Hustlers</p>
+            <p className="text-center text-xs text-gray-400 pt-4">TaskMint v1.4.0 • Built for Hustlers</p>
         </div>
     );
 };

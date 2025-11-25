@@ -76,7 +76,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30">
                 <SparklesIcon className="w-6 h-6" />
             </div>
-          <span className="font-black text-xl text-slate-900 tracking-tighter font-heading">Task<span className="text-amber-600">Mint</span></span>
+            <span className="font-black text-xl text-slate-900 tracking-tighter font-heading">
+              Task<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">Mint</span>
+            </span>
         </div>
         
         <div className="mb-2 px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Menu</div>

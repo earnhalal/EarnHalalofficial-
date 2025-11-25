@@ -1,3 +1,4 @@
+
 // components/App.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Header from './Header';
@@ -59,6 +60,16 @@ type Notification = {
 };
 
 const appUpdates: AppUpdate[] = [
+    {
+        id: 'v1.4.0-premium',
+        version: '1.4.0',
+        date: 'July 27, 2024',
+        title: 'Premium Hub Launched!',
+        description: 'Explore the new Premium Hub with advanced earning methods, Influencer program, and exclusive job packages.',
+        type: 'New Feature',
+        icon: <GameControllerIcon className="w-5 h-5" />,
+        color: 'text-amber-400'
+    },
     {
         id: 'v1.2.0-games',
         version: '1.2.0',

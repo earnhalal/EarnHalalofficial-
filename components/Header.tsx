@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import type { View } from '../types';
 import { SparklesIcon } from './icons';
 
-// --- Data for Dynamic Notifications ---
 const names = [
     'Ahmed', 'Fatima', 'Ali', 'Ayesha', 'Zainab', 'Bilal', 'Hassan', 'Sana', 'Usman', 'Maryam', 'Abdullah', 'Khadija'
 ];
@@ -39,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView }) => {
   }, []);
 
   return (
-    <header className="bg-white/95 backdrop-blur-sm sticky top-0 z-30 border-b border-gray-100 transition-all duration-300">
+    <header className="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-gray-100 transition-all duration-300">
       {isBannerVisible && (
         <div className="bg-slate-900 text-white text-xs font-medium p-2 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite]"></div>
@@ -51,13 +50,13 @@ const Header: React.FC<HeaderProps> = ({ username, setActiveView }) => {
         </div>
       )}
       <div className="flex items-center justify-center px-4 py-4 relative">
-        {/* Centered Logo */}
+        {/* Centered Premium Logo */}
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveView('DASHBOARD')}>
             <div className="w-10 h-10 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-amber-500/30 transition-transform group-hover:scale-105">
                 <SparklesIcon className="w-6 h-6" />
             </div>
             <span className="font-black text-2xl text-slate-900 tracking-tighter font-heading">
-              Task<span className="text-amber-600">Mint</span>
+              Task<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">Mint</span>
             </span>
         </div>
       </div>
