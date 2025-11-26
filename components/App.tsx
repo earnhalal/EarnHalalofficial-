@@ -151,15 +151,19 @@ const AdPixelView = () => (
 
 const GeofencingView = () => (
     <div className="max-w-3xl mx-auto p-6 bg-white rounded-2xl shadow-sm border border-gray-200 animate-fade-in">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">Audience Geofencing</h2>
-        <p className="text-slate-600 mb-6">Restrict your campaigns to specific regions.</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-4">Audience Geofencing (Pakistan)</h2>
+        <p className="text-slate-600 mb-6">Select target regions in Pakistan for your campaign.</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {['North America', 'Europe', 'Asia Pacific', 'Middle East', 'South Asia (PK)', 'Global'].map(region => (
-                <button key={region} className="p-4 border rounded-xl text-left hover:border-blue-500 hover:bg-blue-50 transition-all group">
-                    <span className="font-bold text-slate-700 group-hover:text-blue-700">{region}</span>
+            {['All Pakistan', 'Punjab', 'Sindh', 'KPK', 'Balochistan', 'Islamabad', 'Karachi', 'Lahore', 'Faisalabad', 'Rawalpindi', 'Multan', 'Peshawar', 'Quetta'].map(region => (
+                <button key={region} className="p-4 border rounded-xl text-left hover:border-green-500 hover:bg-green-50 transition-all group flex justify-between items-center">
+                    <span className="font-bold text-slate-700 group-hover:text-green-700">{region}</span>
+                    {region === 'All Pakistan' && <span className="text-[10px] bg-green-600 text-white px-2 py-0.5 rounded-full">Best Value</span>}
                 </button>
             ))}
         </div>
+        <button className="mt-6 w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors shadow-lg">
+            Update Targeting
+        </button>
     </div>
 );
 

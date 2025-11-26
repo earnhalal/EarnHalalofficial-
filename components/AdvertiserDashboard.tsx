@@ -5,7 +5,7 @@ import type { View, Transaction } from '../types';
 import { TransactionType } from '../types';
 import { 
     BriefcaseIcon, MegaphoneIcon, WalletIcon, TargetIcon, 
-    Globe, EyeIcon, TrendingUpIcon, ActivityIcon, CodeIcon, MapIcon, ReceiptIcon, ExchangeIcon
+    Globe, EyeIcon, TrendingUpIcon, ActivityIcon, CodeIcon, MapIcon, ReceiptIcon, ExchangeIcon, PlusCircleIcon
 } from './icons';
 
 interface AdvertiserDashboardProps {
@@ -115,7 +115,13 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Business Console</h1>
                     <p className="text-slate-500 font-medium">Real-time campaign analytics.</p>
                 </div>
-                <div className="flex items-center gap-3 w-full md:w-auto">
+                <div className="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                    <button 
+                        onClick={() => setActiveView('CREATE_TASK')} 
+                        className="flex-1 md:flex-none bg-blue-600 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-blue-500/30"
+                    >
+                        <MegaphoneIcon className="w-4 h-4"/> Create Campaign
+                    </button>
                     <button 
                         onClick={onSwitchMode}
                         className="flex-1 md:flex-none bg-white border border-amber-200 text-amber-700 text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2 shadow-sm"
@@ -222,7 +228,7 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                     />
                     <OptionCard 
                         title="Geofencing" 
-                        description="Restrict ads to specific GPS coordinates." 
+                        description="Restrict ads to specific Pakistani regions." 
                         icon={<MapIcon className="w-6 h-6" />} 
                         onClick={() => setActiveView('GEOFENCING')}
                     />
@@ -243,16 +249,31 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
 
             {/* Connect User Premium Features */}
             <div className="mb-10">
-                <h3 className="font-bold text-lg text-slate-900 mb-6">Premium Features</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div onClick={() => setActiveView('MANAGE_CAMPAIGNS')} className="bg-white p-6 rounded-2xl border border-gray-100 hover:border-blue-300 cursor-pointer group transition-all flex items-center justify-between shadow-sm">
+                <h3 className="font-bold text-lg text-slate-900 mb-6">Quick Launch</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div onClick={() => setActiveView('CREATE_TASK')} className="bg-white p-6 rounded-2xl border border-gray-100 hover:border-blue-300 cursor-pointer group transition-all flex items-center justify-between shadow-sm">
                         <div className="flex items-center gap-4">
-                            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
                                 <MegaphoneIcon className="w-6 h-6" />
                             </div>
                             <div>
+                                <h4 className="font-bold text-slate-900">New Campaign</h4>
+                                <p className="text-xs text-slate-500">Launch a new task to get traffic.</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <span className="block font-black text-xl text-slate-900">+</span>
+                        </div>
+                    </div>
+
+                    <div onClick={() => setActiveView('MANAGE_CAMPAIGNS')} className="bg-white p-6 rounded-2xl border border-gray-100 hover:border-blue-300 cursor-pointer group transition-all flex items-center justify-between shadow-sm">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                                <TargetIcon className="w-6 h-6" />
+                            </div>
+                            <div>
                                 <h4 className="font-bold text-slate-900">Manage Campaigns</h4>
-                                <p className="text-xs text-slate-500">Review performance of your active tasks.</p>
+                                <p className="text-xs text-slate-500">Review performance of active tasks.</p>
                             </div>
                         </div>
                         <div className="text-right">
@@ -267,7 +288,7 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                             </div>
                             <div>
                                 <h4 className="font-bold text-slate-900">Job Board</h4>
-                                <p className="text-xs text-slate-500">Post high-ticket offers to qualified users.</p>
+                                <p className="text-xs text-slate-500">Post high-ticket offers.</p>
                             </div>
                         </div>
                         <div className="text-right">
