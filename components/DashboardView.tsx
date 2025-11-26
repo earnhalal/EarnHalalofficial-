@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import type { View, UserProfile } from '../types';
 import { 
     InviteIcon, DocumentCheckIcon, SparklesIcon, EarnIcon, 
-    ArrowRight, WalletIcon, GiftIcon, PlusCircleIcon, ChartBarIcon, ExchangeIcon
+    ArrowRight, WalletIcon, GiftIcon, PlusCircleIcon, PlayCircleIcon, ExchangeIcon
 } from './icons';
 
 interface DashboardViewProps {
@@ -45,10 +45,10 @@ const QuickActionBtn: React.FC<{
         className="flex flex-col items-center gap-2 group animate-fade-in-up w-full"
         style={{ animationDelay: `${delay}ms` }}
     >
-        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-300 group-hover:scale-105 group-active:scale-95 ${colorClass} ${isHighlight ? 'ring-2 ring-amber-100' : 'ring-2 ring-white ring-opacity-50'}`}>
+        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-white shadow-lg transition-all duration-300 group-hover:scale-105 group-active:scale-95 ${colorClass} ${isHighlight ? 'ring-2 ring-red-100' : 'ring-2 ring-white ring-opacity-50'}`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-5 h-5 sm:w-6 sm:h-6" })}
         </div>
-        <span className={`text-[10px] sm:text-xs font-bold transition-colors ${isHighlight ? 'text-amber-700' : 'text-slate-600 group-hover:text-slate-900'}`}>{label}</span>
+        <span className={`text-[10px] sm:text-xs font-bold transition-colors ${isHighlight ? 'text-red-700' : 'text-slate-600 group-hover:text-slate-900'}`}>{label}</span>
     </button>
 );
 
@@ -181,12 +181,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
                   delay={100}
               />
               
-              {/* Renamed Console button to 'Create' as a shortcut to ad mode, or keep as Console */}
+              {/* New Watch Ads Button */}
               <QuickActionBtn 
-                  icon={<ChartBarIcon />} 
-                  label="Console" 
-                  onClick={onSwitchMode} 
-                  colorClass="bg-gradient-to-br from-slate-700 to-slate-900 shadow-slate-500/40" 
+                  icon={<PlayCircleIcon />} 
+                  label="Watch Ads" 
+                  onClick={() => setActiveView('ADS_WATCH')} 
+                  colorClass="bg-gradient-to-br from-red-500 to-red-700 shadow-red-500/40" 
                   delay={200}
                   isHighlight={true}
               />

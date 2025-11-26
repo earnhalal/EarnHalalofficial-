@@ -14,6 +14,7 @@ export type View =
   | 'EARN'
   | 'SPIN_WHEEL'
   | 'PLAY_AND_EARN'
+  | 'ADS_WATCH' // Added for new feature
   | 'WALLET'
   | 'DEPOSIT'
   | 'CREATE_TASK'
@@ -64,6 +65,7 @@ export enum TransactionType {
   GAME_WIN = 'Game Win',
   GAME_LOSS = 'Game Loss',
   BET_CANCELLED = 'Bet Cancelled',
+  AD_WATCH = 'Ad Watch Reward', // Added for new feature
 }
 
 export interface WithdrawalDetails {

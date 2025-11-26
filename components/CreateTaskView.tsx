@@ -200,7 +200,7 @@ const CreateTaskView: React.FC<CreateTaskViewProps> = ({ balance, onCreateTask }
                             <input type="text" id="title" value={form.title} onChange={handleChange} className="block w-full p-4 bg-slate-50 border-none rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-slate-300" placeholder="e.g. Subscribe to my Channel" required />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Target URL</label>
+                            <label className="block text-xs font-bold text-slate-400 uppercase mb-1.5">Target URL or Link</label>
                             <input type="url" id="url" value={form.url} onChange={handleChange} className="block w-full p-4 bg-slate-50 border-none rounded-xl font-semibold text-slate-900 focus:ring-2 focus:ring-amber-500 transition-all placeholder-slate-300" placeholder="https://..." required />
                         </div>
                         <div>
