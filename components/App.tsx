@@ -258,6 +258,7 @@ const App: React.FC = () => {
       let clicks = 0;
       let spend = 0;
 
+      // Sum up impressions and clicks from all user created tasks
       userCreatedTasks.forEach(task => {
           impressions += (task.views || 0);
           clicks += (task.completions || 0);
@@ -321,11 +322,11 @@ const App: React.FC = () => {
   const toggleUserMode = () => {
       setIsSwitchingMode(true);
       
-      // Delay to allow loader animation
+      // Delay to allow loader animation to play
       setTimeout(() => {
           setUserMode(prev => {
               const newMode = prev === 'EARNER' ? 'ADVERTISER' : 'EARNER';
-              localStorage.setItem('userMode', newMode);
+              localStorage.setItem('userMode', newMode); // Persist choice
               setActiveView(newMode === 'ADVERTISER' ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD');
               
               // Show Toast
@@ -345,7 +346,6 @@ const App: React.FC = () => {
   };
 
   // ... (Email, Login, Signup, Task Logic remains same)
-  // Copied minimal required logic for context...
   const sendSystemEmail = async (userId: string, userEmail: string, type: EmailLog['type'], subject: string, htmlContent: string) => {
       try {
           const batch = writeBatch(db);
@@ -368,7 +368,6 @@ const App: React.FC = () => {
         });
         const transactionsQuery = query(collection(db, "users", firebaseUser.uid, "transactions"), orderBy("date", "desc"));
         const unsubscribeTransactions = onSnapshot(transactionsQuery, (snapshot) => setBaseTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction))));
-        // ... (Other listeners omitted for brevity, assume standard ones)
         
         const withdrawalsQuery = query(collection(db, "withdrawal_requests"), where("userId", "==", firebaseUser.uid));
         const unsubscribeWithdrawals = onSnapshot(withdrawalsQuery, (s) => { const m:any={}; s.forEach(d=>m[d.id]=d.data().status); setWithdrawalStatuses(m); });
@@ -434,7 +433,7 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} userMode={userMode} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} userMode={userMode} onSwitchMode={toggleUserMode} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
       LEADERBOARD: <LeaderboardView />,
@@ -451,7 +450,7 @@ const App: React.FC = () => {
       MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} userMode={userMode} />,
       
       // ADVERTISER VIEWS
-      ADVERTISER_DASHBOARD: <AdvertiserDashboard balance={userProfile?.balance ?? 0} setActiveView={setActiveView} stats={adStats} transactions={transactions} />,
+      ADVERTISER_DASHBOARD: <AdvertiserDashboard balance={userProfile?.balance ?? 0} setActiveView={setActiveView} stats={adStats} transactions={transactions} onSwitchMode={toggleUserMode} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       POST_JOB: <PostJobView balance={userProfile?.balance ?? 0} onPostJob={handlePostJob} />,
       MANAGE_CAMPAIGNS: <TaskHistoryView userTasks={userCreatedTasks} />,

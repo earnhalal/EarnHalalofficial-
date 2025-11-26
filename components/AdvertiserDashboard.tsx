@@ -5,7 +5,7 @@ import type { View, Transaction } from '../types';
 import { TransactionType } from '../types';
 import { 
     BriefcaseIcon, MegaphoneIcon, WalletIcon, TargetIcon, 
-    Globe, EyeIcon, TrendingUpIcon, ActivityIcon, CodeIcon, MapIcon, ReceiptIcon
+    Globe, EyeIcon, TrendingUpIcon, ActivityIcon, CodeIcon, MapIcon, ReceiptIcon, ExchangeIcon
 } from './icons';
 
 interface AdvertiserDashboardProps {
@@ -17,6 +17,7 @@ interface AdvertiserDashboardProps {
         spend: number;
     };
     transactions: Transaction[];
+    onSwitchMode: () => void;
 }
 
 const StatCard: React.FC<{ label: string; value: string; icon: React.ReactNode; color: string }> = ({ label, value, icon, color }) => (
@@ -94,7 +95,7 @@ const PerformanceGraph: React.FC<{ transactions: Transaction[] }> = ({ transacti
                             {daysLabel[i]}
                         </span>
                         {/* Tooltip */}
-                        <div className="absolute -top-8 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div className="absolute -top-8 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                             {item.val.toFixed(0)} Rs
                         </div>
                     </div>
@@ -104,18 +105,28 @@ const PerformanceGraph: React.FC<{ transactions: Transaction[] }> = ({ transacti
     );
 };
 
-const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setActiveView, stats, transactions }) => {
+const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setActiveView, stats, transactions, onSwitchMode }) => {
     
     return (
         <div className="max-w-6xl mx-auto pb-24 animate-fade-in">
+            {/* Header with Switch Button */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <h1 className="text-3xl font-black text-slate-900 tracking-tight">Business Console</h1>
                     <p className="text-slate-500 font-medium">Real-time campaign analytics.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <button onClick={() => setActiveView('MANAGE_CAMPAIGNS')} className="text-sm font-bold text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition-colors border border-blue-100">Manage Ads</button>
-                    <button onClick={() => setActiveView('DEPOSIT')} className="bg-slate-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center gap-2">
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <button 
+                        onClick={onSwitchMode}
+                        className="flex-1 md:flex-none bg-white border border-amber-200 text-amber-700 text-sm font-bold px-4 py-2.5 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    >
+                        <ExchangeIcon className="w-4 h-4"/> 
+                        Switch to Earning
+                    </button>
+                    <button 
+                        onClick={() => setActiveView('DEPOSIT')} 
+                        className="flex-1 md:flex-none bg-slate-900 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                    >
                         <WalletIcon className="w-4 h-4"/> Add Funds
                     </button>
                 </div>

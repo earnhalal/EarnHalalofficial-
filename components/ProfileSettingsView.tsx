@@ -4,7 +4,7 @@ import type { UserProfile, View, UserMode } from '../types';
 import { 
     LogoutIcon, FingerprintIcon, CheckCircleIcon, ChevronDownIcon, 
     WalletIcon, BriefcaseIcon, UserGroupIcon, DocumentTextIcon, 
-    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon, BuildingIcon, TargetIcon
+    InfoIcon, ShieldCheck, ArrowRight, PencilSquareIcon, CrownIcon, StarIcon, DiamondIcon, MedalIcon, ChartBarIcon, InboxIcon, BuildingIcon, TargetIcon, ExchangeIcon
 } from './icons';
 
 interface ProfileSettingsViewProps {
@@ -16,6 +16,7 @@ interface ProfileSettingsViewProps {
     onNavigate: (view: View) => void;
     onSendVerificationOTP: (type: 'email' | 'phone', destination: string, otp: string) => void;
     userMode?: UserMode;
+    onSwitchMode?: () => void;
 }
 
 // --- Professional Avatar System Configuration ---
@@ -61,7 +62,7 @@ const MenuRow: React.FC<{
 );
 
 const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({ 
-    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate, onSendVerificationOTP, userMode
+    userProfile, onUpdateProfile, onUpdatePhoto, onLogout, onSetFingerprintEnabled, onNavigate, onSendVerificationOTP, userMode, onSwitchMode
 }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isEditingPhoto, setIsEditingPhoto] = useState(false);
@@ -369,6 +370,13 @@ const ProfileSettingsView: React.FC<ProfileSettingsViewProps> = ({
                 <div className="space-y-2">
                     <p className="px-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Company & Billing</p>
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        {onSwitchMode && (
+                            <MenuRow 
+                                icon={<ExchangeIcon className="w-5 h-5" />} 
+                                label="Switch to Earning Mode" 
+                                onClick={onSwitchMode} 
+                            />
+                        )}
                         <MenuRow 
                             icon={<DocumentTextIcon className="w-5 h-5" />} 
                             label="Billing Settings" 

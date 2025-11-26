@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import type { View, UserProfile } from '../types';
 import { 
     InviteIcon, DocumentCheckIcon, SparklesIcon, EarnIcon, 
-    ArrowRight, WalletIcon, GiftIcon, PlusCircleIcon, ChartBarIcon
+    ArrowRight, WalletIcon, GiftIcon, PlusCircleIcon, ChartBarIcon, ExchangeIcon
 } from './icons';
 
 interface DashboardViewProps {
@@ -86,23 +86,36 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
     <div className="space-y-6 animate-fade-in pb-24 font-sans">
       
       {/* Header Section */}
-      <div className="flex items-center justify-between px-1">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-1">
           <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">{getGreeting()},</p>
               <h1 className="text-2xl font-black text-slate-900 tracking-tighter">{username}</h1>
           </div>
-          <div className="relative cursor-pointer group" onClick={() => setActiveView('PROFILE_SETTINGS')}>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-br from-amber-300 to-yellow-600 shadow-gold hover:shadow-gold-hover transition-all duration-300 transform group-hover:scale-105">
-                  <div className="w-full h-full rounded-full bg-white p-0.5 overflow-hidden">
-                    <img 
-                        src={userProfile?.photoURL || `https://api.dicebear.com/9.x/micah/svg?seed=${username}`} 
-                        alt="Profile" 
-                        className="w-full h-full object-cover rounded-full bg-gray-50" 
-                    />
+          
+          <div className="flex items-center gap-3 w-full md:w-auto">
+              {/* Switch to Creator Button */}
+              <button 
+                  onClick={onSwitchMode}
+                  className="flex-1 md:flex-none bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-slate-900/20 active:scale-95 border border-slate-700"
+              >
+                  <ExchangeIcon className="w-4 h-4 text-amber-400"/> 
+                  Switch to Creator
+              </button>
+
+              {/* Profile Pic */}
+              <div className="relative cursor-pointer group flex-shrink-0" onClick={() => setActiveView('PROFILE_SETTINGS')}>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-br from-amber-300 to-yellow-600 shadow-gold hover:shadow-gold-hover transition-all duration-300 transform group-hover:scale-105">
+                      <div className="w-full h-full rounded-full bg-white p-0.5 overflow-hidden">
+                        <img 
+                            src={userProfile?.photoURL || `https://api.dicebear.com/9.x/micah/svg?seed=${username}`} 
+                            alt="Profile" 
+                            className="w-full h-full object-cover rounded-full bg-gray-50" 
+                        />
+                      </div>
                   </div>
-              </div>
-              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(level)} animate-bounce-small`}>
-                  {level}
+                  <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-extrabold text-white shadow-md border-2 border-white ${getLevelColor(level)} animate-bounce-small`}>
+                      {level}
+                  </div>
               </div>
           </div>
       </div>
@@ -168,6 +181,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
                   delay={100}
               />
               
+              {/* Renamed Console button to 'Create' as a shortcut to ad mode, or keep as Console */}
               <QuickActionBtn 
                   icon={<ChartBarIcon />} 
                   label="Console" 
