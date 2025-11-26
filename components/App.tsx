@@ -38,6 +38,7 @@ import AdvertiserDashboard from './AdvertiserDashboard';
 import PostJobView from './PostJobView';
 import AdsWatchView from './AdsWatchView'; // New Import
 import ModeSwitchLoader from './ModeSwitchLoader';
+import AIAgentChatbot from './AIAgentChatbot';
 import { GameControllerIcon, CloseIcon, CodeIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog, UserMode } from '../types';
@@ -529,6 +530,10 @@ const App: React.FC = () => {
           
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={() => { setShowPinLock(false); pinAction && pinAction(); setPinAction(null); }} onPinSet={async (pin) => { if (user) { await updateDoc(doc(db, "users", user.uid), { walletPin: pin }); setShowPinLock(false); pinAction && pinAction(); setPinAction(null); } }} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
+      
+      {/* AI Chatbot Widget - Always enabled for support */}
+      <AIAgentChatbot />
+
       <style>{`
         @keyframes slide-up {
             from { transform: translateY(100%); }

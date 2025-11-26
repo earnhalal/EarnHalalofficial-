@@ -2,7 +2,7 @@
 import React from 'react';
 import {
   DashboardIcon, WalletIcon, CreateTaskIcon, SettingsIcon,
-  ClipboardListIcon, PlusCircleIcon, BriefcaseIcon, ExchangeIcon, BuildingIcon, MegaphoneIcon, ChartBarIcon, UserGroupIcon, EyeIcon, TargetIcon, InfoIcon, ShieldCheck
+  ClipboardListIcon, PlusCircleIcon, BriefcaseIcon, ExchangeIcon, BuildingIcon, MegaphoneIcon, ChartBarIcon, UserGroupIcon, EyeIcon, TargetIcon, InfoIcon, ShieldCheck, PlayCircleIcon, GiftIcon
 } from './icons';
 import type { View, UserMode } from '../types';
 
@@ -22,7 +22,8 @@ const NavItem: React.FC<{
   isActive: boolean;
   onClick: () => void;
   badgeCount?: number;
-}> = ({ icon, label, isActive, onClick, badgeCount }) => {
+  isNew?: boolean;
+}> = ({ icon, label, isActive, onClick, badgeCount, isNew }) => {
     const activeClass = 'bg-blue-50 text-blue-700 font-bold shadow-sm border-r-4 border-blue-600';
     
     return (
@@ -35,7 +36,10 @@ const NavItem: React.FC<{
         }`}
       >
         <div className={`${isActive ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`}>{icon}</div>
-        <span className="text-sm flex-1 text-left">{label}</span>
+        <span className="text-sm flex-1 text-left flex items-center gap-2">
+            {label}
+            {isNew && <span className="text-[8px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded-full uppercase tracking-wide animate-pulse">New</span>}
+        </span>
         {badgeCount && badgeCount > 0 && (
             <span className="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">{badgeCount}</span>
         )}
@@ -45,21 +49,35 @@ const NavItem: React.FC<{
 
 const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarOpen, onClose, unreadUpdatesCount, userMode, onSwitchMode }) => {
   
+  const isAdvertiser = userMode === 'ADVERTISER';
+
   // Advertiser Menu (Business Suite)
-  const advertiserViews: { view: View; label: string; icon: React.ReactNode }[] = [
+  const advertiserViews = [
       { view: 'ADVERTISER_DASHBOARD', label: 'Overview', icon: <DashboardIcon className="w-5 h-5" /> },
       { view: 'CREATE_TASK', label: 'New Campaign', icon: <MegaphoneIcon className="w-5 h-5" /> },
       { view: 'POST_JOB', label: 'Post Job', icon: <BriefcaseIcon className="w-5 h-5" /> },
       { view: 'MANAGE_CAMPAIGNS', label: 'All Campaigns', icon: <ClipboardListIcon className="w-5 h-5" /> },
       { view: 'WALLET', label: 'Funds & Wallet', icon: <WalletIcon className="w-5 h-5" /> },
       { view: 'DEPOSIT', label: 'Add Budget', icon: <PlusCircleIcon className="w-5 h-5" /> },
-      // Expanded Functional Options
       { view: 'ADS_GUIDE', label: 'How to Run Ads', icon: <InfoIcon className="w-5 h-5" /> },
       { view: 'ADS_POLICY', label: 'Ads Policy', icon: <ShieldCheck className="w-5 h-5" /> },
-      { view: 'PROFILE_SETTINGS', label: 'Business Settings', icon: <SettingsIcon className="w-5 h-5" /> },
+      { view: 'PROFILE_SETTINGS', label: 'Settings', icon: <SettingsIcon className="w-5 h-5" /> },
+  ];
+
+  // Earner Menu (User App)
+  const earnerViews = [
+      { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-5 h-5" /> },
+      { view: 'EARN', label: 'Task Wall', icon: <ClipboardListIcon className="w-5 h-5" /> },
+      { view: 'ADS_WATCH', label: 'Watch Ads', icon: <PlayCircleIcon className="w-5 h-5" />, isNew: true },
+      { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
+      { view: 'PREMIUM_HUB', label: 'Premium Hub', icon: <BriefcaseIcon className="w-5 h-5" /> },
+      { view: 'WALLET', label: 'My Wallet', icon: <WalletIcon className="w-5 h-5" /> },
+      { view: 'INVITE', label: 'Invite Friends', icon: <UserGroupIcon className="w-5 h-5" /> },
+      { view: 'LEADERBOARD', label: 'Leaderboard', icon: <ChartBarIcon className="w-5 h-5" /> },
+      { view: 'PROFILE_SETTINGS', label: 'Profile', icon: <SettingsIcon className="w-5 h-5" /> },
   ];
   
-  const currentMenu = advertiserViews;
+  const currentMenu = isAdvertiser ? advertiserViews : earnerViews;
 
   const handleItemClick = (view: View) => {
       setActiveView(view);
@@ -83,23 +101,25 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
         md:translate-x-0 md:static md:shadow-none flex flex-col`}
       >
         <div className="p-6 flex items-center gap-3 border-b border-gray-100">
-             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-blue-500/30 shadow-lg">
-                  <BuildingIcon className="w-6 h-6" />
+             <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white shadow-lg ${isAdvertiser ? 'bg-blue-600 shadow-blue-500/30' : 'bg-gradient-to-br from-amber-400 to-yellow-600 shadow-amber-500/30'}`}>
+                  {isAdvertiser ? <BuildingIcon className="w-6 h-6" /> : <ClipboardListIcon className="w-6 h-6" />}
               </div>
               <div>
                   <span className="font-black text-xl text-slate-900 tracking-tight font-heading block leading-none">
                     TaskMint
                   </span>
-                  <span className="text-[10px] font-bold tracking-widest uppercase text-blue-600">
-                      Business Console
+                  <span className={`text-[10px] font-bold tracking-widest uppercase ${isAdvertiser ? 'text-blue-600' : 'text-amber-600'}`}>
+                      {isAdvertiser ? 'Business Console' : 'Earning App'}
                   </span>
               </div>
         </div>
           
         <div className="py-4 overflow-y-auto flex-1 custom-scrollbar">
-            <p className="px-6 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Advertising</p>
+            <p className="px-6 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                {isAdvertiser ? 'Advertising' : 'Main Menu'}
+            </p>
             <nav className="space-y-1">
-                {currentMenu.slice(0, 6).map((item, index) => (
+                {currentMenu.map((item: any, index) => (
                 <NavItem
                     key={`${item.view}-${index}`}
                     icon={item.icon}
@@ -107,19 +127,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
                     isActive={activeView === item.view}
                     onClick={() => handleItemClick(item.view)}
                     badgeCount={item.view === 'UPDATES_INBOX' ? unreadUpdatesCount : 0}
-                />
-                ))}
-            </nav>
-
-            <p className="px-6 text-xs font-bold text-slate-400 uppercase tracking-wider mt-6 mb-2">Tools & Data</p>
-            <nav className="space-y-1">
-                {currentMenu.slice(6).map((item, index) => (
-                <NavItem
-                    key={`tools-${index}`}
-                    icon={item.icon}
-                    label={item.label}
-                    isActive={activeView === item.view}
-                    onClick={() => handleItemClick(item.view)}
+                    isNew={item.isNew}
                 />
                 ))}
             </nav>
@@ -135,9 +143,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
                     <ExchangeIcon className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">Switch View</p>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">Switch Mode</p>
                     <p className="text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
-                        Go to User App
+                        {isAdvertiser ? 'Go to Earning' : 'Go to Business'}
                     </p>
                 </div>
             </button>

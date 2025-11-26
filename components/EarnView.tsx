@@ -6,7 +6,7 @@ import { TaskType } from '../types';
 import { 
     CheckCircleIcon, YoutubeIcon, FacebookIcon, InstagramIcon, 
     TikTokIcon, TwitterIcon, LinkedInIcon, DiscordIcon, 
-    TelegramIcon, SnapchatIcon, Globe 
+    TelegramIcon, SnapchatIcon, Globe, PlayCircleIcon, ArrowRight
 } from './icons';
 
 interface ProofSubmissionModalProps {
@@ -149,16 +149,13 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
     setTaskForProof(task);
   };
 
-  if (approvedTasks.length === 0) {
-    return (
-      <div className="bg-white p-8 rounded-xl shadow-subtle text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">No Tasks Available</h2>
-        <p className="text-gray-600">
-          All tasks have been completed. Please check back later for new opportunities!
-        </p>
-      </div>
-    );
-  }
+  const handleWatchAdsClick = () => {
+      // Dispatch a custom event to switch view, since we don't have setActiveView prop here
+      // This relies on App.tsx handling popstate or we could pass setActiveView.
+      // Ideally, EarnView should receive setActiveView. For now, let's dispatch an event or use window history state hack.
+      window.history.pushState({ view: 'ADS_WATCH' }, '', '');
+      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'ADS_WATCH' } }));
+  };
 
   return (
     <div className="space-y-6">
@@ -172,50 +169,85 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
               }}
           />
       )}
-      <h2 className="text-3xl font-bold text-gray-900">Available Tasks</h2>
-      {approvedTasks.map((task, index) => {
-        const isCompletedByUser = completedTaskIds.includes(task.id);
-        const { icon, bg } = getTaskIcon(task.type);
+      
+      {/* Promotional Banner for Video Ads */}
+      <div className="bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+          <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <PlayCircleIcon className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                  <h3 className="text-lg font-bold">Watch & Earn</h3>
+                  <p className="text-red-100 text-sm">Watch short videos and earn instant cash rewards.</p>
+              </div>
+          </div>
+          <button 
+            onClick={handleWatchAdsClick}
+            className="bg-white text-red-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-red-50 transition-colors shadow-sm whitespace-nowrap flex items-center gap-2"
+          >
+              View Video Ads <ArrowRight className="w-4 h-4" />
+          </button>
+      </div>
 
-        return (
-            <div 
-                key={task.id} 
-                className="bg-white p-4 sm:p-6 rounded-xl shadow-subtle transition-all duration-300 hover:shadow-subtle-md hover:-translate-y-1 animate-fade-in-up border border-gray-200"
-                style={{ animationDelay: `${index * 75}ms`}}
-            >
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl ${bg} flex-shrink-0 mt-1`}>
-                      {icon}
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold uppercase text-gray-400">{task.type}</span>
-                    <h3 className="text-xl font-bold text-gray-900 leading-tight">{task.title}</h3>
-                    <p className="text-gray-600 mt-1 text-sm line-clamp-2">{task.description}</p>
-                  </div>
-                </div>
-                <div className="text-right flex-shrink-0 self-end sm:self-center">
-                  <p className="text-2xl font-bold font-numeric text-accent-600">{task.reward.toFixed(2)} Rs</p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end sm:items-center gap-4">
-                {isCompletedByUser ? (
-                    <div className="flex items-center gap-2 bg-green-100 text-green-800 py-2 px-6 rounded-md font-semibold w-full sm:w-auto justify-center">
-                        <CheckCircleIcon className="w-5 h-5" />
-                        <span>Completed</span>
+      <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold text-gray-900">Available Tasks</h2>
+          <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">
+              {approvedTasks.length} Tasks
+          </span>
+      </div>
+
+      {approvedTasks.length === 0 ? (
+        <div className="bg-white p-8 rounded-xl shadow-subtle text-center">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">No Tasks Available</h2>
+            <p className="text-gray-600">
+            All standard tasks have been completed. Try the <strong>Watch & Earn</strong> section above!
+            </p>
+        </div>
+      ) : (
+        approvedTasks.map((task, index) => {
+            const isCompletedByUser = completedTaskIds.includes(task.id);
+            const { icon, bg } = getTaskIcon(task.type);
+
+            return (
+                <div 
+                    key={task.id} 
+                    className="bg-white p-4 sm:p-6 rounded-xl shadow-subtle transition-all duration-300 hover:shadow-subtle-md hover:-translate-y-1 animate-fade-in-up border border-gray-200"
+                    style={{ animationDelay: `${index * 75}ms`}}
+                >
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-xl ${bg} flex-shrink-0 mt-1`}>
+                        {icon}
                     </div>
-                ) : (
-                    <button
-                        onClick={() => handleCompleteClick(task)}
-                        className="bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-700 transition-colors w-full sm:w-auto shadow-sm hover:shadow-md"
-                    >
-                        Complete Task
-                    </button>
-                )}
-              </div>
-            </div>
-        );
-      })}
+                    <div>
+                        <span className="text-xs font-semibold uppercase text-gray-400">{task.type}</span>
+                        <h3 className="text-xl font-bold text-gray-900 leading-tight">{task.title}</h3>
+                        <p className="text-gray-600 mt-1 text-sm line-clamp-2">{task.description}</p>
+                    </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 self-end sm:self-center">
+                    <p className="text-2xl font-bold font-numeric text-accent-600">{task.reward.toFixed(2)} Rs</p>
+                    </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-end sm:items-center gap-4">
+                    {isCompletedByUser ? (
+                        <div className="flex items-center gap-2 bg-green-100 text-green-800 py-2 px-6 rounded-md font-semibold w-full sm:w-auto justify-center">
+                            <CheckCircleIcon className="w-5 h-5" />
+                            <span>Completed</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => handleCompleteClick(task)}
+                            className="bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-primary-700 transition-colors w-full sm:w-auto shadow-sm hover:shadow-md"
+                        >
+                            Complete Task
+                        </button>
+                    )}
+                </div>
+                </div>
+            );
+        })
+      )}
     </div>
   );
 };

@@ -1,158 +1,258 @@
 
-// components/AdsWatchView.tsx
-import React, { useState, useEffect } from 'react';
-import { PlayCircleIcon, CheckCircleIcon, CloseIcon, FireIcon } from './icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { PlayCircleIcon, CheckCircleIcon, ArrowRight, FireIcon, CloseIcon, ShieldCheck } from './icons';
 
 interface AdsWatchViewProps {
     onWatchAd: (reward: number) => void;
 }
 
-const ADS_LIST = [
-    { id: 1, title: 'Watch: New Strategy Game Trailer', duration: 15, reward: 2.5, type: 'Gaming' },
-    { id: 2, title: 'Review: Best Crypto Exchange App', duration: 30, reward: 5.0, type: 'Finance' },
-    { id: 3, title: 'Sneak Peek: Upcoming Movie Teaser', duration: 10, reward: 1.5, type: 'Entertainment' },
-    { id: 4, title: 'Tutorial: Learn Python in 10 Mins', duration: 45, reward: 8.0, type: 'Education' },
-    { id: 5, title: 'Product Demo: Smart Watch Series 9', duration: 20, reward: 3.0, type: 'Tech' },
-    { id: 6, title: 'Top 10 Travel Destinations 2025', duration: 25, reward: 4.0, type: 'Travel' },
-];
+const TOTAL_DAILY_TASKS = 10;
+const AD_URL = "https://otieu.com/4/10238788";
+const TIMER_DURATION = 30; // 30 seconds
+const REWARD_PER_AD = 2.50; // Fixed reward per ad
 
 const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
-    const [selectedAd, setSelectedAd] = useState<typeof ADS_LIST[0] | null>(null);
-    const [timer, setTimer] = useState(0);
+    const [completedCount, setCompletedCount] = useState(0);
+    const [isViewingAd, setIsViewingAd] = useState(false);
+    const [timer, setTimer] = useState(TIMER_DURATION);
     const [canClaim, setCanClaim] = useState(false);
-    const [claimedAds, setClaimedAds] = useState<number[]>([]);
+    const [currentTaskNum, setCurrentTaskNum] = useState(0);
+    
+    // Load daily progress from local storage
+    useEffect(() => {
+        const today = new Date().toDateString();
+        const storedDate = localStorage.getItem('ads_date');
+        const storedCount = localStorage.getItem('ads_count');
 
+        if (storedDate === today && storedCount) {
+            setCompletedCount(parseInt(storedCount, 10));
+        } else {
+            // Reset if it's a new day
+            localStorage.setItem('ads_date', today);
+            localStorage.setItem('ads_count', '0');
+            setCompletedCount(0);
+        }
+    }, []);
+
+    // Timer Logic for In-App Player
     useEffect(() => {
         let interval: any;
-        if (selectedAd && timer > 0) {
+        if (isViewingAd && timer > 0) {
             interval = setInterval(() => {
                 setTimer((prev) => prev - 1);
             }, 1000);
-        } else if (selectedAd && timer === 0) {
+        } else if (isViewingAd && timer === 0) {
             setCanClaim(true);
         }
         return () => clearInterval(interval);
-    }, [selectedAd, timer]);
+    }, [isViewingAd, timer]);
 
-    const handleAdClick = (ad: typeof ADS_LIST[0]) => {
-        if (claimedAds.includes(ad.id)) return;
-        setSelectedAd(ad);
-        setTimer(ad.duration);
+    const handleStartTask = (taskNum: number) => {
+        if (completedCount >= TOTAL_DAILY_TASKS) return;
+        setCurrentTaskNum(taskNum);
+        setIsViewingAd(true);
+        setTimer(TIMER_DURATION);
         setCanClaim(false);
     };
 
     const handleClaim = () => {
-        if (!selectedAd) return;
-        onWatchAd(selectedAd.reward);
-        setClaimedAds(prev => [...prev, selectedAd.id]);
-        setSelectedAd(null);
+        if (!canClaim) return;
+        
+        // Update progress
+        const newCount = completedCount + 1;
+        setCompletedCount(newCount);
+        localStorage.setItem('ads_count', newCount.toString());
+        
+        // Give Reward
+        onWatchAd(REWARD_PER_AD);
+        
+        // Close Player
+        setIsViewingAd(false);
     };
 
-    const closeAd = () => {
-        setSelectedAd(null);
-        setTimer(0);
+    const handleClosePlayer = () => {
+        if (canClaim) {
+            handleClaim();
+        } else {
+            const confirmClose = window.confirm("If you close now, you will lose the reward. Are you sure?");
+            if (confirmClose) {
+                setIsViewingAd(false);
+            }
+        }
     };
 
-    return (
-        <div className="max-w-4xl mx-auto pb-24 animate-fade-in px-2">
-            {selectedAd && (
-                <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center">
-                    {/* Simulated Video Player UI */}
-                    <div className="w-full max-w-4xl aspect-video bg-gray-900 relative flex items-center justify-center shadow-2xl border-y border-gray-800">
-                        <div className="absolute top-4 right-4 z-20">
-                            <div className="bg-black/50 text-white px-4 py-2 rounded-full font-mono font-bold backdrop-blur-md border border-white/10">
-                                {timer > 0 ? `Ad ends in ${timer}s` : 'Reward Unlocked!'}
-                            </div>
+    // --- In-App Ad Player Overlay ---
+    if (isViewingAd) {
+        const progressPercent = ((TIMER_DURATION - timer) / TIMER_DURATION) * 100;
+        
+        return (
+            <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fade-in font-sans">
+                {/* Top Bar */}
+                <div className="flex items-center justify-between p-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 text-white z-20">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center animate-pulse">
+                            <PlayCircleIcon className="w-5 h-5 text-white" />
                         </div>
-                        
-                        {/* Content */}
-                        {timer > 0 ? (
-                            <div className="text-center animate-pulse">
-                                <PlayCircleIcon className="w-20 h-20 text-white/20 mx-auto mb-4" />
-                                <p className="text-white/50 text-xl font-bold">Playing Advertisement...</p>
-                                <p className="text-white/30 text-sm mt-2">Do not close this window</p>
-                            </div>
-                        ) : (
-                            <div className="text-center animate-scale-up">
-                                <CheckCircleIcon className="w-24 h-24 text-green-500 mx-auto mb-4" />
-                                <h2 className="text-3xl font-bold text-white mb-2">Task Completed!</h2>
-                                <p className="text-gray-300 mb-8">You have earned {selectedAd.reward.toFixed(2)} Rs</p>
-                                <button 
-                                    onClick={handleClaim}
-                                    className="bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 px-10 rounded-full shadow-lg hover:shadow-green-500/50 transition-all transform hover:scale-105 active:scale-95"
-                                >
-                                    Claim Reward
-                                </button>
-                            </div>
-                        )}
+                        <div>
+                            <h3 className="font-bold text-sm">Ad Task #{currentTaskNum}</h3>
+                            <p className="text-xs text-slate-400">Watching Sponsored Content</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={handleClosePlayer}
+                        className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+                    >
+                        <CloseIcon className="w-5 h-5" />
+                    </button>
+                </div>
 
-                        {/* Close Button (Only if user wants to give up, or after claim logic handles closing) */}
-                        {timer > 0 && (
-                            <button onClick={closeAd} className="absolute top-4 left-4 p-2 bg-white/10 rounded-full text-white/70 hover:bg-white/20">
-                                <CloseIcon className="w-6 h-6" />
+                {/* Main Ad Area (Simulated Video Screen) */}
+                <div className="flex-1 relative bg-black w-full h-full overflow-hidden">
+                    {/* Loading Spinner behind iframe */}
+                    <div className="absolute inset-0 flex items-center justify-center z-0">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
+                    </div>
+                    
+                    <iframe 
+                        src={AD_URL}
+                        className="absolute inset-0 w-full h-full z-10 bg-white"
+                        sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                        title="Ad Content"
+                        style={{ border: 'none' }}
+                    />
+                    
+                    {/* Timer Overlay (Video Style) */}
+                    {!canClaim && (
+                        <div className="absolute top-4 right-4 z-30 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full font-mono font-bold border border-white/10 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                            00:{timer.toString().padStart(2, '0')}
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Control Bar */}
+                <div className="p-6 bg-slate-900/90 backdrop-blur-md border-t border-slate-800 text-white z-20 flex flex-col gap-4 safe-area-bottom">
+                    {!canClaim ? (
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                <span>Verifying View...</span>
+                                <span>{Math.round(progressPercent)}%</span>
+                            </div>
+                            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                <div 
+                                    className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-1000 ease-linear" 
+                                    style={{ width: `${progressPercent}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-center text-xs text-slate-500 mt-2">Please keep this screen open to earn your reward.</p>
+                        </div>
+                    ) : (
+                        <div className="animate-slide-up">
+                            <div className="flex items-center justify-center gap-2 mb-4 text-green-400">
+                                <CheckCircleIcon className="w-6 h-6" />
+                                <span className="font-bold text-lg">Ad Verified Successfully</span>
+                            </div>
+                            <button 
+                                onClick={handleClaim}
+                                className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-black text-lg shadow-lg shadow-green-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                            >
+                                <FireIcon className="w-5 h-5 text-yellow-300" />
+                                Claim {REWARD_PER_AD.toFixed(2)} Rs Reward
                             </button>
-                        )}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // --- Main Task List View ---
+    return (
+        <div className="max-w-3xl mx-auto pb-24 animate-fade-in px-4">
+            {/* Header Stats */}
+            <div className="text-center mb-10 pt-6">
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Daily Video Ads</h2>
+                <p className="text-slate-500 font-medium">Watch short ads to earn instant cash.</p>
+                
+                <div className="mt-6 inline-flex items-center bg-white rounded-full shadow-sm border border-gray-200 p-1 pr-6">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${completedCount === TOTAL_DAILY_TASKS ? 'bg-green-500' : 'bg-amber-500'}`}>
+                        {Math.round((completedCount / TOTAL_DAILY_TASKS) * 100)}%
+                    </div>
+                    <div className="ml-3 text-left">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Today's Progress</p>
+                        <p className="text-sm font-bold text-gray-900">{completedCount} / {TOTAL_DAILY_TASKS} Completed</p>
                     </div>
                 </div>
-            )}
-
-            <div className="text-center mb-10 pt-6">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-100 text-red-600 text-xs font-bold uppercase tracking-wider mb-4 border border-red-200">
-                    <PlayCircleIcon className="w-4 h-4" /> Video Wall
-                </div>
-                <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Watch & Earn</h2>
-                <p className="text-slate-500 max-w-lg mx-auto font-medium">
-                    Watch short sponsored videos to earn instant cash rewards. New ads are added hourly.
-                </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ADS_LIST.map((ad) => {
-                    const isClaimed = claimedAds.includes(ad.id);
+            {/* Task List */}
+            <div className="space-y-3">
+                {Array.from({ length: TOTAL_DAILY_TASKS }).map((_, index) => {
+                    const taskNum = index + 1;
+                    const isCompleted = taskNum <= completedCount;
+                    const isLocked = taskNum > completedCount + 1;
+                    const isActive = taskNum === completedCount + 1;
+
                     return (
                         <button
-                            key={ad.id}
-                            onClick={() => handleAdClick(ad)}
-                            disabled={isClaimed}
-                            className={`relative bg-white rounded-2xl p-4 shadow-subtle border border-gray-100 transition-all duration-300 text-left group overflow-hidden
-                                ${isClaimed ? 'opacity-60 cursor-not-allowed grayscale' : 'hover:shadow-lg hover:-translate-y-1 hover:border-red-200'}
+                            key={taskNum}
+                            onClick={isActive ? () => handleStartTask(taskNum) : undefined}
+                            disabled={isCompleted || isLocked}
+                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden
+                                ${isCompleted 
+                                    ? 'bg-green-50 border-green-200 opacity-80' 
+                                    : isActive 
+                                        ? 'bg-white border-amber-400 shadow-md hover:shadow-lg hover:-translate-y-0.5' 
+                                        : 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed'
+                                }
                             `}
                         >
-                            <div className="aspect-video bg-slate-100 rounded-xl mb-4 relative overflow-hidden">
-                                {/* Thumbnail Placeholder */}
-                                <div className="absolute inset-0 flex items-center justify-center bg-slate-200 group-hover:bg-slate-800 transition-colors duration-500">
-                                    <PlayCircleIcon className="w-12 h-12 text-slate-400 group-hover:text-red-500 transition-colors duration-300" />
+                            {isActive && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>}
+                            
+                            <div className="flex items-center gap-4 pl-2">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
+                                    ${isCompleted 
+                                        ? 'bg-green-500 text-white' 
+                                        : isActive 
+                                            ? 'bg-amber-100 text-amber-700' 
+                                            : 'bg-gray-200 text-gray-500'}
+                                `}>
+                                    {isCompleted ? <CheckCircleIcon className="w-6 h-6"/> : taskNum}
                                 </div>
-                                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-0.5 rounded-md backdrop-blur-sm">
-                                    {ad.duration}s
+                                <div className="text-left">
+                                    <h4 className={`font-bold ${isCompleted ? 'text-green-800' : isActive ? 'text-slate-900' : 'text-gray-400'}`}>
+                                        Ad Video #{taskNum}
+                                    </h4>
+                                    <p className="text-xs text-gray-500 font-medium">
+                                        {isCompleted ? 'Completed' : isActive ? 'Tap to Watch' : 'Locked'}
+                                    </p>
                                 </div>
-                                {isClaimed && (
-                                    <div className="absolute inset-0 bg-white/80 flex items-center justify-center backdrop-blur-sm z-10">
-                                        <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-sm border border-green-200">
-                                            <CheckCircleIcon className="w-3 h-3" /> Watched
-                                        </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <span className={`text-sm font-bold ${isActive ? 'text-amber-600' : 'text-gray-400'}`}>
+                                    +{REWARD_PER_AD.toFixed(2)} Rs
+                                </span>
+                                {isActive && (
+                                    <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-md group-hover:bg-amber-500 transition-colors">
+                                        <ArrowRight className="w-4 h-4" />
                                     </div>
                                 )}
                             </div>
-
-                            <div className="flex justify-between items-start mb-2">
-                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${isClaimed ? 'bg-gray-100 text-gray-500' : 'bg-red-50 text-red-600'}`}>
-                                    {ad.type}
-                                </span>
-                                <div className="flex items-center gap-1 text-amber-600 font-bold text-sm">
-                                    <span>+{ad.reward.toFixed(1)}</span>
-                                    <span className="text-[10px] text-amber-600/70">Rs</span>
-                                </div>
-                            </div>
-
-                            <h3 className="font-bold text-slate-900 leading-tight text-sm line-clamp-2 mb-1 group-hover:text-red-600 transition-colors">
-                                {ad.title}
-                            </h3>
-                            <p className="text-xs text-slate-400">Sponsored Ad</p>
                         </button>
                     );
                 })}
             </div>
+
+            {completedCount === TOTAL_DAILY_TASKS && (
+                <div className="mt-8 p-6 bg-green-600 rounded-3xl text-white text-center shadow-xl animate-fade-in-up">
+                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
+                        <CheckCircleIcon className="w-8 h-8" />
+                    </div>
+                    <h3 className="text-2xl font-black mb-2">All Tasks Completed!</h3>
+                    <p className="text-green-100 mb-0">Come back tomorrow for 10 new videos.</p>
+                </div>
+            )}
         </div>
     );
 };
