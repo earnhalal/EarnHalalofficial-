@@ -215,7 +215,13 @@ const App: React.FC = () => {
   const [isSwitchingMode, setIsSwitchingMode] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [userMode, setUserMode] = useState<UserMode>('EARNER');
+  
+  // Initialize userMode from localStorage to persist state across refreshes
+  const [userMode, setUserMode] = useState<UserMode>(() => {
+      const savedMode = localStorage.getItem('userMode');
+      return (savedMode === 'ADVERTISER' || savedMode === 'EARNER') ? savedMode : 'EARNER';
+  });
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Kept but maybe unused for Advertiser now
   
   const [activeView, setActiveViewInternal] = useState<View>(() => {
@@ -224,26 +230,6 @@ const App: React.FC = () => {
       }
       return 'DASHBOARD';
   });
-
-  // Advertiser Real-time Stats State
-  const [adStats, setAdStats] = useState({
-      impressions: 45200,
-      clicks: 1204,
-      spend: 1540
-  });
-
-  useEffect(() => {
-      if (userMode === 'ADVERTISER') {
-          const interval = setInterval(() => {
-              setAdStats(prev => ({
-                  impressions: prev.impressions + Math.floor(Math.random() * 5),
-                  clicks: prev.clicks + (Math.random() > 0.7 ? 1 : 0),
-                  spend: prev.spend + (Math.random() > 0.8 ? 0.5 : 0)
-              }));
-          }, 2000);
-          return () => clearInterval(interval);
-      }
-  }, [userMode]);
 
   // ... (All other standard state: transactions, tasks, etc.)
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
@@ -266,7 +252,27 @@ const App: React.FC = () => {
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
 
-  // ... (Effects for Auth and Data fetching remain same)
+  // Real-time Stats aggregation for Advertiser Dashboard
+  const adStats = useMemo(() => {
+      let impressions = 0;
+      let clicks = 0;
+      let spend = 0;
+
+      userCreatedTasks.forEach(task => {
+          impressions += (task.views || 0);
+          clicks += (task.completions || 0);
+      });
+
+      // Calculate real spend from transactions (Task Creation, Job Posting)
+      baseTransactions.forEach(tx => {
+          if (tx.type === TransactionType.TASK_CREATION || tx.type === TransactionType.JOB_POSTING_FEE) {
+              spend += Math.abs(tx.amount);
+          }
+      });
+
+      return { impressions, clicks, spend };
+  }, [userCreatedTasks, baseTransactions]);
+
   useEffect(() => {
     if (window.location.pathname === '/signup') setAuthAction('signup');
   }, []);
@@ -314,14 +320,28 @@ const App: React.FC = () => {
 
   const toggleUserMode = () => {
       setIsSwitchingMode(true);
+      
+      // Delay to allow loader animation
       setTimeout(() => {
           setUserMode(prev => {
               const newMode = prev === 'EARNER' ? 'ADVERTISER' : 'EARNER';
+              localStorage.setItem('userMode', newMode);
               setActiveView(newMode === 'ADVERTISER' ? 'ADVERTISER_DASHBOARD' : 'DASHBOARD');
+              
+              // Show Toast
+              setNotifications(prevNotifs => [
+                  ...prevNotifs,
+                  {
+                      id: Date.now().toString(),
+                      title: newMode === 'ADVERTISER' ? 'Creator Mode Enabled' : 'Earning Mode Enabled',
+                      message: newMode === 'ADVERTISER' ? 'Welcome to your Business Console.' : 'Welcome back to Task Wall.',
+                      type: 'success'
+                  }
+              ]);
               return newMode;
           });
           setIsSwitchingMode(false);
-      }, 5000);
+      }, 3000);
   };
 
   // ... (Email, Login, Signup, Task Logic remains same)
@@ -431,7 +451,7 @@ const App: React.FC = () => {
       MAILBOX: <MailboxView emails={emailLogs} onMarkAsRead={handleMarkEmailAsRead} userMode={userMode} />,
       
       // ADVERTISER VIEWS
-      ADVERTISER_DASHBOARD: <AdvertiserDashboard balance={userProfile?.balance ?? 0} setActiveView={setActiveView} stats={adStats} />,
+      ADVERTISER_DASHBOARD: <AdvertiserDashboard balance={userProfile?.balance ?? 0} setActiveView={setActiveView} stats={adStats} transactions={transactions} />,
       CREATE_TASK: <CreateTaskView balance={userProfile?.balance ?? 0} onCreateTask={handleCreateTask} />,
       POST_JOB: <PostJobView balance={userProfile?.balance ?? 0} onPostJob={handlePostJob} />,
       MANAGE_CAMPAIGNS: <TaskHistoryView userTasks={userCreatedTasks} />,

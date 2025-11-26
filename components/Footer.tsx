@@ -58,7 +58,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView, userMo
         if (navView === 'EARN') return ['EARN', 'TASK_HISTORY', 'CREATE_TASK', 'PLAY_AND_EARN', 'SPIN_WHEEL'].includes(activeView);
         if (navView === 'PREMIUM_HUB') return ['PREMIUM_HUB', 'JOBS', 'SOCIAL_GROUPS', 'MY_APPLICATIONS'].includes(activeView);
         if (navView === 'INVITE') return activeView === 'INVITE';
-        if (navView === 'PROFILE_SETTINGS') return ['PROFILE_SETTINGS', 'DEPOSIT', 'PRIVACY_POLICY', 'TERMS_CONDITIONS', 'ABOUT_US', 'CONTACT_US', 'HOW_IT_WORKS', 'ADS_GUIDE', 'ADS_POLICY', 'AD_PIXEL', 'GEOFENCING', 'CONVERSION_EVENTS', 'BILLING'].includes(activeView);
+        if (navView === 'PROFILE_SETTINGS') return ['PROFILE_SETTINGS', 'PRIVACY_POLICY', 'TERMS_CONDITIONS', 'ABOUT_US', 'CONTACT_US', 'HOW_IT_WORKS', 'ADS_GUIDE', 'ADS_POLICY', 'AD_PIXEL', 'GEOFENCING', 'CONVERSION_EVENTS', 'BILLING'].includes(activeView);
         
         // Advertiser Logic
         if (navView === 'MANAGE_CAMPAIGNS') return ['MANAGE_CAMPAIGNS', 'CREATE_TASK'].includes(activeView);

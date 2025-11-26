@@ -20,7 +20,7 @@ const ModeSwitchLoader: React.FC<ModeSwitchLoaderProps> = ({ targetMode }) => {
                 // Random increments to simulate real loading
                 return prev + Math.random() * 5; 
             });
-        }, 150);
+        }, 100); // Slightly faster
 
         return () => clearInterval(interval);
     }, []);
@@ -46,11 +46,11 @@ const ModeSwitchLoader: React.FC<ModeSwitchLoaderProps> = ({ targetMode }) => {
             </div>
 
             <h2 className={`text-2xl md:text-3xl font-black tracking-tight mb-2 animate-fade-in-up ${isAdvertiser ? 'text-white' : 'text-slate-900'}`}>
-                {isAdvertiser ? 'Initializing Business Console' : 'Switching to User App'}
+                {isAdvertiser ? 'Initializing Business Console...' : 'Switching to Earning Mode...'}
             </h2>
             
             <p className={`text-sm font-medium mb-8 opacity-70 ${isAdvertiser ? 'text-blue-200' : 'text-amber-700'}`}>
-                {isAdvertiser ? 'Loading Campaign Data...' : 'Preparing Task Wall...'}
+                {isAdvertiser ? 'Loading Campaign Analytics...' : 'Preparing Task Wall...'}
             </p>
 
             {/* Progress Bar */}

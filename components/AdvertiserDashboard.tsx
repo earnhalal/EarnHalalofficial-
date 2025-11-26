@@ -1,7 +1,8 @@
 
 // components/AdvertiserDashboard.tsx
-import React from 'react';
-import type { View } from '../types';
+import React, { useMemo } from 'react';
+import type { View, Transaction } from '../types';
+import { TransactionType } from '../types';
 import { 
     BriefcaseIcon, MegaphoneIcon, WalletIcon, TargetIcon, 
     Globe, EyeIcon, TrendingUpIcon, ActivityIcon, CodeIcon, MapIcon, ReceiptIcon
@@ -15,6 +16,7 @@ interface AdvertiserDashboardProps {
         clicks: number;
         spend: number;
     };
+    transactions: Transaction[];
 }
 
 const StatCard: React.FC<{ label: string; value: string; icon: React.ReactNode; color: string }> = ({ label, value, icon, color }) => (
@@ -39,43 +41,62 @@ const OptionCard: React.FC<{ title: string; description: string; icon: React.Rea
     </div>
 )
 
-// Functional-looking Graph Component
-const PerformanceGraph = () => {
-    const [timeframe, setTimeframe] = useState('7D');
-    const data = timeframe === '7D' ? [35, 55, 40, 60, 75, 50, 90] : [60, 40, 70, 50, 80, 65, 95];
+// Functional Graph Component that uses real transaction data
+const PerformanceGraph: React.FC<{ transactions: Transaction[] }> = ({ transactions }) => {
+    const data = useMemo(() => {
+        // Initialize last 7 days with 0
+        const dailySpend = Array(7).fill(0);
+        const today = new Date();
+        
+        transactions.forEach(tx => {
+            if (tx.type === TransactionType.TASK_CREATION || tx.type === TransactionType.JOB_POSTING_FEE) {
+                const txDate = tx.date?.toDate ? tx.date.toDate() : new Date(tx.date);
+                const diffTime = Math.abs(today.getTime() - txDate.getTime());
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 7) {
+                    // Index 6 is today, 0 is 6 days ago
+                    dailySpend[6 - diffDays] += Math.abs(tx.amount);
+                }
+            }
+        });
+        
+        // Normalize for graph height (prevent division by zero)
+        const maxSpend = Math.max(...dailySpend, 100); // Minimum 100 scale
+        return dailySpend.map(val => ({ val, percent: (val / maxSpend) * 100 }));
+    }, [transactions]);
+
+    const daysLabel = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toLocaleDateString('en-US', { weekday: 'short' });
+    });
     
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
-                    <ActivityIcon className="w-5 h-5 text-blue-500" /> Traffic Overview
+                    <ActivityIcon className="w-5 h-5 text-blue-500" /> Daily Ad Spend (7 Days)
                 </h3>
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                    {['7D', '30D', '90D'].map(t => (
-                        <button 
-                            key={t} 
-                            onClick={() => setTimeframe(t)} 
-                            className={`text-xs font-bold px-3 py-1.5 rounded-md transition-all ${timeframe === t ? 'bg-white shadow-sm text-slate-900' : 'text-gray-500 hover:text-gray-900'}`}
-                        >
-                            {t}
-                        </button>
-                    ))}
-                </div>
             </div>
             <div className="h-48 w-full flex items-end gap-3">
-                {data.map((h, i) => (
+                {data.map((item, i) => (
                     <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
                         <div className="relative w-full bg-blue-50 rounded-t-lg overflow-hidden h-full flex items-end">
                             <div 
-                                className="w-full bg-blue-500 transition-all duration-500 group-hover:bg-blue-600 relative" 
-                                style={{ height: `${h}%` }}
+                                className="w-full bg-blue-500 transition-all duration-500 group-hover:bg-blue-600 relative min-h-[4px]" 
+                                style={{ height: `${item.percent}%` }}
                             >
                                 <div className="absolute top-0 left-0 right-0 h-1 bg-white/20"></div>
                             </div>
                         </div>
-                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-blue-600">
-                            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i]}
+                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-blue-600 uppercase">
+                            {daysLabel[i]}
                         </span>
+                        {/* Tooltip */}
+                        <div className="absolute -top-8 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                            {item.val.toFixed(0)} Rs
+                        </div>
                     </div>
                 ))}
             </div>
@@ -83,22 +104,8 @@ const PerformanceGraph = () => {
     );
 };
 
-import { useState, useEffect } from 'react';
-
-const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setActiveView, stats }) => {
-    const [liveAudience, setLiveAudience] = useState(842);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setLiveAudience(prev => {
-                const change = Math.floor(Math.random() * 15) - 7; 
-                const newValue = prev + change;
-                return newValue > 500 ? newValue : 500;
-            });
-        }, 3000);
-        return () => clearInterval(interval);
-    }, []);
-
+const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setActiveView, stats, transactions }) => {
+    
     return (
         <div className="max-w-6xl mx-auto pb-24 animate-fade-in">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -135,7 +142,7 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                     color="bg-teal-500" 
                 />
                 <StatCard 
-                    label="Total Clicks" 
+                    label="Total Conversions" 
                     value={stats.clicks.toLocaleString()} 
                     icon={<TrendingUpIcon className="w-6 h-6" />} 
                     color="bg-amber-500" 
@@ -146,10 +153,10 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
                 {/* Chart */}
                 <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-                    <PerformanceGraph />
+                    <PerformanceGraph transactions={transactions} />
                 </div>
 
-                {/* Live Audience Globe */}
+                {/* Audience Overview */}
                 <div className="bg-slate-900 rounded-3xl p-6 text-white shadow-xl flex flex-col overflow-hidden relative">
                     {/* Abstract Globe Effect */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/20 rounded-full blur-[80px] pointer-events-none"></div>
@@ -160,28 +167,28 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                     
                     <div className="space-y-5 flex-1 relative z-10">
                         <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm">
-                            <span className="text-sm font-medium text-slate-300">Active Users</span>
+                            <span className="text-sm font-medium text-slate-300">Network Activity</span>
                             <div className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                                <span className="font-bold text-white text-xl font-mono">{liveAudience}</span>
+                                <span className="font-bold text-white text-xl font-mono">High</span>
                             </div>
                         </div>
                         
                         <div className="space-y-3">
                             <div className="flex justify-between text-xs font-bold text-slate-400">
                                 <span>Mobile Traffic</span>
-                                <span>85%</span>
+                                <span>92%</span>
                             </div>
                             <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full w-[85%] bg-blue-500 rounded-full"></div>
+                                <div className="h-full w-[92%] bg-blue-500 rounded-full"></div>
                             </div>
                             
                             <div className="flex justify-between text-xs font-bold text-slate-400">
-                                <span>Worldwide</span>
-                                <span>Global</span>
+                                <span>Engagement Rate</span>
+                                <span>~ 4.5%</span>
                             </div>
                             <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                                <div className="h-full w-[100%] bg-purple-500 rounded-full"></div>
+                                <div className="h-full w-[65%] bg-purple-500 rounded-full"></div>
                             </div>
                         </div>
                     </div>
@@ -238,8 +245,7 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                             </div>
                         </div>
                         <div className="text-right">
-                            <span className="block font-black text-xl text-slate-900">3</span>
-                            <span className="text-[10px] font-bold text-green-600 uppercase">Active</span>
+                            <span className="block font-black text-xl text-slate-900">&rarr;</span>
                         </div>
                     </div>
 
@@ -254,8 +260,7 @@ const AdvertiserDashboard: React.FC<AdvertiserDashboardProps> = ({ balance, setA
                             </div>
                         </div>
                         <div className="text-right">
-                            <span className="block font-black text-xl text-slate-900">Post</span>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase">New</span>
+                            <span className="block font-black text-xl text-slate-900">+</span>
                         </div>
                     </div>
                 </div>
