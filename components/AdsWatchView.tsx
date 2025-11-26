@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { PlayCircleIcon, CheckCircleIcon, ArrowRight, FireIcon, CloseIcon, ShieldCheck } from './icons';
+import { PlayCircleIcon, CheckCircleIcon, ArrowRight, FireIcon, CloseIcon, ShieldCheck, EyeIcon } from './icons';
 
 interface AdsWatchViewProps {
     onWatchAd: (reward: number) => void;
@@ -8,8 +8,8 @@ interface AdsWatchViewProps {
 
 const TOTAL_DAILY_TASKS = 10;
 const AD_URL = "https://otieu.com/4/10238788";
-const TIMER_DURATION = 30; // 30 seconds
-const REWARD_PER_AD = 2.50; // Fixed reward per ad
+const TIMER_DURATION = 60; // 1 Minute
+const REWARD_PER_AD = 0.00088; // $0.00088
 
 const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
     const [completedCount, setCompletedCount] = useState(0);
@@ -81,6 +81,12 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         }
     };
 
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
     // --- In-App Ad Player Overlay ---
     if (isViewingAd) {
         const progressPercent = ((TIMER_DURATION - timer) / TIMER_DURATION) * 100;
@@ -123,9 +129,9 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                     
                     {/* Timer Overlay (Video Style) */}
                     {!canClaim && (
-                        <div className="absolute top-4 right-4 z-30 bg-black/60 backdrop-blur-md text-white px-4 py-2 rounded-full font-mono font-bold border border-white/10 flex items-center gap-2">
+                        <div className="absolute top-4 right-4 z-30 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-lg font-mono font-bold border border-white/10 flex items-center gap-2 shadow-lg">
                             <div className="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
-                            00:{timer.toString().padStart(2, '0')}
+                            {formatTime(timer)}
                         </div>
                     )}
                 </div>
@@ -157,7 +163,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                                 className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl font-black text-lg shadow-lg shadow-green-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
                             >
                                 <FireIcon className="w-5 h-5 text-yellow-300" />
-                                Claim {REWARD_PER_AD.toFixed(2)} Rs Reward
+                                Claim ${REWARD_PER_AD.toFixed(5)} Reward
                             </button>
                         </div>
                     )}
@@ -166,27 +172,47 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         );
     }
 
-    // --- Main Task List View ---
+    // --- Main Task List View (Video Gallery Style) ---
     return (
-        <div className="max-w-3xl mx-auto pb-24 animate-fade-in px-4">
+        <div className="max-w-5xl mx-auto pb-24 animate-fade-in px-2 sm:px-4">
             {/* Header Stats */}
-            <div className="text-center mb-10 pt-6">
-                <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Daily Video Ads</h2>
-                <p className="text-slate-500 font-medium">Watch short ads to earn instant cash.</p>
+            <div className="mb-8 pt-6 bg-gradient-to-r from-slate-900 to-slate-800 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                 
-                <div className="mt-6 inline-flex items-center bg-white rounded-full shadow-sm border border-gray-200 p-1 pr-6">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${completedCount === TOTAL_DAILY_TASKS ? 'bg-green-500' : 'bg-amber-500'}`}>
-                        {Math.round((completedCount / TOTAL_DAILY_TASKS) * 100)}%
+                <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                            <PlayCircleIcon className="w-4 h-4" />
+                            <span>Watch & Earn</span>
+                        </div>
+                        <h2 className="text-3xl font-black tracking-tight mb-2">Daily Video Tasks</h2>
+                        <p className="text-slate-400 text-sm">Watch sponsored videos to earn dollar rewards.</p>
                     </div>
-                    <div className="ml-3 text-left">
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Today's Progress</p>
-                        <p className="text-sm font-bold text-gray-900">{completedCount} / {TOTAL_DAILY_TASKS} Completed</p>
+                    
+                    <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                        <div className="text-right">
+                            <p className="text-xs text-slate-300 uppercase tracking-wide font-bold">Your Progress</p>
+                            <p className="text-xl font-black text-white">{completedCount} <span className="text-slate-400 text-sm">/ {TOTAL_DAILY_TASKS}</span></p>
+                        </div>
+                        <div className="w-12 h-12 rounded-full border-4 border-slate-700 flex items-center justify-center relative">
+                            <span className="text-xs font-bold">{Math.round((completedCount / TOTAL_DAILY_TASKS) * 100)}%</span>
+                            <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                <path
+                                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    fill="none"
+                                    stroke="#f59e0b"
+                                    strokeWidth="3"
+                                    strokeDasharray={`${(completedCount / TOTAL_DAILY_TASKS) * 100}, 100`}
+                                    className="transition-all duration-1000 ease-out"
+                                />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* Task List */}
-            <div className="space-y-3">
+            {/* Video Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: TOTAL_DAILY_TASKS }).map((_, index) => {
                     const taskNum = index + 1;
                     const isCompleted = taskNum <= completedCount;
@@ -198,59 +224,89 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                             key={taskNum}
                             onClick={isActive ? () => handleStartTask(taskNum) : undefined}
                             disabled={isCompleted || isLocked}
-                            className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 group relative overflow-hidden
-                                ${isCompleted 
-                                    ? 'bg-green-50 border-green-200 opacity-80' 
-                                    : isActive 
-                                        ? 'bg-white border-amber-400 shadow-md hover:shadow-lg hover:-translate-y-0.5' 
-                                        : 'bg-gray-50 border-gray-100 opacity-60 cursor-not-allowed'
+                            className={`group relative flex flex-col w-full text-left rounded-2xl overflow-hidden transition-all duration-300 border-2
+                                ${isActive 
+                                    ? 'bg-white border-amber-400 shadow-lg hover:shadow-xl hover:-translate-y-1 scale-[1.02] z-10' 
+                                    : isCompleted 
+                                        ? 'bg-slate-50 border-slate-200 opacity-70 grayscale'
+                                        : 'bg-slate-100 border-slate-200 opacity-60 cursor-not-allowed'
                                 }
                             `}
                         >
-                            {isActive && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>}
-                            
-                            <div className="flex items-center gap-4 pl-2">
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm
-                                    ${isCompleted 
-                                        ? 'bg-green-500 text-white' 
-                                        : isActive 
-                                            ? 'bg-amber-100 text-amber-700' 
-                                            : 'bg-gray-200 text-gray-500'}
+                            {/* Thumbnail Area */}
+                            <div className={`relative w-full aspect-video bg-slate-800 flex items-center justify-center overflow-hidden
+                                ${isActive ? 'group-hover:brightness-110 transition-all' : ''}
+                            `}>
+                                {/* Abstract Gradient Background as Thumbnail */}
+                                <div className={`absolute inset-0 bg-gradient-to-br ${isActive ? 'from-slate-700 to-slate-900' : 'from-slate-800 to-slate-900'}`}></div>
+                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                                
+                                {/* Play Button Overlay */}
+                                <div className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center transition-transform duration-300
+                                    ${isActive 
+                                        ? 'bg-red-600 text-white shadow-lg group-hover:scale-110' 
+                                        : isCompleted
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-slate-600 text-slate-400'
+                                    }
                                 `}>
-                                    {isCompleted ? <CheckCircleIcon className="w-6 h-6"/> : taskNum}
+                                    {isCompleted ? <CheckCircleIcon className="w-6 h-6" /> : <PlayCircleIcon className="w-6 h-6" />}
                                 </div>
-                                <div className="text-left">
-                                    <h4 className={`font-bold ${isCompleted ? 'text-green-800' : isActive ? 'text-slate-900' : 'text-gray-400'}`}>
-                                        Ad Video #{taskNum}
-                                    </h4>
-                                    <p className="text-xs text-gray-500 font-medium">
-                                        {isCompleted ? 'Completed' : isActive ? 'Tap to Watch' : 'Locked'}
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div className="flex items-center gap-3">
-                                <span className={`text-sm font-bold ${isActive ? 'text-amber-600' : 'text-gray-400'}`}>
-                                    +{REWARD_PER_AD.toFixed(2)} Rs
-                                </span>
+                                {/* Duration Badge */}
+                                <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-sm">
+                                    01:00
+                                </div>
+                                
+                                {/* Status Badge (Top Left) */}
                                 {isActive && (
-                                    <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-md group-hover:bg-amber-500 transition-colors">
-                                        <ArrowRight className="w-4 h-4" />
+                                    <div className="absolute top-2 left-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm animate-pulse">
+                                        NOW PLAYING
+                                    </div>
+                                )}
+                                {isLocked && (
+                                    <div className="absolute top-2 left-2 bg-slate-700 text-slate-300 text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
+                                        <ShieldCheck className="w-3 h-3" /> Locked
                                     </div>
                                 )}
                             </div>
+
+                            {/* Content Area */}
+                            <div className="p-4 flex flex-col gap-1">
+                                <h4 className={`font-bold text-sm line-clamp-1 ${isCompleted ? 'text-slate-500' : 'text-slate-900'}`}>
+                                    Sponsored Ad #{taskNum}
+                                </h4>
+                                <div className="flex items-center justify-between mt-1">
+                                    <p className="text-xs text-slate-500 font-medium">
+                                        {isCompleted ? 'Reward Claimed' : isActive ? 'Click to Watch' : 'Complete previous task'}
+                                    </p>
+                                    <span className={`text-xs font-black px-2 py-1 rounded-md ${isActive ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                                        ${REWARD_PER_AD}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            {/* Progress Bar (Visual only) */}
+                            {isActive && (
+                                <div className="h-1 w-full bg-slate-100">
+                                    <div className="h-full bg-red-500 w-0 group-hover:w-full transition-all duration-700 ease-out"></div>
+                                </div>
+                            )}
                         </button>
                     );
                 })}
             </div>
 
             {completedCount === TOTAL_DAILY_TASKS && (
-                <div className="mt-8 p-6 bg-green-600 rounded-3xl text-white text-center shadow-xl animate-fade-in-up">
-                    <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
-                        <CheckCircleIcon className="w-8 h-8" />
+                <div className="mt-12 p-8 bg-green-600 rounded-3xl text-white text-center shadow-xl animate-fade-in-up relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                    <div className="relative z-10">
+                        <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4 text-white backdrop-blur-sm">
+                            <CheckCircleIcon className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-3xl font-black mb-2">All Tasks Completed!</h3>
+                        <p className="text-green-100 mb-0 text-lg">You've earned your daily rewards. Come back tomorrow for more.</p>
                     </div>
-                    <h3 className="text-2xl font-black mb-2">All Tasks Completed!</h3>
-                    <p className="text-green-100 mb-0">Come back tomorrow for 10 new videos.</p>
                 </div>
             )}
         </div>
