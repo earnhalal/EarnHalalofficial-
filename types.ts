@@ -165,6 +165,11 @@ export interface UserProfile {
   totalTasks?: number; // Redundant with tasksCompletedCount but added per request
   tasksForNextLevel?: number;
   levelProgress?: number;
+
+  // --- NEW ADS SYSTEM FIELDS ---
+  dailyAdWatchCount?: number;
+  lastAdWatchDate?: string; // YYYY-MM-DD for resetting daily count
+  lastAdWatchTimestamp?: any; // Firestore timestamp for cooldown calc
 }
 
 export interface Job {
