@@ -122,7 +122,7 @@ const InviteView: React.FC<InviteViewProps> = ({ userProfile, referrals }) => {
     const [showReferralHistory, setShowReferralHistory] = useState(false);
     
     // Dynamic base URL to support production domain
-    const baseUrl = "https://taskmint-pro.vercel.app"; 
+    const baseUrl = "https://taskmint.click"; 
     const referralLink = userProfile?.username ? `${baseUrl}/signup?ref=${userProfile.username}` : 'Generating link...';
 
     const handleCopy = () => {
