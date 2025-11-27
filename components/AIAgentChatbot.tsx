@@ -2,6 +2,7 @@
 // components/AIAgentChatbot.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
+import { ArrowUpCircleIcon, CloseIcon, SparklesIcon } from './icons';
 
 const agentNames = ['Ayesha', 'Mahnoor', 'Hira', 'Anum', 'Zoya', 'Maryam'];
 
@@ -106,160 +107,112 @@ const AIAgentChatbot: React.FC<AIAgentChatbotProps> = ({ isOpen, onClose }) => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isLoading]);
     
-    const generateSuggestions = async (lastMessage: string) => {
-        if (!chatSession.current) return;
-        try {
-             const apiKey = process.env.API_KEY;
-             if (!apiKey) throw new Error("API_KEY not found");
-             const ai = new GoogleGenAI({ apiKey });
-             const suggestionPrompt = `Based on the user's last message: "${lastMessage}", provide exactly 3 very short, relevant follow-up questions they might ask in Roman Urdu. Respond with ONLY a valid JSON array of strings. Example: ["Withdrawal limit kia hai?", "Task ke rules?", "Jobs feature kia hai?"]`;
-             
-             const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: suggestionPrompt,
-                config: { responseMimeType: 'application/json' }
-             });
-
-             const suggestionsArray = JSON.parse(response.text);
-             if (Array.isArray(suggestionsArray) && suggestionsArray.every(s => typeof s === 'string')) {
-                setSuggestions(suggestionsArray.slice(0, 3));
-             }
-        } catch (e) {
-            console.error("Failed to generate suggestions:", e);
-            setSuggestions(['Earning methods?', 'Withdrawal limit?', 'Aur batayen.']);
-        }
-    }
-
-    const handleSendMessage = async (messageText: string) => {
-        if (!messageText.trim() || isLoading) return;
-        
-        const userMessage: Message = { id: Date.now(), text: messageText, sender: 'user' };
-        setMessages(prev => [...prev, userMessage]);
+    const handleSendMessage = async () => {
+        if (!inputValue.trim()) return;
+        const userMessage = inputValue.trim();
         setInputValue('');
-        setSuggestions([]);
+        setSuggestions([]); // Clear suggestions on user input
+
+        setMessages(prev => [...prev, { id: Date.now(), text: userMessage, sender: 'user' }]);
         setIsLoading(true);
 
-        if (!chatSession.current) {
-            initializeChat();
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 1200)); // Typing delay
-
         try {
-            if (chatSession.current) {
-                const stream = await chatSession.current.sendMessageStream({ message: messageText });
-                
-                let botResponse = '';
-                const botMessageId = Date.now() + 1;
-                let firstChunk = true;
-
-                for await (const chunk of stream) {
-                    botResponse += chunk.text;
-                    if (firstChunk) {
-                        setMessages(prev => [...prev, { id: botMessageId, text: botResponse, sender: 'bot' }]);
-                        firstChunk = false;
-                    } else {
-                        setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: botResponse } : msg));
-                    }
-                }
-                
-                await generateSuggestions(messageText);
-
-            } else {
-                 throw new Error("Chat session not available.");
+            if (!chatSession.current) {
+                // Try initializing if not ready (e.g. key issue resolved)
+                initializeChat();
+                if (!chatSession.current) throw new Error("Chat session not initialized");
             }
+
+            const result = await chatSession.current.sendMessage({ message: userMessage });
+            const botResponse = result.text; // Using standard property for Gemini SDK
+
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: botResponse || "Sorry, I didn't get that.", sender: 'bot' }]);
         } catch (error) {
-            console.error("Gemini API Error:", error);
-            setMessages(prev => [...prev, {id: Date.now(), text: "Sorry, I'm having trouble connecting. Please try again later.", sender: 'bot'}]);
+            console.error("Chat Error:", error);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: "Internet issue lag raha hai. Dobara try karen.", sender: 'bot' }]);
         } finally {
             setIsLoading(false);
         }
     };
-    
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') handleSendMessage();
+    };
+
+    if (!isOpen) return null;
+
     return (
-        <>
-            <style>{`
-                .chatbot-widget {
-                    transform-origin: bottom right;
-                    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-                }
-                .message-bubble {
-                    animation: slide-up 0.4s ease-out forwards;
-                }
-                @keyframes slide-up {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-            `}</style>
-
-            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-gray-800 rounded-2xl shadow-2xl flex flex-col z-[200] ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
-                <div className="flex-shrink-0 p-4 bg-gradient-to-r from-accent-600 to-yellow-500 text-white rounded-t-2xl flex items-center justify-between shadow-md">
+        <div className="fixed bottom-20 right-4 z-50 w-80 sm:w-96 h-[500px] bg-slate-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-700 animate-fade-in-up">
+            {/* Header */}
+            <div className="bg-slate-800 p-4 flex items-center justify-between border-b border-slate-700">
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                            <SparklesIcon className="w-6 h-6" />
+                        </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"></div>
+                    </div>
                     <div>
-                        <h3 className="font-bold text-lg">{agentName}</h3>
-                        <div className="flex items-center gap-2">
-                             <div className="w-2 h-2 bg-green-300 rounded-full"></div>
-                             <p className="text-xs text-yellow-100">Online</p>
-                        </div>
-                    </div>
-                    <button onClick={onClose} className="text-white hover:text-yellow-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-900 custom-scrollbar">
-                    {messages.map((msg) => (
-                        <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[80%] px-4 py-2 rounded-2xl message-bubble text-sm ${
-                                msg.sender === 'user' 
-                                ? 'bg-accent-600 text-white rounded-br-none' 
-                                : 'bg-gray-700 text-gray-200 rounded-bl-none border border-gray-600'
-                            }`}>
-                                {msg.text}
-                            </div>
-                        </div>
-                    ))}
-                    {isLoading && <TypingIndicator />}
-                    <div ref={messagesEndRef} />
-                </div>
-
-                <div className="p-3 bg-gray-800 border-t border-gray-700">
-                    {suggestions.length > 0 && (
-                        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 custom-scrollbar">
-                            {suggestions.map((s, i) => (
-                                <button 
-                                    key={i} 
-                                    onClick={() => handleSendMessage(s)}
-                                    className="whitespace-nowrap px-3 py-1 bg-gray-700 hover:bg-gray-600 text-xs text-accent-300 rounded-full border border-gray-600 transition-colors"
-                                >
-                                    {s}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage(inputValue)}
-                            placeholder="Type a message..."
-                            className="flex-1 bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-full px-4 py-2 focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 text-sm"
-                        />
-                        <button 
-                            onClick={() => handleSendMessage(inputValue)}
-                            disabled={!inputValue.trim() || isLoading}
-                            className="p-2 bg-accent-600 text-white rounded-full hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                            </svg>
-                        </button>
+                        <h3 className="font-bold text-white text-sm">{agentName}</h3>
+                        <p className="text-xs text-slate-400">Support Agent</p>
                     </div>
                 </div>
+                <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
+                    <CloseIcon className="w-6 h-6" />
+                </button>
             </div>
-        </>
+
+            {/* Chat Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900 custom-scrollbar">
+                {messages.map((msg) => (
+                    <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                            msg.sender === 'user' 
+                            ? 'bg-amber-500 text-white rounded-br-none shadow-md' 
+                            : 'bg-slate-800 text-slate-200 rounded-bl-none border border-slate-700'
+                        }`}>
+                            {msg.text}
+                        </div>
+                    </div>
+                ))}
+                {isLoading && <TypingIndicator />}
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Suggestions */}
+            {suggestions.length > 0 && !isLoading && (
+                <div className="px-4 py-2 bg-slate-900 flex gap-2 overflow-x-auto no-scrollbar">
+                    {suggestions.map((s, i) => (
+                        <button 
+                            key={i} 
+                            onClick={() => { setInputValue(s); setTimeout(handleSendMessage, 0); }}
+                            className="whitespace-nowrap px-3 py-1 bg-slate-800 text-amber-400 text-xs rounded-full border border-amber-500/30 hover:bg-slate-700 transition-colors"
+                        >
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            {/* Input Area */}
+            <div className="p-4 bg-slate-800 border-t border-slate-700 flex gap-2">
+                <input 
+                    type="text" 
+                    value={inputValue} 
+                    onChange={(e) => setInputValue(e.target.value)} 
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type your question..." 
+                    className="flex-1 bg-slate-900 text-white text-sm rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 border border-slate-700"
+                />
+                <button 
+                    onClick={handleSendMessage} 
+                    disabled={isLoading || !inputValue.trim()}
+                    className="bg-amber-500 text-white p-2 rounded-xl hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    <ArrowUpCircleIcon className="w-6 h-6" />
+                </button>
+            </div>
+        </div>
     );
 };
 
