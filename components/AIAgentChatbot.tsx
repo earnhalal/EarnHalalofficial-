@@ -1,3 +1,4 @@
+
 // components/AIAgentChatbot.tsx
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { GoogleGenAI, Chat } from "@google/genai";
@@ -8,6 +9,11 @@ type Message = {
     id: number;
     text: string;
     sender: 'bot' | 'user';
+}
+
+interface AIAgentChatbotProps {
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -32,8 +38,7 @@ const TypingIndicator: React.FC = () => (
 );
 
 
-const AIAgentChatbot: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
+const AIAgentChatbot: React.FC<AIAgentChatbotProps> = ({ isOpen, onClose }) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -100,10 +105,6 @@ const AIAgentChatbot: React.FC = () => {
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isLoading]);
-    
-    const handleToggle = () => {
-        setIsOpen(prev => !prev);
-    };
     
     const generateSuggestions = async (lastMessage: string) => {
         if (!chatSession.current) return;
@@ -182,9 +183,6 @@ const AIAgentChatbot: React.FC = () => {
                     transform-origin: bottom right;
                     transition: transform 0.3s ease-out, opacity 0.3s ease-out;
                 }
-                .chatbot-icon {
-                    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-                }
                 .message-bubble {
                     animation: slide-up 0.4s ease-out forwards;
                 }
@@ -192,20 +190,9 @@ const AIAgentChatbot: React.FC = () => {
                     from { opacity: 0; transform: translateY(10px); }
                     to { opacity: 1; transform: translateY(0); }
                 }
-                 @keyframes pulse-glow {
-                    0%, 100% {
-                        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7);
-                    }
-                    70% {
-                        box-shadow: 0 0 0 10px rgba(245, 158, 11, 0);
-                    }
-                }
-                .animate-pulse-glow {
-                    animation: pulse-glow 2s infinite;
-                }
             `}</style>
 
-            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-gray-800 rounded-2xl shadow-2xl flex flex-col z-50 ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
+            <div className={`chatbot-widget fixed bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] max-w-sm h-[70%] max-h-[500px] bg-gray-800 rounded-2xl shadow-2xl flex flex-col z-[200] ${isOpen ? 'transform scale-100 opacity-100' : 'transform scale-90 opacity-0 pointer-events-none'}`}>
                 <div className="flex-shrink-0 p-4 bg-gradient-to-r from-accent-600 to-yellow-500 text-white rounded-t-2xl flex items-center justify-between shadow-md">
                     <div>
                         <h3 className="font-bold text-lg">{agentName}</h3>
@@ -214,7 +201,7 @@ const AIAgentChatbot: React.FC = () => {
                              <p className="text-xs text-yellow-100">Online</p>
                         </div>
                     </div>
-                    <button onClick={handleToggle} className="text-white hover:text-yellow-100 transition-colors">
+                    <button onClick={onClose} className="text-white hover:text-yellow-100 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -272,15 +259,6 @@ const AIAgentChatbot: React.FC = () => {
                     </div>
                 </div>
             </div>
-
-            <button
-                onClick={handleToggle}
-                className={`chatbot-icon fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-accent-600 to-yellow-500 text-white rounded-full shadow-lg flex items-center justify-center z-50 hover:scale-110 active:scale-95 animate-pulse-glow ${isOpen ? 'rotate-90 opacity-0 pointer-events-none' : 'rotate-0 opacity-100'}`}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-            </button>
         </>
     );
 };

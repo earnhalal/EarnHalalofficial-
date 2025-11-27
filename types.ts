@@ -228,3 +228,27 @@ export interface EmailLog {
     status: 'Sent' | 'Delivered' | 'Opened';
     bodyPreview?: string;
 }
+
+// --- DYNAMIC AD SYSTEM ---
+export interface AdCampaign {
+    id: string;
+    createdAt?: any;
+    
+    title: string;
+    source: 'direct_link' | 'propeller' | 'script'; // Matches user requirement
+    
+    videoUrl?: string; // CamelCase per requirement
+    scriptUrl?: string; // CamelCase per requirement
+    zone_id?: string; // Kept as snake_case per user prompt requirement
+    
+    taskType?: 'watch' | 'click';
+    rewardPoints: number; // CamelCase per requirement
+    
+    startDate: any; // Firestore Timestamp
+    endDate: any; // Firestore Timestamp
+    
+    status: 'active' | 'inactive';
+    duration: number;
+    
+    targetAudience?: string;
+}

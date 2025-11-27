@@ -239,6 +239,7 @@ const App: React.FC = () => {
 
   // ... (All other standard state: transactions, tasks, etc.)
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Global chat state
   const [baseTransactions, setBaseTransactions] = useState<Transaction[]>([]);
   const [withdrawalStatuses, setWithdrawalStatuses] = useState<Record<string, string>>({});
   const [tasks, setTasks] = useState<UserCreatedTask[]>([]);
@@ -454,7 +455,7 @@ const App: React.FC = () => {
       SPIN_WHEEL: <SpinWheelView onWin={(amount) => handleGameWin(amount, 'Spin & Win')} balance={userProfile?.balance ?? 0} onBuySpin={handleBuySpin} />,
       PLAY_AND_EARN: <PlayAndEarnView setActiveView={setActiveView} />,
       DEPOSIT: <DepositView onDeposit={handleDeposit} transactions={transactions} />,
-      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} userMode={userMode} onSwitchMode={toggleUserMode} />,
+      PROFILE_SETTINGS: <ProfileSettingsView userProfile={userProfile} onUpdateProfile={handleUpdateProfile} onUpdatePhoto={handleUploadProfilePicture} onLogout={handleLogout} onSetFingerprintEnabled={async () => { if (user) await updateDoc(doc(db, "users", user.uid), { isFingerprintEnabled: true }); }} onNavigate={setActiveView} onSendVerificationOTP={handleSendVerificationOTP} userMode={userMode} onSwitchMode={toggleUserMode} onOpenSupport={() => setIsChatOpen(true)} />,
       HOW_IT_WORKS: <HowItWorksView />, ABOUT_US: <AboutUsView />, CONTACT_US: <ContactUsView />,
       PREMIUM_HUB: <PremiumView setActiveView={setActiveView} />,
       LEADERBOARD: <LeaderboardView />,
@@ -531,8 +532,8 @@ const App: React.FC = () => {
           {showPinLock && <PinLockView mode={pinLockMode} onClose={() => { setShowPinLock(false); setPinAction(null); }} onPinCorrect={() => { setShowPinLock(false); pinAction && pinAction(); setPinAction(null); }} onPinSet={async (pin) => { if (user) { await updateDoc(doc(db, "users", user.uid), { walletPin: pin }); setShowPinLock(false); pinAction && pinAction(); setPinAction(null); } }} onSkip={() => setShowPinLock(false)} pinToVerify={userProfile.walletPin ?? undefined} />}
       </div>
       
-      {/* AI Chatbot Widget - Always enabled for support */}
-      <AIAgentChatbot />
+      {/* AI Chatbot Widget - Controlled by app state */}
+      <AIAgentChatbot isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       <style>{`
         @keyframes slide-up {
