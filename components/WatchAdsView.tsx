@@ -208,14 +208,14 @@ const WatchAdsView: React.FC = () => {
     }, [handleClaim]);
 
     return (
-        <div className="max-w-md mx-auto pb-24 px-4 animate-fade-in min-h-[80vh]">
+        <div className="max-w-5xl mx-auto pb-24 px-4 animate-fade-in min-h-[80vh]">
             {/* Header */}
             <div className="text-center mb-8 pt-4">
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-rose-600 mb-4 shadow-lg shadow-red-500/30">
                     <PlayCircleIcon className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Watch Videos & Earn Coins</h2>
-                <p className="text-slate-500 mt-2 text-sm">Watch sponsored clips from our partners.</p>
+                <p className="text-slate-500 mt-2 text-sm">Watch sponsored clips from our partners to earn real money.</p>
             </div>
 
             {/* List */}
@@ -230,34 +230,66 @@ const WatchAdsView: React.FC = () => {
                     <p className="text-slate-500">Check back later for new offers!</p>
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {ads.map(ad => (
-                        <div key={ad.id} className="bg-white rounded-2xl p-5 shadow-card hover:shadow-gold transition-all border border-gray-100 group relative overflow-hidden">
-                            <div className="flex justify-between items-start mb-3 relative z-10">
-                                <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wide">
-                                    {ad.network}
-                                </span>
-                                <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-lg border border-green-100">
-                                    <ClockIcon className="w-3 h-3" />
-                                    <span className="text-xs font-bold">{ad.duration}s</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {ads.map((ad, index) => (
+                        <div 
+                            key={ad.id} 
+                            onClick={() => handleStartWatch(ad)}
+                            className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all cursor-pointer group flex flex-col"
+                        >
+                            {/* Thumbnail Section (YouTube Style) */}
+                            <div className="relative aspect-video bg-slate-900 flex items-center justify-center group overflow-hidden">
+                                {/* Placeholder Gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-black opacity-90"></div>
+                                
+                                {/* Decorate Background */}
+                                <div className="absolute inset-0 flex items-center justify-center opacity-10">
+                                    <PlayCircleIcon className="w-32 h-32 text-white" />
                                 </div>
+
+                                {/* Play Button Overlay */}
+                                <div className="relative z-10 w-14 h-14 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border-2 border-white/80 group-hover:bg-red-600 group-hover:border-red-600 group-hover:scale-110 transition-all duration-300 shadow-lg">
+                                    <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+
+                                {/* Duration Badge */}
+                                <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-md">
+                                    0:{ad.duration.toString().padStart(2, '0')}
+                                </span>
                             </div>
-                            
-                            <h3 className="text-lg font-bold text-slate-900 mb-4 relative z-10">{ad.title}</h3>
-                            
-                            <div className="flex items-center justify-between relative z-10">
-                                <div className="flex items-center gap-1.5">
-                                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+
+                            {/* Info Section */}
+                            <div className="p-4 flex gap-3 flex-1">
+                                {/* Avatar / Network Icon */}
+                                <div className="flex-shrink-0">
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-600 border border-amber-200 shadow-sm">
                                         <CoinIcon className="w-5 h-5" />
                                     </div>
-                                    <span className="font-black text-slate-900 text-lg">{ad.rewardAmount} <span className="text-xs font-medium text-slate-400">Coins</span></span>
                                 </div>
-                                <button 
-                                    onClick={() => handleStartWatch(ad)}
-                                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-green-600/30 transition-all active:scale-95 flex items-center gap-2"
-                                >
-                                    <PlayCircleIcon className="w-4 h-4" /> Watch Now
-                                </button>
+
+                                {/* Text Details */}
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors mb-1">
+                                        {ad.title}
+                                    </h3>
+                                    
+                                    <div className="flex flex-wrap items-center gap-x-1 text-xs text-gray-500">
+                                        <span className="font-medium text-slate-700">{ad.network}</span>
+                                        <span>•</span>
+                                        <span>{ad.viewsCount > 1000 ? (ad.viewsCount/1000).toFixed(1) + 'K' : ad.viewsCount} views</span>
+                                    </div>
+                                    
+                                    <div className="mt-2 flex items-center gap-1.5">
+                                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide border border-green-200">
+                                            Reward
+                                        </span>
+                                        <span className="text-sm font-black text-slate-900">
+                                            {ad.rewardAmount} Rs
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}
