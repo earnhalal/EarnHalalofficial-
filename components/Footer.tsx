@@ -2,7 +2,7 @@
 // components/Footer.tsx
 import React from 'react';
 import type { View, UserMode } from '../types';
-import { HomeIcon, ClipboardListIcon, BriefcaseIcon, InviteIcon, UserIcon, WalletIcon, PlusCircleIcon, MenuIcon } from './icons';
+import { HomeIcon, ClipboardListIcon, BriefcaseIcon, UserIcon, WalletIcon, PlusCircleIcon, MenuIcon, PlayCircleIcon } from './icons';
 
 interface BottomNavProps {
     activeView: View;
@@ -45,9 +45,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView, userMo
         { view: 'PROFILE_SETTINGS', label: 'Menu', icon: <MenuIcon className="w-6 h-6" /> },
     ] : [
         { view: 'DASHBOARD', label: 'Home', icon: <HomeIcon className="w-6 h-6" /> },
+        { view: 'WATCH_AND_EARN', label: 'Watch', icon: <PlayCircleIcon className="w-6 h-6" /> },
         { view: 'EARN', label: 'Task Wall', icon: <ClipboardListIcon className="w-6 h-6" /> },
         { view: 'PREMIUM_HUB', label: 'Premium', icon: <BriefcaseIcon className="w-6 h-6" /> },
-        { view: 'INVITE', label: 'Invite', icon: <InviteIcon className="w-6 h-6" /> },
         { view: 'PROFILE_SETTINGS', label: 'Profile', icon: <UserIcon className="w-6 h-6" /> },
     ];
     
@@ -56,6 +56,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView, userMo
         if (navView === 'ADVERTISER_DASHBOARD') return activeView === 'ADVERTISER_DASHBOARD';
         
         if (navView === 'EARN') return ['EARN', 'TASK_HISTORY', 'CREATE_TASK', 'PLAY_AND_EARN', 'SPIN_WHEEL'].includes(activeView);
+        if (navView === 'WATCH_AND_EARN') return activeView === 'WATCH_AND_EARN';
         if (navView === 'PREMIUM_HUB') return ['PREMIUM_HUB', 'JOBS', 'SOCIAL_GROUPS', 'MY_APPLICATIONS'].includes(activeView);
         if (navView === 'INVITE') return activeView === 'INVITE';
         if (navView === 'PROFILE_SETTINGS') return ['PROFILE_SETTINGS', 'PRIVACY_POLICY', 'TERMS_CONDITIONS', 'ABOUT_US', 'CONTACT_US', 'HOW_IT_WORKS', 'ADS_GUIDE', 'ADS_POLICY', 'AD_PIXEL', 'GEOFENCING', 'CONVERSION_EVENTS', 'BILLING'].includes(activeView);

@@ -6,7 +6,7 @@ import { TaskType } from '../types';
 import { 
     CheckCircleIcon, YoutubeIcon, FacebookIcon, InstagramIcon, 
     TikTokIcon, TwitterIcon, LinkedInIcon, DiscordIcon, 
-    TelegramIcon, SnapchatIcon, Globe, PlayCircleIcon, ArrowRight
+    TelegramIcon, SnapchatIcon, Globe, ArrowRight
 } from './icons';
 
 interface ProofSubmissionModalProps {
@@ -149,14 +149,6 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
     setTaskForProof(task);
   };
 
-  const handleWatchAdsClick = () => {
-      // Dispatch a custom event to switch view, since we don't have setActiveView prop here
-      // This relies on App.tsx handling popstate or we could pass setActiveView.
-      // Ideally, EarnView should receive setActiveView. For now, let's dispatch an event or use window history state hack.
-      window.history.pushState({ view: 'ADS_WATCH' }, '', '');
-      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'ADS_WATCH' } }));
-  };
-
   return (
     <div className="space-y-6">
       {taskForProof && (
@@ -170,25 +162,6 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
           />
       )}
       
-      {/* Promotional Banner for Video Ads */}
-      <div className="bg-gradient-to-r from-red-600 to-rose-600 rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
-          <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                  <PlayCircleIcon className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                  <h3 className="text-lg font-bold">Watch & Earn</h3>
-                  <p className="text-red-100 text-sm">Watch short videos and earn instant cash rewards.</p>
-              </div>
-          </div>
-          <button 
-            onClick={handleWatchAdsClick}
-            className="bg-white text-red-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-red-50 transition-colors shadow-sm whitespace-nowrap flex items-center gap-2"
-          >
-              View Video Ads <ArrowRight className="w-4 h-4" />
-          </button>
-      </div>
-
       <div className="flex items-center justify-between">
           <h2 className="text-3xl font-bold text-gray-900">Available Tasks</h2>
           <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold">
@@ -200,7 +173,7 @@ const EarnView: React.FC<EarnViewProps> = ({ tasks, onCompleteTask, onTaskView, 
         <div className="bg-white p-8 rounded-xl shadow-subtle text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">No Tasks Available</h2>
             <p className="text-gray-600">
-            All standard tasks have been completed. Try the <strong>Watch & Earn</strong> section above!
+            All standard tasks have been completed. Please check back later!
             </p>
         </div>
       ) : (

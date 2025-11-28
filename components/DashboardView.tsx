@@ -174,21 +174,19 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
           </h2>
           <div className="grid grid-cols-4 gap-2 sm:gap-4">
               <QuickActionBtn 
+                  icon={<PlayCircleIcon />} 
+                  label="Watch Ads" 
+                  onClick={() => setActiveView('WATCH_AND_EARN')} 
+                  colorClass="bg-gradient-to-br from-red-500 to-rose-600 shadow-red-500/40" 
+                  delay={50}
+                  isHighlight={true}
+              />
+              <QuickActionBtn 
                   icon={<EarnIcon />} 
-                  label="Earn" 
+                  label="Tasks" 
                   onClick={() => setActiveView('EARN')} 
                   colorClass="bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-emerald-500/40" 
                   delay={100}
-              />
-              
-              {/* New Watch Ads Button */}
-              <QuickActionBtn 
-                  icon={<PlayCircleIcon />} 
-                  label="Watch Ads" 
-                  onClick={() => setActiveView('ADS_WATCH')} 
-                  colorClass="bg-gradient-to-br from-red-500 to-red-700 shadow-red-500/40" 
-                  delay={200}
-                  isHighlight={true}
               />
               
               <QuickActionBtn 
@@ -196,14 +194,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({ balance, tasksCompleted, 
                   label="Spin" 
                   onClick={() => setActiveView('SPIN_WHEEL')} 
                   colorClass="bg-gradient-to-br from-pink-500 to-rose-500 shadow-pink-500/40" 
-                  delay={300}
+                  delay={200}
               />
               <QuickActionBtn 
                   icon={<InviteIcon />} 
                   label="Invite" 
                   onClick={() => setActiveView('INVITE')} 
                   colorClass="bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/40" 
-                  delay={400}
+                  delay={300}
               />
           </div>
       </div>

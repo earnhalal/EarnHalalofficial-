@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { PlayCircleIcon, CheckCircleIcon, FireIcon, CloseIcon, ShieldCheck, EyeIcon, ArrowRight, StarIcon, CodeIcon } from './icons';
+import { PlayCircleIcon, CheckCircleIcon, FireIcon, CloseIcon, ShieldCheck, EyeIcon, ArrowRight, StarIcon, CodeIcon, CoinIcon } from './icons';
 import { db, auth, serverTimestamp, increment } from '../firebase';
 import { doc, getDoc, collection, addDoc, runTransaction, query, where, onSnapshot } from 'firebase/firestore';
 import type { UserProfile, AdCampaign } from '../types';
@@ -20,6 +20,45 @@ const PLAN_CONFIG: Record<string, { dailyLimit: number }> = {
     'Growth': { dailyLimit: 20 },
     'Business': { dailyLimit: 9999 },
     'Enterprise': { dailyLimit: 9999 }
+};
+
+// --- VAST Parsing Utility ---
+const parseVastXml = async (url: string): Promise<string | null> => {
+    try {
+        console.log("Fetching VAST XML:", url);
+        const response = await fetch(url);
+        const text = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+
+        // Attempt to find a MediaFile node (preferred: mp4)
+        const mediaFiles = xmlDoc.getElementsByTagName("MediaFile");
+        
+        if (mediaFiles.length === 0) {
+            console.warn("No MediaFiles found in VAST");
+            return null;
+        }
+
+        let selectedUrl = null;
+        for (let i = 0; i < mediaFiles.length; i++) {
+            const type = mediaFiles[i].getAttribute("type");
+            const content = mediaFiles[i].textContent?.trim();
+            if (type && (type.includes("mp4") || type.includes("webm"))) {
+                selectedUrl = content;
+                break; 
+            }
+        }
+
+        // Fallback
+        if (!selectedUrl && mediaFiles.length > 0) {
+            selectedUrl = mediaFiles[0].textContent?.trim();
+        }
+
+        return selectedUrl || null;
+    } catch (error) {
+        console.error("Error parsing VAST:", error);
+        return null;
+    }
 };
 
 const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
@@ -42,21 +81,22 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
     const [isClaiming, setIsClaiming] = useState(false);
     const [claimStatus, setClaimStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
+    
+    // Video Player State
+    const [videoSrc, setVideoSrc] = useState<string | null>(null);
+    const [isVideoLoading, setIsVideoLoading] = useState(false);
 
     // Refs
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const scriptContainerRef = useRef<HTMLDivElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
 
-    // 1. Fetch Ads (Robust Logic)
+    // 1. Fetch Ads
     useEffect(() => {
         setLoadingAds(true);
-        console.log("[AdsWatchView] Starting ad fetch from 'ads' collection...");
-        
-        // Requirement 1: Fetch ads where status = "active"
         const q = query(collection(db, "ads"), where("status", "==", "active"));
         
         const unsubscribe = onSnapshot(q, (snapshot) => {
-            console.log(`[AdsWatchView] Snapshot received. Docs: ${snapshot.size}`);
             const now = new Date();
             const fetchedAds: AdCampaign[] = [];
 
@@ -64,47 +104,28 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                 try {
                     const data = doc.data();
                     
-                    // --- Data Normalization & Mapping ---
-                    // This ensures we handle both camelCase (requested) and any legacy snake_case
-                    
-                    // Requirement 4: Convert Timestamps to JS Date
-                    let startDate = new Date(0); // Default epoch
-                    if (data.startDate) {
-                        startDate = data.startDate.toDate ? data.startDate.toDate() : new Date(data.startDate);
-                    } else if (data.start_date) {
-                        // Fallback for snake_case
-                        startDate = data.start_date.toDate ? data.start_date.toDate() : new Date(data.start_date);
-                    }
+                    let startDate = new Date(0);
+                    if (data.startDate) startDate = data.startDate.toDate ? data.startDate.toDate() : new Date(data.startDate);
+                    else if (data.start_date) startDate = data.start_date.toDate ? data.start_date.toDate() : new Date(data.start_date);
 
-                    let endDate = new Date(8640000000000000); // Default max future
-                    if (data.endDate) {
-                        endDate = data.endDate.toDate ? data.endDate.toDate() : new Date(data.endDate);
-                    } else if (data.end_date) {
-                        // Fallback for snake_case
-                        endDate = data.end_date.toDate ? data.end_date.toDate() : new Date(data.end_date);
-                    }
+                    let endDate = new Date(8640000000000000);
+                    if (data.endDate) endDate = data.endDate.toDate ? data.endDate.toDate() : new Date(data.endDate);
+                    else if (data.end_date) endDate = data.end_date.toDate ? data.end_date.toDate() : new Date(data.end_date);
 
-                    // Requirement 1: startDate <= current date <= endDate
                     const isActiveDate = now >= startDate && now <= endDate;
 
                     if (isActiveDate) {
                         fetchedAds.push({
                             id: doc.id,
                             title: data.title || 'Video Ad',
-                            
-                            // Requirement 2: Ad types (direct_link / propeller)
-                            // Mapping source to ensure we handle 'script' or 'propeller' uniformly
-                            source: (data.source === 'propeller' || data.source === 'script') ? 'propeller' : 'direct_link',
-                            
-                            // Requirement 3: Fields
+                            source: data.source || 'direct_link',
                             videoUrl: data.videoUrl || data.video_url || '',
+                            vastUrl: data.vastUrl || '', // Support VAST
                             scriptUrl: data.scriptUrl || data.script_url || '',
                             zone_id: data.zone_id || data.zoneId || '',
-                            
                             rewardPoints: Number(data.rewardPoints) || Number(data.reward_points) || 0,
                             duration: Number(data.duration) || DEFAULT_DURATION,
                             taskType: data.taskType || data.task_type || 'watch',
-                            
                             status: data.status,
                             startDate: startDate,
                             endDate: endDate,
@@ -116,14 +137,8 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                     console.error(`[AdsWatchView] Error parsing ad ${doc.id}:`, e);
                 }
             });
-
-            // Requirement 5: Output console.log for testing
-            console.log("[AdsWatchView] Processed Ads Array:", fetchedAds);
             
             setAds(fetchedAds);
-            setLoadingAds(false);
-        }, (error) => {
-            console.error("[AdsWatchView] Firestore Error:", error);
             setLoadingAds(false);
         });
 
@@ -168,29 +183,24 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         }
     }, [cooldownLeft]);
 
-    const getUserConfig = () => {
-        const plan = profile?.jobSubscription?.plan || 'Free';
-        return PLAN_CONFIG[plan] || PLAN_CONFIG['Free'];
-    };
-    const config = getUserConfig();
+    const config = PLAN_CONFIG[profile?.jobSubscription?.plan || 'Free'] || PLAN_CONFIG['Free'];
 
     // 4. Anti-Cheat Visibility
     const handleVisibilityChange = useCallback(() => {
-        if (document.hidden) setIsPaused(true);
+        if (document.hidden) {
+            setIsPaused(true);
+            if (videoRef.current) videoRef.current.pause();
+        }
     }, []);
-
-    const handleBlur = useCallback(() => setIsPaused(true), []);
 
     useEffect(() => {
         if (isViewing) {
             document.addEventListener("visibilitychange", handleVisibilityChange);
-            window.addEventListener("blur", handleBlur);
         }
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("blur", handleBlur);
         };
-    }, [isViewing, handleVisibilityChange, handleBlur]);
+    }, [isViewing, handleVisibilityChange]);
 
     // 5. Start Watch Logic
     const handleStartWatch = async (ad: AdCampaign) => {
@@ -204,6 +214,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
             setIsPaused(false);
             setClaimStatus('idle');
             setErrorMessage('');
+            setVideoSrc(null);
             
             const duration = ad.duration || DEFAULT_DURATION;
             setTargetDuration(duration);
@@ -219,41 +230,43 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                 targetDuration: duration,
                 expectedReward: ad.rewardPoints
             });
-            
             setSessionId(sessionRef.id);
 
-            // Start Local Timer
-            intervalRef.current = setInterval(() => {
-                setTimer(prev => {
-                    if (prev <= 1) {
-                        if (intervalRef.current) clearInterval(intervalRef.current);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+            // Handle Source Specifics
+            if (ad.source === 'vast' || ad.source === 'video') {
+                setIsVideoLoading(true);
+                let src = ad.videoUrl;
+                if (ad.source === 'vast' && ad.vastUrl) {
+                    const parsedUrl = await parseVastXml(ad.vastUrl);
+                    if (parsedUrl) src = parsedUrl;
+                }
+                setVideoSrc(src || null);
+                setIsVideoLoading(false);
+            } else {
+                // For iframe/script ads, start timer
+                intervalRef.current = setInterval(() => {
+                    setTimer(prev => {
+                        if (prev <= 1) {
+                            if (intervalRef.current) clearInterval(intervalRef.current);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
+            }
 
-            // Requirement 2 & 5: Inject Script for 'propeller' source
+            // Inject Script for 'propeller' source
             if (ad.source === 'propeller' && ad.scriptUrl) {
                 setTimeout(() => {
                     if (scriptContainerRef.current) {
-                        console.log("[AdsWatchView] Injecting Propeller Script...");
-                        scriptContainerRef.current.innerHTML = ''; // Clear previous
-                        
+                        scriptContainerRef.current.innerHTML = '';
                         const script = document.createElement('script');
                         script.src = ad.scriptUrl!;
                         script.async = true;
-                        
-                        // Handle zone ID if available
-                        if (ad.zone_id) {
-                            script.setAttribute('data-zone', ad.zone_id); // Standard
-                            script.dataset.zone = ad.zone_id; // React friendly
-                        }
-                        
-                        // Append to container
+                        if (ad.zone_id) script.dataset.zone = ad.zone_id;
                         scriptContainerRef.current.appendChild(script);
                     }
-                }, 500); // Slight delay for DOM readiness
+                }, 500);
             }
 
         } catch (e) {
@@ -263,13 +276,14 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         }
     };
 
-    // 6. Timer Logic
-    useEffect(() => {
-        if (isPaused && intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-        } else if (!isPaused && isViewing && timer > 0 && !intervalRef.current) {
-            intervalRef.current = setInterval(() => {
+    // 6. Resume/Pause Logic
+    const handleResume = () => {
+        setIsPaused(false);
+        if (videoRef.current) videoRef.current.play();
+        
+        // Resume timer for non-video ads
+        if (activeAd && activeAd.source !== 'video' && activeAd.source !== 'vast' && timer > 0) {
+             intervalRef.current = setInterval(() => {
                 setTimer(prev => {
                     if (prev <= 1) {
                         if (intervalRef.current) clearInterval(intervalRef.current);
@@ -279,9 +293,15 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                 });
             }, 1000);
         }
-    }, [isPaused, isViewing, timer]);
+    };
 
-    // 7. Claim Reward
+    // 7. Video Ended Handler
+    const handleVideoEnded = () => {
+        setTimer(0); // Force timer completion
+        // Optional: Auto claim? Better to let user click claim.
+    };
+
+    // 8. Claim Reward
     const handleClaimReward = async () => {
         if (!auth.currentUser || !sessionId || !activeAd) return;
         
@@ -300,14 +320,12 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                 const today = new Date().toDateString();
                 
                 transaction.update(sessionRef, { status: 'claimed', claimTime: serverTimestamp() });
-                
                 transaction.update(userRef, {
                     balance: increment(activeAd.rewardPoints),
                     dailyAdWatchCount: increment(1),
                     lastAdWatchDate: today,
                     lastAdWatchTimestamp: serverTimestamp()
                 });
-
                 transaction.set(txRef, {
                     type: TransactionType.AD_WATCH,
                     description: `Watched Ad: ${activeAd.title}`,
@@ -332,7 +350,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
     };
 
     const handleClose = () => {
-        if (isViewing && timer > 0) {
+        if (isViewing && timer > 0 && activeAd) {
             if (!window.confirm("You will lose your reward if you close now.")) return;
         }
         setIsViewing(false);
@@ -342,9 +360,10 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
-    // --- Renderers ---
-
+    // --- Player Render ---
     if (isViewing && activeAd) {
+        // Calculate progress based on timer for non-video, or video events for video
+        // For simplicity, we use the countdown 'timer' state which decrements
         const progressPercent = ((targetDuration - timer) / targetDuration) * 100;
         const isTimerDone = timer === 0;
 
@@ -358,7 +377,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                         </div>
                         <div>
                             <h3 className="font-bold text-sm text-slate-100">{activeAd.title}</h3>
-                            <p className="text-[10px] text-slate-400 font-medium">Keep window active</p>
+                            <p className="text-[10px] text-slate-400 font-medium">Do not close window</p>
                         </div>
                     </div>
                     <button onClick={handleClose} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700">
@@ -366,10 +385,40 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                     </button>
                 </div>
 
-                {/* Ad Content Area */}
+                {/* Content Area */}
                 <div className="flex-1 relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
                     
-                    {/* 1. Direct Link (Iframe/Video) */}
+                    {/* VIDEO PLAYER (HTML5) */}
+                    {(activeAd.source === 'video' || activeAd.source === 'vast') && (
+                        <div className="w-full h-full flex items-center justify-center">
+                            {isVideoLoading ? (
+                                <div className="text-white flex flex-col items-center">
+                                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-500 mb-2"></div>
+                                    <p>Loading Video...</p>
+                                </div>
+                            ) : videoSrc ? (
+                                <video
+                                    ref={videoRef}
+                                    src={videoSrc}
+                                    autoPlay
+                                    playsInline
+                                    controls={false} // Disable controls
+                                    className="max-h-full max-w-full aspect-video"
+                                    onEnded={handleVideoEnded}
+                                    onContextMenu={(e) => e.preventDefault()}
+                                    onTimeUpdate={(e) => {
+                                        const el = e.currentTarget;
+                                        const remaining = Math.max(0, Math.ceil(el.duration - el.currentTime));
+                                        setTimer(remaining);
+                                    }}
+                                />
+                            ) : (
+                                <div className="text-red-500">Failed to load video source.</div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* DIRECT IFRAME */}
                     {activeAd.source === 'direct_link' && activeAd.videoUrl && (
                         <div className={`absolute inset-0 w-full h-full transition-opacity duration-500 ${isPaused ? 'opacity-20 blur-sm' : 'opacity-100'}`}>
                             <iframe 
@@ -381,48 +430,47 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                         </div>
                     )}
 
-                    {/* 2. Propeller / Script Injection */}
+                    {/* PROPELLER SCRIPT */}
                     {activeAd.source === 'propeller' && (
                         <div 
                             ref={scriptContainerRef}
                             className={`w-full h-full flex items-center justify-center bg-white transition-opacity duration-500 ${isPaused ? 'opacity-20 blur-sm' : 'opacity-100'}`}
                         >
-                            {/* Script injected via useEffect */}
                             <div className="text-center">
                                 <p className="text-slate-400 text-sm animate-pulse">Loading Partner Ad...</p>
-                                <p className="text-[10px] text-slate-300 mt-2">Wait for the timer to finish.</p>
                             </div>
                         </div>
                     )}
 
                     {/* Paused Overlay */}
                     {isPaused && !isTimerDone && (
-                        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
+                        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
                             <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mb-6 animate-pulse">
                                 <EyeIcon className="w-10 h-10 text-red-500" />
                             </div>
                             <h2 className="text-3xl font-black text-white mb-2">AD PAUSED</h2>
-                            <button onClick={() => setIsPaused(false)} className="px-8 py-3 bg-white text-slate-900 font-bold rounded-full mt-4">
-                                Resume
+                            <p className="text-slate-400 mb-6">Please keep the window active to earn your reward.</p>
+                            <button onClick={handleResume} className="px-8 py-3 bg-white text-slate-900 font-bold rounded-full hover:bg-slate-200 transition-colors">
+                                Resume Watching
                             </button>
                         </div>
                     )}
 
-                    {/* Timer HUD */}
+                    {/* Timer HUD (Only if video controls not overriding) */}
                     {!isTimerDone && !isPaused && (
-                        <div className="absolute top-6 right-6 z-30 bg-black/50 backdrop-blur rounded-full p-1">
-                            <div className="relative w-14 h-14 flex items-center justify-center">
+                        <div className="absolute top-6 right-6 z-30 bg-black/50 backdrop-blur-md rounded-full p-2 flex items-center gap-2 border border-white/10">
+                            <div className="relative w-8 h-8 flex items-center justify-center">
                                 <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#334155" strokeWidth="4" />
                                     <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f59e0b" strokeWidth="4" strokeDasharray={`${progressPercent}, 100`} className="transition-all duration-1000 ease-linear" />
                                 </svg>
-                                <span className="absolute text-xs font-bold text-white font-mono">{timer}s</span>
                             </div>
+                            <span className="text-sm font-bold text-white font-mono w-8 text-center">{timer}s</span>
                         </div>
                     )}
                 </div>
 
-                {/* Bottom Action Bar */}
+                {/* Footer Controls */}
                 <div className="p-6 bg-slate-900 border-t border-slate-800 text-white z-30">
                     {!isTimerDone ? (
                         <div className="space-y-3">
@@ -437,7 +485,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                     ) : (
                         <div className="animate-slide-up">
                             {claimStatus === 'idle' && (
-                                <button onClick={handleClaimReward} disabled={isClaiming} className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl font-black text-lg flex items-center justify-center gap-3">
+                                <button onClick={handleClaimReward} disabled={isClaiming} className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl font-black text-lg flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-green-500/30 transition-all transform hover:-translate-y-1">
                                     {isClaiming ? (
                                         <span className="loading loading-spinner loading-sm"></span>
                                     ) : (
@@ -450,8 +498,10 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                             )}
                             {claimStatus === 'success' && (
                                 <div className="text-center">
-                                    <h3 className="text-xl font-bold text-white mb-2">Reward Claimed!</h3>
-                                    <button onClick={handleClose} className="w-full py-3 bg-slate-800 rounded-xl font-bold text-white">Close</button>
+                                    <h3 className="text-xl font-bold text-green-400 mb-2 flex items-center justify-center gap-2">
+                                        <CheckCircleIcon className="w-6 h-6"/> Reward Claimed!
+                                    </h3>
+                                    <button onClick={handleClose} className="w-full py-3 bg-slate-800 rounded-xl font-bold text-white hover:bg-slate-700 mt-2">Close Player</button>
                                 </div>
                             )}
                             {claimStatus === 'error' && (
@@ -467,11 +517,11 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
         );
     }
 
-    // --- Dashboard Grid ---
+    // --- Main List View ---
     return (
         <div className="max-w-5xl mx-auto pb-24 animate-fade-in px-3 sm:px-4">
             
-            {/* Header Info */}
+            {/* Stats Header */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-black p-8 text-white shadow-2xl mb-8 border border-slate-700/50">
                 <div className="absolute top-0 right-0 -mr-10 -mt-10 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl"></div>
                 <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
@@ -484,7 +534,7 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                             Watch & Earn <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-yellow-500">Rewards</span>
                         </h2>
                         <p className="text-slate-400 font-medium max-w-md">
-                            Watch sponsored videos or visit partner links to earn instantly.
+                            Watch sponsored videos to earn instantly. Rewards are credited immediately.
                         </p>
                     </div>
                     <div className="flex gap-4">
@@ -506,25 +556,23 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                 </div>
             </div>
 
-            {/* Ad List */}
+            {/* Ad Grid */}
             {loadingAds ? (
                 <div className="text-center py-20">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-                    <p className="text-slate-500 font-medium">Searching for available ads...</p>
+                    <p className="text-slate-500 font-medium">Loading campaigns...</p>
                 </div>
             ) : ads.length === 0 ? (
-                <div className="text-center py-20 bg-white rounded-3xl border border-gray-100">
+                <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                         <ShieldCheck className="w-8 h-8 text-gray-300" />
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">No Active Ads</h3>
-                    <p className="text-slate-500 font-medium mt-1">Check back later for new campaigns.</p>
+                    <p className="text-slate-500 font-medium mt-1">Please check back later for new opportunities.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Render available ads from Firebase */}
                     {ads.map((ad) => {
-                        // Check if we hit daily limit
                         const isLimitReached = dailyCount >= config.dailyLimit;
                         const isCooldown = cooldownLeft > 0;
                         const isDisabled = isLimitReached || isCooldown;
@@ -532,51 +580,58 @@ const AdsWatchView: React.FC<AdsWatchViewProps> = ({ onWatchAd }) => {
                         return (
                             <div 
                                 key={ad.id}
-                                className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-300 group bg-white border-gray-200
-                                    ${isDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:border-amber-400 hover:-translate-y-1 cursor-pointer shadow-lg'}
+                                className={`relative overflow-hidden rounded-2xl border-2 transition-all duration-300 group bg-white border-gray-100
+                                    ${isDisabled ? 'opacity-60 cursor-not-allowed grayscale' : 'hover:border-amber-400 hover:-translate-y-1 cursor-pointer shadow-lg hover:shadow-xl'}
                                 `}
                                 onClick={() => !isDisabled && handleStartWatch(ad)}
                             >
-                                {/* Thumbnail / Icon Area */}
-                                <div className="aspect-video bg-slate-100 relative flex items-center justify-center">
-                                    {ad.source === 'direct_link' ? (
-                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${isDisabled ? 'bg-slate-300' : 'bg-red-600 text-white shadow-lg group-hover:scale-110'}`}>
+                                {/* Thumbnail Area */}
+                                <div className="aspect-video bg-slate-100 relative flex items-center justify-center overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
+                                    
+                                    {(ad.source === 'video' || ad.source === 'vast' || (ad.source === 'direct_link' && ad.videoUrl)) ? (
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${isDisabled ? 'bg-slate-300' : 'bg-red-600 text-white shadow-lg group-hover:scale-110'}`}>
                                             <PlayCircleIcon className="w-6 h-6" />
                                         </div>
                                     ) : (
-                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${isDisabled ? 'bg-slate-300' : 'bg-blue-600 text-white shadow-lg group-hover:scale-110'}`}>
+                                        <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${isDisabled ? 'bg-slate-300' : 'bg-blue-600 text-white shadow-lg group-hover:scale-110'}`}>
                                             <CodeIcon className="w-6 h-6" />
                                         </div>
                                     )}
                                     
-                                    <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-bold text-white">
+                                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1 rounded-lg text-[10px] font-bold text-white z-20 border border-white/10">
                                         {ad.duration || DEFAULT_DURATION}s
                                     </div>
                                     
-                                    {ad.taskType && (
-                                        <div className="absolute top-3 left-3 bg-amber-100 text-amber-700 px-2 py-1 rounded-md text-[10px] font-bold uppercase">
-                                            {ad.taskType}
-                                        </div>
-                                    )}
+                                    <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-1 rounded-lg text-[10px] font-bold uppercase z-20 shadow-sm">
+                                        {ad.taskType}
+                                    </div>
                                 </div>
 
+                                {/* Content */}
                                 <div className="p-5">
-                                    <div className="flex justify-between items-start mb-2">
-                                        <h4 className="font-bold text-slate-900 line-clamp-1">{ad.title || "Sponsored Ad"}</h4>
-                                        <span className="text-xs font-black text-green-600 bg-green-50 px-2 py-1 rounded-md border border-green-100">
-                                            {ad.rewardPoints} Rs
-                                        </span>
+                                    <div className="flex justify-between items-start mb-3">
+                                        <h4 className="font-bold text-slate-900 line-clamp-1 text-base">{ad.title}</h4>
                                     </div>
-                                    <div className="flex items-center justify-between mt-4">
-                                        <span className={`text-xs font-bold uppercase tracking-wider ${isDisabled ? 'text-slate-400' : 'text-amber-600'}`}>
-                                            {isLimitReached ? 'Limit Reached' : isCooldown ? 'Cooling Down' : 'Watch Now'}
-                                        </span>
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 text-green-600 bg-green-50 px-2.5 py-1 rounded-lg border border-green-100">
+                                            <CoinIcon className="w-4 h-4" />
+                                            <span className="text-sm font-black">{ad.rewardPoints}</span>
+                                        </div>
+                                        
                                         {!isDisabled && (
-                                            <div className="w-6 h-6 bg-slate-900 rounded-full flex items-center justify-center text-white">
-                                                <ArrowRight className="w-3 h-3" />
+                                            <div className="w-8 h-8 bg-slate-900 rounded-full flex items-center justify-center text-white group-hover:bg-amber-500 transition-colors">
+                                                <ArrowRight className="w-4 h-4" />
                                             </div>
                                         )}
                                     </div>
+                                    
+                                    {isDisabled && (
+                                        <div className="mt-3 text-xs font-bold text-center text-slate-400 uppercase tracking-wide bg-slate-50 py-1 rounded-md">
+                                            {isLimitReached ? 'Daily Limit Reached' : 'Cooldown Active'}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

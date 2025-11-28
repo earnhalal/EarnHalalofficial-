@@ -456,6 +456,13 @@ export const DocumentArrowUpIcon: React.FC<IconProps> = (props) => (
     </svg>
 );
 
+export const ClockIcon: React.FC<IconProps> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+    </svg>
+);
+
 // --- Payment & Extra UI Icons ---
 
 export const JazzCashIcon: React.FC<IconProps> = (props) => (
@@ -602,7 +609,7 @@ export const MapIcon: React.FC<IconProps> = (props) => (
 
 export const ReceiptIcon: React.FC<IconProps> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+        <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1Z" />
         <line x1="16" y1="8" x2="8" y2="8" />
         <line x1="16" y1="12" x2="8" y2="12" />
         <line x1="10" y1="16" x2="8" y2="16" />

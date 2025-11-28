@@ -12,9 +12,9 @@ declare global {
 export type View =
   | 'DASHBOARD'
   | 'EARN'
+  | 'WATCH_AND_EARN' // Added New View
   | 'SPIN_WHEEL'
   | 'PLAY_AND_EARN'
-  | 'ADS_WATCH' // Added for new feature
   | 'WALLET'
   | 'DEPOSIT'
   | 'CREATE_TASK'
@@ -65,7 +65,7 @@ export enum TransactionType {
   GAME_WIN = 'Game Win',
   GAME_LOSS = 'Game Loss',
   BET_CANCELLED = 'Bet Cancelled',
-  AD_WATCH = 'Ad Watch Reward', // Added for new feature
+  AD_WATCH = 'Ad Watch Reward',
 }
 
 export interface WithdrawalDetails {
@@ -125,6 +125,17 @@ export interface UserCreatedTask extends Task {
     createdBy: string;
 }
 
+// --- NEW AD TASK INTERFACE ---
+export interface AdTask {
+    id: string;
+    title: string;
+    reward: number;
+    mainTaskCategory: 'WATCH_AD';
+    adType: 'VAST_URL' | 'Raw_Script';
+    adCode: string; // URL for VAST or Script content for Raw_Script
+    watchDurationSec: number;
+    status: 'active' | 'inactive';
+}
 
 export type PaymentStatus = 'UNPAID' | 'PENDING_VERIFICATION' | 'VERIFIED';
 
@@ -218,7 +229,6 @@ export interface Referral {
     createdAt: any; // Firestore timestamp
 }
 
-// --- NEW EMAIL SYSTEM TYPES ---
 export interface EmailLog {
     id: string;
     type: 'Welcome' | 'Security Alert' | 'Verification' | 'Notification' | 'Password Reset';
@@ -229,26 +239,20 @@ export interface EmailLog {
     bodyPreview?: string;
 }
 
-// --- DYNAMIC AD SYSTEM ---
 export interface AdCampaign {
     id: string;
     createdAt?: any;
-    
     title: string;
-    source: 'direct_link' | 'propeller' | 'script'; // Matches user requirement
-    
-    videoUrl?: string; // CamelCase per requirement
-    scriptUrl?: string; // CamelCase per requirement
-    zone_id?: string; // Kept as snake_case per user prompt requirement
-    
+    source: 'direct_link' | 'propeller' | 'script' | 'vast' | 'video'; 
+    videoUrl?: string; 
+    vastUrl?: string; 
+    scriptUrl?: string; 
+    zone_id?: string; 
     taskType?: 'watch' | 'click';
-    rewardPoints: number; // CamelCase per requirement
-    
-    startDate: any; // Firestore Timestamp
-    endDate: any; // Firestore Timestamp
-    
+    rewardPoints: number; 
+    startDate: any; 
+    endDate: any; 
     status: 'active' | 'inactive';
     duration: number;
-    
     targetAudience?: string;
 }

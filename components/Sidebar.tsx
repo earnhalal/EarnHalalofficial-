@@ -67,8 +67,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, isSidebarO
   // Earner Menu (User App)
   const earnerViews = [
       { view: 'DASHBOARD', label: 'Dashboard', icon: <DashboardIcon className="w-5 h-5" /> },
+      { view: 'WATCH_AND_EARN', label: 'Watch & Earn', icon: <PlayCircleIcon className="w-5 h-5" />, isNew: true },
       { view: 'EARN', label: 'Task Wall', icon: <ClipboardListIcon className="w-5 h-5" /> },
-      { view: 'ADS_WATCH', label: 'Watch Ads', icon: <PlayCircleIcon className="w-5 h-5" />, isNew: true },
       { view: 'SPIN_WHEEL', label: 'Spin & Win', icon: <GiftIcon className="w-5 h-5" /> },
       { view: 'PREMIUM_HUB', label: 'Premium Hub', icon: <BriefcaseIcon className="w-5 h-5" /> },
       { view: 'WALLET', label: 'My Wallet', icon: <WalletIcon className="w-5 h-5" /> },

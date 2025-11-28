@@ -36,9 +36,9 @@ import CoinFlipGame from './games/CoinFlipGame';
 import MinesGame from './games/MinesGame';
 import AdvertiserDashboard from './AdvertiserDashboard';
 import PostJobView from './PostJobView';
-import AdsWatchView from './AdsWatchView'; // New Import
 import ModeSwitchLoader from './ModeSwitchLoader';
 import AIAgentChatbot from './AIAgentChatbot';
+import WatchAdsView from './WatchAdsView'; // Imported New View
 import { GameControllerIcon, CloseIcon, CodeIcon } from './icons';
 
 import type { View, UserProfile, Transaction, Task, UserCreatedTask, Job, JobSubscriptionPlan, WithdrawalDetails, Application, SocialGroup, Referral, EmailLog, UserMode } from '../types';
@@ -429,26 +429,12 @@ const App: React.FC = () => {
   const handleCreateSocialGroup = async(g:any)=>{ if(!user)return; await addDoc(collection(db,"social_groups"),{...g,submittedBy:user.uid,submittedAt:serverTimestamp(),status:'pending'}); };
   const handleUploadProfilePicture = async(file:File|null,url?:string)=>{ if(!user)return; let p=url||''; if(file){const r=ref(storage,`profile_pictures/${user.uid}`); await uploadBytes(r,file); p=await getDownloadURL(r);} await updateProfile(user,{photoURL:p}); await updateDoc(doc(db,"users",user.uid),{photoURL:p}); setUserProfile(pr=>pr?{...pr,photoURL:p}:null); };
 
-  // NEW: Handle Watch Ad Reward
-  const handleWatchAd = async (reward: number) => {
-      if (!user) return;
-      const batch = writeBatch(db);
-      batch.update(doc(db, "users", user.uid), { balance: increment(reward) });
-      batch.set(doc(collection(db, "users", user.uid, "transactions")), {
-          type: TransactionType.AD_WATCH,
-          description: 'Watched Video Ad',
-          amount: reward,
-          date: serverTimestamp()
-      });
-      await batch.commit();
-  };
-
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
       // EARNER VIEWS
       DASHBOARD: <DashboardView userProfile={userProfile} balance={userProfile?.balance ?? 0} tasksCompleted={userProfile?.tasksCompletedCount ?? 0} invitedCount={userProfile?.invitedCount ?? 0} setActiveView={setActiveView} username={userProfile?.username ?? ''} onSwitchMode={toggleUserMode} />,
       EARN: <EarnView tasks={tasks} onCompleteTask={handleCompleteTask} onTaskView={handleTaskView} completedTaskIds={userProfile?.completedTaskIds ?? []} />,
-      ADS_WATCH: <AdsWatchView onWatchAd={handleWatchAd} />, // New View
+      WATCH_AND_EARN: <WatchAdsView />, // Render the Watch Ads view
       WALLET: <WalletView balance={userProfile?.balance ?? 0} pendingRewards={0} transactions={transactions} username={userProfile?.username ?? ''} onWithdraw={handleWithdraw} savedDetails={userProfile?.savedWithdrawalDetails ?? null} hasPin={!!userProfile?.walletPin} onSetupPin={() => { setPinLockMode('set'); setShowPinLock(true); }} joinedAt={userProfile?.joinedAt} userMode={userMode} />,
       TASK_HISTORY: <TaskHistoryView userTasks={userCreatedTasks} />,
       INVITE: <InviteView userProfile={userProfile} referrals={referrals} />,
