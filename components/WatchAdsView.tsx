@@ -23,7 +23,6 @@ const WatchAdsView: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [activeAd, setActiveAd] = useState<VideoAd | null>(null);
     const [timeLeft, setTimeLeft] = useState(0);
-    const [canClaim, setCanClaim] = useState(false);
     const [isClaiming, setIsClaiming] = useState(false);
 
     // Timer reference
@@ -54,7 +53,7 @@ const WatchAdsView: React.FC = () => {
                         rewardAmount: Number(data.rewardAmount) || 1,
                         duration: Number(data.duration) || 15,
                         network: data.network || 'Partner',
-                        embedCode: data.embedCode || '<div>No Content</div>',
+                        embedCode: data.embedCode || '',
                         viewsCount: data.viewsCount || 0,
                         maxViews: data.maxViews || 10000,
                         isActive: data.isActive
@@ -73,7 +72,6 @@ const WatchAdsView: React.FC = () => {
     const handleStartWatch = (ad: VideoAd) => {
         setActiveAd(ad);
         setTimeLeft(ad.duration);
-        setCanClaim(false);
 
         // Start Countdown Timer (Visual Backup)
         if (timerRef.current) clearInterval(timerRef.current);
@@ -81,7 +79,6 @@ const WatchAdsView: React.FC = () => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
                     if (timerRef.current) clearInterval(timerRef.current);
-                    // setCanClaim(true); // Now handled via postMessage or backup timer in iframe
                     return 0;
                 }
                 return prev - 1;
@@ -125,7 +122,7 @@ const WatchAdsView: React.FC = () => {
                 });
             });
 
-            // alert(`You earned ${activeAd.rewardAmount} Coins!`);
+            // Auto close after success
             handleClose();
         } catch (error) {
             console.error("Error claiming reward:", error);
@@ -136,20 +133,21 @@ const WatchAdsView: React.FC = () => {
 
     // Prepare content for iframe with Bridge Polyfill
     const getIframeContent = (ad: VideoAd) => {
-        // Polyfill for React/Web environment to bridge the communication
+        // Polyfill to allow flutter_inappwebview calls to work in the browser via postMessage
         const polyfill = `
             <script>
-                // Polyfill for React/Web environment
-                window.flutter_inappwebview = {
-                    callHandler: function(handlerName, args) {
-                        console.log("Bridge Call:", handlerName, args);
-                        window.parent.postMessage({ type: handlerName, data: args }, '*');
-                    }
-                };
+                if (!window.flutter_inappwebview) {
+                    window.flutter_inappwebview = {
+                        callHandler: function(handlerName, args) {
+                            console.log("Bridge Call:", handlerName, args);
+                            window.parent.postMessage({ type: handlerName, data: args }, '*');
+                        }
+                    };
+                }
             </script>
         `;
         
-        // EXACT HTML requested by user for HilltopAds
+        // Exact HTML requested for HilltopAds
         return `
 <!DOCTYPE html>
 <html>
@@ -201,7 +199,7 @@ const WatchAdsView: React.FC = () => {
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
             if (event.data && event.data.type === 'adCompleted') {
-                console.log("Ad completed, claiming reward...");
+                console.log("Ad completed signal received, claiming reward...");
                 handleClaim();
             }
         };
@@ -281,7 +279,7 @@ const WatchAdsView: React.FC = () => {
                     </div>
 
                     {/* Iframe Content */}
-                    <div className="flex-1 bg-black relative">
+                    <div className="flex-1 bg-black relative w-full h-full">
                         <iframe
                             srcDoc={getIframeContent(activeAd)}
                             className="w-full h-full border-none"
@@ -296,7 +294,7 @@ const WatchAdsView: React.FC = () => {
                         <div className="flex flex-col items-center justify-center gap-2">
                             {isClaiming ? (
                                 <div className="text-green-500 font-bold flex items-center gap-2">
-                                    <div className="loading loading-spinner loading-sm"></div> Verifying & Claiming...
+                                    <div className="loading loading-spinner loading-sm"></div> Claiming Reward...
                                 </div>
                             ) : (
                                 <>
@@ -308,7 +306,7 @@ const WatchAdsView: React.FC = () => {
                                             style={{ width: `${((activeAd.duration - timeLeft) / activeAd.duration) * 100}%` }}
                                         ></div>
                                     </div>
-                                    <p className="text-gray-500 text-[10px] mt-1">Tap screen if video doesn't start</p>
+                                    <p className="text-gray-500 text-[10px] mt-1">Please wait for the ad to complete</p>
                                 </>
                             )}
                         </div>
@@ -320,4 +318,3 @@ const WatchAdsView: React.FC = () => {
 };
 
 export default WatchAdsView;
-    
