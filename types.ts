@@ -61,6 +61,7 @@ export enum TransactionType {
   REFERRAL = 'Referral Bonus',
   JOINING_FEE = 'Joining Fee',
   JOB_SUBSCRIPTION = 'Job Subscription',
+  AD_SUBSCRIPTION = 'Ad Subscription', // New Type
   SPIN_PURCHASE = 'Spin Purchase',
   GAME_WIN = 'Game Win',
   GAME_LOSS = 'Game Loss',
@@ -148,6 +149,12 @@ export interface JobSubscription {
     lastApplicationDate: string; // YYYY-MM-DD
 }
 
+export interface AdSubscription {
+    planName: 'Starter' | 'Pro' | 'VIP';
+    dailyLimit: number;
+    expiryDate: any; // Firestore Timestamp
+}
+
 export interface UserProfile {
   uid: string;
   username: string;
@@ -158,6 +165,7 @@ export interface UserProfile {
   joinedAt: any; // Firestore Timestamp
   paymentStatus: PaymentStatus;
   jobSubscription: JobSubscription | null;
+  adSubscription?: AdSubscription | null; // New Field for Ad Watch Limits
   referralCount: number; // Deprecated, use invitedCount instead for clarity
   invitedCount: number;
   totalReferralEarnings: number;

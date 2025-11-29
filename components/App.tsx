@@ -248,7 +248,10 @@ const App: React.FC = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [socialGroups, setSocialGroups] = useState<SocialGroup[]>([]);
   const [userSocialGroups, setUserSocialGroups] = useState<SocialGroup[]>([]);
-  const [notificationPermission, setNotificationPermission] = useState('default');
+  // Fix: Initialize with actual browser permission state
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+      typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+  );
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [authAction, setAuthAction] = useState<'login' | 'signup' | null>(null);
   const [showPinLock, setShowPinLock] = useState(false);
@@ -429,6 +432,18 @@ const App: React.FC = () => {
   const handleCreateSocialGroup = async(g:any)=>{ if(!user)return; await addDoc(collection(db,"social_groups"),{...g,submittedBy:user.uid,submittedAt:serverTimestamp(),status:'pending'}); };
   const handleUploadProfilePicture = async(file:File|null,url?:string)=>{ if(!user)return; let p=url||''; if(file){const r=ref(storage,`profile_pictures/${user.uid}`); await uploadBytes(r,file); p=await getDownloadURL(r);} await updateProfile(user,{photoURL:p}); await updateDoc(doc(db,"users",user.uid),{photoURL:p}); setUserProfile(pr=>pr?{...pr,photoURL:p}:null); };
 
+  // Improved Notification Handler
+  const handleRequestNotification = () => {
+      if (!('Notification' in window)) return;
+      
+      Notification.requestPermission().then((permission) => {
+          setNotificationPermission(permission);
+          if (permission === 'denied') {
+              alert("Notifications are currently blocked. Please enable them in your browser settings to receive important updates.");
+          }
+      });
+  };
+
   const renderContent = () => {
     const views: Record<View, React.ReactNode> = {
       // EARNER VIEWS
@@ -478,7 +493,13 @@ const App: React.FC = () => {
 
   return (
     <>
-      {notificationPermission === 'default' && <NotificationBanner onRequestPermission={() => Notification.requestPermission().then(setNotificationPermission)} onDismiss={() => setNotificationPermission('dismissed')} />}
+      {notificationPermission === 'default' && (
+          <NotificationBanner 
+              onRequestPermission={handleRequestNotification} 
+              onDismiss={() => setNotificationPermission('denied')} // User manually dismissed
+          />
+      )}
+      
       {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
       
       {isSwitchingMode && <ModeSwitchLoader targetMode={userMode === 'EARNER' ? 'ADVERTISER' : 'EARNER'} />}
