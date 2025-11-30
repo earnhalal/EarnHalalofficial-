@@ -150,23 +150,9 @@ export interface JobSubscription {
 }
 
 export interface AdSubscription {
-    planName: 'Free' | 'Starter' | 'Pro' | 'VIP';
+    planName: 'Starter' | 'Pro' | 'VIP';
     dailyLimit: number;
     expiryDate: any; // Firestore Timestamp
-}
-
-// --- NEW AD PROGRESS INTERFACES ---
-export interface AdSlot {
-    slotId: number;
-    status: 'locked' | 'unlocked' | 'completed';
-    rewardUSD?: number;
-    rewardPKR?: number;
-}
-
-export interface AdProgress {
-    date: string; // YYYY-MM-DD
-    usedToday: number;
-    slots: AdSlot[];
 }
 
 export interface UserProfile {
@@ -271,8 +257,7 @@ export interface AdCampaign {
     scriptUrl?: string; 
     zone_id?: string; 
     taskType?: 'watch' | 'click';
-    rewardPoints: number; // PKR
-    rewardUSD?: number; // Added for USD display support
+    rewardPoints: number; 
     startDate: any; 
     endDate: any; 
     status: 'active' | 'inactive';
