@@ -78,7 +78,7 @@ const DepositView: React.FC<DepositViewProps> = ({ onDeposit, transactions }) =>
 
   const accountDetails = {
       EasyPaisa: { title: 'M-WASEEM', number: '03338739929', icon: <EasyPaisaIcon className="w-6 h-6" /> },
-      JazzCash: { title: 'M-WASEEM', number: '03001234567', icon: <JazzCashIcon className="w-6 h-6" /> } 
+      JazzCash: { title: 'SHAHID-KALEEM', number: '03299659585', icon: <JazzCashIcon className="w-6 h-6" /> } 
   };
 
   return (
